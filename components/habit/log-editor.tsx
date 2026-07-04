@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/client";
 import { useAchievementToast, useToast } from "@/lib/toast/client";
 import { useOffline } from "@/lib/offline/client";
@@ -27,6 +28,7 @@ export function LogEditor({
   const { push } = useToast();
   const notifyAchievements = useAchievementToast();
   const { runOrQueue } = useOffline();
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [status, setStatus] = useState<LogStatus>((habit.todayLog?.status as LogStatus) ?? "done");
   const [value, setValue] = useState(habit.todayLog?.value ?? habit.goalTarget ?? 0);
@@ -38,6 +40,10 @@ export function LogEditor({
   const freezesAvailable = habit.streak.freezesAvailable;
 
   function handleSave() {
+    // Optimista: refleja el guardado y cierra el editor de inmediato; la
+    // mutacion real (y el refresh de datos derivados como racha) sigue en
+    // segundo plano.
+    onSaved(status, isBinary ? undefined : value);
     startTransition(async () => {
       await runOrQueue({
         type: "log",
@@ -50,7 +56,7 @@ export function LogEditor({
           mood: mood ?? undefined,
         },
       });
-      onSaved(status, isBinary ? undefined : value);
+      router.refresh();
     });
   }
 

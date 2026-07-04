@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/client";
 import { useOffline } from "@/lib/offline/client";
@@ -11,13 +11,14 @@ export function RoutineQuickActions({ routines, date }: { routines: RoutineToday
   const router = useRouter();
   const { runOrQueue } = useOffline();
   const [isPending, startTransition] = useTransition();
+  const [optimisticDone, setOptimisticDone] = useState<Set<string>>(new Set());
 
   if (routines.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-2">
       {routines.map((r) => {
-        const complete = r.doneToday >= r.totalToday;
+        const complete = optimisticDone.has(r.id) || r.doneToday >= r.totalToday;
         return (
           <div
             key={r.id}
@@ -32,7 +33,8 @@ export function RoutineQuickActions({ routines, date }: { routines: RoutineToday
             <button
               type="button"
               disabled={isPending || complete}
-              onClick={() =>
+              onClick={() => {
+                setOptimisticDone((prev) => new Set(prev).add(r.id));
                 startTransition(async () => {
                   await Promise.all(
                     r.habits.map((h) =>
@@ -48,8 +50,8 @@ export function RoutineQuickActions({ routines, date }: { routines: RoutineToday
                     )
                   );
                   router.refresh();
-                })
-              }
+                });
+              }}
               className="shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold disabled:opacity-60"
               style={{
                 background: complete ? "transparent" : "var(--color-text)",

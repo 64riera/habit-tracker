@@ -177,7 +177,6 @@ export function HabitCheckRow({ habit, date, compact }: Props) {
             setStatus(newStatus);
             setValue(newValue ?? 0);
             setEditorOpen(false);
-            router.refresh();
           }}
           onClose={() => setEditorOpen(false)}
         />

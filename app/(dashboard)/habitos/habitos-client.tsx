@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ContentHeader } from "@/components/nav/content-header";
@@ -14,6 +14,7 @@ export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
   const { t, dict, locale } = useI18n();
   const router = useRouter();
   const [, startTransition] = useTransition();
+  const [pinnedOverrides, setPinnedOverrides] = useState<Record<string, boolean>>({});
 
   function handleReorder(orderedIds: string[]) {
     startTransition(async () => {
@@ -23,6 +24,7 @@ export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
   }
 
   function handleTogglePin(habitId: string, pinned: boolean) {
+    setPinnedOverrides((prev) => ({ ...prev, [habitId]: pinned }));
     startTransition(async () => {
       await togglePinHabit(habitId, pinned);
       router.refresh();
@@ -41,6 +43,7 @@ export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
           onReorder={handleReorder}
           renderItem={(habit, dragHandleProps) => {
             const color = habit.category?.color ?? "var(--color-text)";
+            const isPinned = pinnedOverrides[habit.id] ?? habit.isPinned;
             return (
               <div className="flex items-center gap-2.5 border-b border-border py-3">
                 <button
@@ -72,10 +75,10 @@ export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
                 </Link>
                 <button
                   type="button"
-                  onClick={() => handleTogglePin(habit.id, !habit.isPinned)}
-                  aria-label={habit.isPinned ? t("habit.unpin") : t("habit.pin")}
+                  onClick={() => handleTogglePin(habit.id, !isPinned)}
+                  aria-label={isPinned ? t("habit.unpin") : t("habit.pin")}
                   className="shrink-0 text-sm"
-                  style={{ color: habit.isPinned ? "var(--color-accent)" : "var(--color-border)" }}
+                  style={{ color: isPinned ? "var(--color-accent)" : "var(--color-border)" }}
                 >
                   ★
                 </button>
