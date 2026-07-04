@@ -1,0 +1,23 @@
+node_modules
+.next
+.git
+.gitignore
+
+# base de datos local (persistida vía volumen, no debe entrar a la imagen)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# secretos: se inyectan en runtime vía env_file/environment, nunca en el build
+.env*
+
+# archivos de este entorno de trabajo, no parte de la app
+.DS_Store
+files.zip
+Habito - Sistema de Habitos.html
+plan and phases
+.claude-autorun
+.dev-scripts
+tsconfig.tsbuildinfo
+npm-debug.log*

@@ -1,0 +1,20 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file:
+      # Reutiliza tus variables de desarrollo (APP_PASSWORD, APP_JWT_SECRET, etc.).
+      # Si quieres Turso remoto en vez de SQLite local, define aquí
+      # TURSO_DATABASE_URL / TURSO_AUTH_TOKEN sin comentar.
+      - .env.local
+    environment:
+      # Sobrescribe cualquier file:./local.db de .env.local para que la base
+      # viva en el volumen persistente en vez de dentro del contenedor.
+      TURSO_DATABASE_URL: file:/app/data/local.db
+    volumes:
+      - habito-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  habito-data:
