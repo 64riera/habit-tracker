@@ -32,7 +32,10 @@ export function describeGoal(habit: {
   return `${habit.goalTarget}${habit.goalUnit ? ` ${habit.goalUnit}` : ""}`.trim();
 }
 
-export function categoryLabel(categoryId: string | null, dict: unknown): string {
-  if (!categoryId) return "";
-  return translate(dict, `categories.${categoryId}`) || categoryId;
+export function categoryDisplayName(
+  category: { nameEs: string; nameEn: string } | null | undefined,
+  locale: string
+): string {
+  if (!category) return "";
+  return locale === "es" ? category.nameEs : category.nameEn;
 }

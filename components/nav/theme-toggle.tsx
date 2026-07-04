@@ -2,9 +2,11 @@
 
 import { useTheme } from "next-themes";
 import { useHasMounted } from "@/lib/hooks/use-has-mounted";
+import { useI18n } from "@/lib/i18n/client";
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
+  const { t } = useI18n();
   const mounted = useHasMounted();
 
   const isDark = mounted && resolvedTheme === "dark";
@@ -12,7 +14,7 @@ export function ThemeToggle() {
   return (
     <button
       type="button"
-      aria-label="Cambiar tema / Toggle theme"
+      aria-label={t("settings.theme")}
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className="flex h-[19px] w-[34px] shrink-0 items-center rounded-full bg-border p-[2px] md:h-[22px] md:w-[40px]"
       style={{ justifyContent: isDark ? "flex-end" : "flex-start" }}

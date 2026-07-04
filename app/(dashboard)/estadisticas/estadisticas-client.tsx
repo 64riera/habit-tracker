@@ -3,19 +3,31 @@
 import { ContentHeader } from "@/components/nav/content-header";
 import { TrendBars } from "@/components/charts/trend-bars";
 import { CategoryBars } from "@/components/charts/category-bars";
+import { PeriodSummaryCard } from "@/components/stats/period-summary-card";
+import { PatternsPanel } from "@/components/stats/patterns-panel";
 import { useI18n } from "@/lib/i18n/client";
 import type { CategoryStat, HabitStatCard, TrendPoint } from "@/lib/queries/stats";
+import type { MoodCorrelation, WorstWeekday } from "@/lib/queries/patterns";
+import type { PeriodComparison } from "@/lib/queries/summary";
 
 export function EstadisticasClient({
   overall,
   trend,
   categories,
   cards,
+  weekSummary,
+  monthSummary,
+  worstWeekday,
+  moodCorrelation,
 }: {
   overall: { pct7: number; pct30: number; pct90: number };
   trend: TrendPoint[];
   categories: CategoryStat[];
   cards: HabitStatCard[];
+  weekSummary: PeriodComparison;
+  monthSummary: PeriodComparison;
+  worstWeekday: WorstWeekday;
+  moodCorrelation: MoodCorrelation;
 }) {
   const { t } = useI18n();
 
@@ -40,6 +52,21 @@ export function EstadisticasClient({
             </div>
           ))}
         </div>
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <PeriodSummaryCard
+            titleKey="stats.weeklySummary"
+            vsLabelKey="stats.vsLastWeek"
+            data={weekSummary}
+          />
+          <PeriodSummaryCard
+            titleKey="stats.monthlySummary"
+            vsLabelKey="stats.vsLastMonth"
+            data={monthSummary}
+          />
+        </div>
+
+        <PatternsPanel worstWeekday={worstWeekday} moodCorrelation={moodCorrelation} />
 
         {cards.length > 0 && (
           <div>

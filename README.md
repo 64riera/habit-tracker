@@ -29,6 +29,18 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Correr con Docker
+
+Requiere que exista `.env.local` (mismo archivo que usas en desarrollo, con `APP_PASSWORD` y `APP_JWT_SECRET`).
+
+```bash
+docker compose up --build
+```
+
+Esto compila la imagen, aplica las migraciones de `drizzle/` contra una base SQLite dentro del volumen persistente `habito-data`, y levanta la app en [http://localhost:3000](http://localhost:3000). Los datos sobreviven a `docker compose down` y a reconstrucciones de la imagen; solo se pierden con `docker compose down -v`.
+
+Si prefieres usar Turso remoto en vez del SQLite local del volumen, define `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN` en `.env.local` y quita la variable `TURSO_DATABASE_URL` de `docker-compose.yml`.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.

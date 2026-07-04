@@ -3,11 +3,13 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/client";
-import { logHabit, deleteLog } from "@/lib/actions/logs";
-import { categoryLabel, describeFrequency } from "@/lib/habits/describe";
+import { useOffline } from "@/lib/offline/client";
+import { categoryDisplayName, describeFrequency } from "@/lib/habits/describe";
 import type { HabitWithExtras } from "@/lib/queries/habits";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { LogEditor } from "./log-editor";
+import type { LogStatus } from "@/lib/habits/status";
 
 type Props = {
   habit: HabitWithExtras;
@@ -15,22 +17,18 @@ type Props = {
   compact?: boolean;
 };
 
-const CAT_COLOR: Record<string, string> = {
-  creatividad: "var(--color-cat-creatividad)",
-  fitness: "var(--color-cat-fitness)",
-  aprendizaje: "var(--color-cat-aprendizaje)",
-  estudio: "var(--color-cat-estudio)",
-  bienestar: "var(--color-cat-bienestar)",
-};
-
 export function HabitCheckRow({ habit, date, compact }: Props) {
-  const { t, dict } = useI18n();
+  const { t, dict, locale } = useI18n();
   const router = useRouter();
+  const { runOrQueue } = useOffline();
   const [isPending, startTransition] = useTransition();
-  const [status, setStatus] = useState(habit.todayLog?.status ?? null);
+  const [status, setStatus] = useState<LogStatus | null>(
+    (habit.todayLog?.status as LogStatus) ?? null
+  );
   const [value, setValue] = useState(habit.todayLog?.value ?? 0);
+  const [editorOpen, setEditorOpen] = useState(false);
 
-  const color = habit.categoryId ? CAT_COLOR[habit.categoryId] ?? "var(--color-text)" : "var(--color-text)";
+  const color = habit.category?.color ?? "var(--color-text)";
   const isBinary = habit.goalType === "binary";
   const target = habit.goalTarget ?? 1;
   const step = Math.max(target / 4, 1);
@@ -38,18 +36,43 @@ export function HabitCheckRow({ habit, date, compact }: Props) {
   const isDone = status === "done";
   const progressPct = isBinary ? (isDone ? 100 : 0) : Math.min(100, Math.round((value / target) * 100));
 
+  function statusVisual() {
+    switch (status) {
+      case "done":
+        return { border: "var(--color-accent)", background: "var(--color-accent)", icon: "✓", iconColor: "var(--color-accent-contrast)" };
+      case "partial":
+        return {
+          border: "var(--color-accent)",
+          background: `linear-gradient(90deg, var(--color-accent) ${progressPct}%, transparent ${progressPct}%)`,
+          icon: null,
+          iconColor: "",
+        };
+      case "justified":
+        return { border: "var(--color-muted)", background: "transparent", icon: "J", iconColor: "var(--color-muted)" };
+      case "skipped":
+        return { border: "var(--color-border)", background: "color-mix(in srgb, var(--color-text) 8%, transparent)", icon: "–", iconColor: "var(--color-muted)" };
+      case "frozen":
+        return { border: "var(--color-accent)", background: "transparent", icon: "❄", iconColor: "var(--color-accent)" };
+      case "missed":
+        return { border: "var(--color-border)", background: "color-mix(in srgb, var(--color-text) 14%, transparent)", icon: "×", iconColor: "var(--color-muted)" };
+      default:
+        return { border: "var(--color-border)", background: "transparent", icon: null, iconColor: "" };
+    }
+  }
+  const visual = statusVisual();
+
   function handleClick() {
     if (isBinary) {
       if (isDone) {
         setStatus(null);
         startTransition(async () => {
-          await deleteLog(habit.id, date);
+          await runOrQueue({ type: "delete", habitId: habit.id, date });
           router.refresh();
         });
       } else {
         setStatus("done");
         startTransition(async () => {
-          await logHabit({ habitId: habit.id, date, status: "done" });
+          await runOrQueue({ type: "log", input: { habitId: habit.id, date, status: "done" } });
           router.refresh();
         });
       }
@@ -61,7 +84,7 @@ export function HabitCheckRow({ habit, date, compact }: Props) {
       setStatus("done");
       setValue(target);
       startTransition(async () => {
-        await logHabit({ habitId: habit.id, date, status: "done", value: target });
+        await runOrQueue({ type: "log", input: { habitId: habit.id, date, status: "done", value: target } });
         router.refresh();
       });
     } else if (isDone) {
@@ -69,72 +92,96 @@ export function HabitCheckRow({ habit, date, compact }: Props) {
       setStatus(null);
       setValue(0);
       startTransition(async () => {
-        await deleteLog(habit.id, date);
+        await runOrQueue({ type: "delete", habitId: habit.id, date });
         router.refresh();
       });
     } else {
       setStatus("partial");
       setValue(next);
       startTransition(async () => {
-        await logHabit({ habitId: habit.id, date, status: "partial", value: next });
+        await runOrQueue({ type: "log", input: { habitId: habit.id, date, status: "partial", value: next } });
         router.refresh();
       });
     }
   }
 
   return (
-    <div
-      className={cn(
-        "flex items-center gap-4 border-b border-border py-3.5",
-        isPending && "opacity-70"
-      )}
-    >
-      <Link
-        href={`/habitos/${habit.id}`}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-serif-italic text-[15px] font-semibold md:h-[42px] md:w-[42px] md:text-[17px]"
-        style={{ background: `color-mix(in oklch, ${color} 16%, transparent)`, color }}
-      >
-        {habit.name.charAt(0).toUpperCase()}
-      </Link>
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-[13.5px] font-semibold md:text-[15px]">{habit.name}</div>
-        <div className="mt-0.5 truncate text-[11px] text-muted md:text-xs">
-          {!compact && habit.category ? `${categoryLabel(habit.categoryId, dict)} · ` : ""}
-          {describeFrequency(habit, dict)}
+    <div className={cn(isPending && "opacity-70")}>
+      <div className="flex items-center gap-4 border-b border-border py-3.5">
+        <Link
+          href={`/habitos/${habit.id}`}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-serif-italic text-[15px] font-semibold md:h-[42px] md:w-[42px] md:text-[17px]"
+          style={{ background: `color-mix(in oklch, ${color} 16%, transparent)`, color }}
+        >
+          {habit.name.charAt(0).toUpperCase()}
+        </Link>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[13.5px] font-semibold md:text-[15px]">
+            {habit.isPinned && (
+              <span className="mr-1" style={{ color: "var(--color-accent)" }} aria-hidden>
+                ★
+              </span>
+            )}
+            {habit.name}
+          </div>
+          <div className="mt-0.5 truncate text-[11px] text-muted md:text-xs">
+            {!compact && habit.category ? `${categoryDisplayName(habit.category, locale)} · ` : ""}
+            {describeFrequency(habit, dict)}
+          </div>
+          {!isBinary && (
+            <div className="mt-2 h-0.5 w-40 max-w-full rounded-full bg-border">
+              <div
+                className="h-0.5 rounded-full bg-text transition-all"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          )}
         </div>
-        {!isBinary && (
-          <div className="mt-2 h-0.5 w-40 max-w-full rounded-full bg-border">
-            <div
-              className="h-0.5 rounded-full bg-text transition-all"
-              style={{ width: `${progressPct}%` }}
-            />
+        {!compact && (
+          <div className="shrink-0 text-right">
+            <div className="font-serif text-base font-semibold">{habit.streak.current}</div>
+            <div className="text-[9px] tracking-wide text-muted uppercase">{t("common.days")}</div>
           </div>
         )}
+        {!compact && (
+          <button
+            type="button"
+            aria-label={t("checkin.moreOptions")}
+            aria-expanded={editorOpen}
+            onClick={() => setEditorOpen((v) => !v)}
+            className="shrink-0 text-sm text-muted"
+          >
+            ⋯
+          </button>
+        )}
+        <button
+          type="button"
+          aria-label={t("checkin.markDone")}
+          onClick={handleClick}
+          disabled={isPending}
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors md:h-7 md:w-7"
+          style={{ borderColor: visual.border, background: visual.background }}
+        >
+          {visual.icon && (
+            <span className="text-[11px]" style={{ color: visual.iconColor }}>
+              {visual.icon}
+            </span>
+          )}
+        </button>
       </div>
-      {!compact && (
-        <div className="shrink-0 text-right">
-          <div className="font-serif text-base font-semibold">{habit.streak.current}</div>
-          <div className="text-[9px] tracking-wide text-muted uppercase">{t("common.days")}</div>
-        </div>
+      {editorOpen && (
+        <LogEditor
+          habit={habit}
+          date={date}
+          onSaved={(newStatus, newValue) => {
+            setStatus(newStatus);
+            setValue(newValue ?? 0);
+            setEditorOpen(false);
+            router.refresh();
+          }}
+          onClose={() => setEditorOpen(false)}
+        />
       )}
-      <button
-        type="button"
-        aria-label={t("checkin.markDone")}
-        onClick={handleClick}
-        disabled={isPending}
-        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors md:h-7 md:w-7"
-        style={{
-          borderColor: isDone ? "var(--color-accent)" : "var(--color-border)",
-          background:
-            status === "partial"
-              ? `linear-gradient(90deg, var(--color-accent) ${progressPct}%, transparent ${progressPct}%)`
-              : isDone
-                ? "var(--color-accent)"
-                : "transparent",
-        }}
-      >
-        {isDone && <span className="text-[13px] text-accent-contrast">✓</span>}
-      </button>
     </div>
   );
 }

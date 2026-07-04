@@ -5,6 +5,7 @@ import { achievements, habitLogs, habitStreaks, habits } from "@/lib/db/schema";
 import { nanoid } from "nanoid";
 import { dateRange, getTodayDateString, monthKey } from "@/lib/date";
 import { isDateApplicable } from "@/lib/habits/frequency";
+import { overLimitSkipDates, keepsStreakOn } from "@/lib/habits/status";
 import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
 
 export type AchievementType = "7_days" | "30_days" | "100_days" | "perfect_month" | "comeback";
@@ -65,8 +66,6 @@ export async function maybeUnlockAchievements(
   return unlocked;
 }
 
-const KEEPS_STREAK = new Set(["done", "partial", "justified", "skipped", "frozen"]);
-
 async function checkPerfectMonth(habitId: string): Promise<boolean> {
   const [habit] = await db.select().from(habits).where(eq(habits.id, habitId)).limit(1);
   if (!habit) return false;
@@ -85,12 +84,17 @@ async function checkPerfectMonth(habitId: string): Promise<boolean> {
     .where(eq(habitLogs.habitId, habitId));
   const statusByDate = new Map(logs.map((l) => [l.date, l.status]));
 
+  // El límite de skips se calcula sobre todo el historial del hábito, ya que un
+  // período semanal puede empezar antes del mes en curso.
+  const allApplicable = dateRange(habit.startDate, today).filter((d) => isDateApplicable(habit, d));
+  const overLimit = overLimitSkipDates(habit, allApplicable, statusByDate);
+
   const daysInMonth = dateRange(monthStart, today).filter((d) => monthKey(d) === currentMonth);
   const applicable = daysInMonth.filter((d) => isDateApplicable(habit, d) && d <= today);
   if (applicable.length < 7) return false; // evita falsos positivos muy al inicio del mes
 
   return applicable.every((d) => {
     const status = statusByDate.get(d);
-    return status ? KEEPS_STREAK.has(status) : d === today;
+    return status ? keepsStreakOn(status, d, overLimit) : d === today;
   });
 }

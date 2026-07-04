@@ -23,20 +23,21 @@ export function CalendarMonth({ cells, monthLabel }: { cells: CalendarCell[]; mo
         ))}
         {cells.map((cell) => {
           const isFilled = cell.level > 0;
+          const hollow = isFilled && cell.allJustified;
+          const shade = `color-mix(in srgb, var(--color-text) ${LEVEL_ALPHA[cell.level]}%, transparent)`;
           return (
             <div
               key={cell.date}
+              role="img"
+              aria-label={t("history.cellLevel", { date: cell.date, level: cell.level })}
               className="flex aspect-square items-center justify-center rounded-lg border text-[11px] box-border"
               style={{
-                background: cell.isToday
-                  ? "var(--color-accent)"
-                  : isFilled
-                    ? `color-mix(in srgb, var(--color-text) ${LEVEL_ALPHA[cell.level]}%, transparent)`
-                    : "transparent",
-                borderColor: cell.isToday ? "var(--color-accent)" : "var(--color-border)",
+                background: cell.isToday ? "var(--color-accent)" : isFilled && !hollow ? shade : "transparent",
+                borderColor: cell.isToday ? "var(--color-accent)" : hollow ? shade : "var(--color-border)",
+                borderWidth: hollow ? "1.5px" : "1px",
                 color: cell.isToday
                   ? "var(--color-accent-contrast)"
-                  : cell.level >= 3
+                  : cell.level >= 3 && !hollow
                     ? "var(--color-accent-contrast)"
                     : "var(--color-muted)",
                 opacity: cell.inMonth ? 1 : 0.25,

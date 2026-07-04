@@ -3,6 +3,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { categories, habitLogs, habitStreaks, habits } from "@/lib/db/schema";
 import { isDateApplicable } from "@/lib/habits/frequency";
+import { FREEZE_MONTHLY_ALLOWANCE } from "@/lib/habits/status";
 
 export type CategoryRow = typeof categories.$inferSelect;
 export type HabitRow = typeof habits.$inferSelect;
@@ -11,11 +12,15 @@ export type HabitLogRow = typeof habitLogs.$inferSelect;
 export type HabitWithExtras = HabitRow & {
   category: CategoryRow | null;
   todayLog: HabitLogRow | null;
-  streak: { current: number; longest: number };
+  streak: { current: number; longest: number; freezesAvailable: number };
 };
 
 export async function getCategories(): Promise<CategoryRow[]> {
   return db.select().from(categories).orderBy(categories.sortOrder);
+}
+
+export async function getHabitNames(): Promise<{ id: string; name: string }[]> {
+  return db.select({ id: habits.id, name: habits.name }).from(habits).orderBy(habits.sortOrder);
 }
 
 async function attachExtras(rows: HabitRow[], date: string): Promise<HabitWithExtras[]> {
@@ -42,6 +47,7 @@ async function attachExtras(rows: HabitRow[], date: string): Promise<HabitWithEx
     streak: {
       current: streakByHabit.get(h.id)?.currentStreak ?? 0,
       longest: streakByHabit.get(h.id)?.longestStreak ?? 0,
+      freezesAvailable: streakByHabit.get(h.id)?.freezesAvailable ?? FREEZE_MONTHLY_ALLOWANCE,
     },
   }));
 }

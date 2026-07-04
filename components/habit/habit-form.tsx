@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n/client";
-import { categoryLabel } from "@/lib/habits/describe";
+import { categoryDisplayName } from "@/lib/habits/describe";
 import { parseFrequencyConfig } from "@/lib/habits/frequency";
 import { cn } from "@/lib/utils";
 import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
@@ -18,7 +18,7 @@ const GOAL_TYPES = ["binary", "quantitative", "duration"] as const;
 const FREQ_TYPES = ["daily", "weekdays", "x_per_week", "x_per_month", "custom_interval"] as const;
 
 export function HabitForm({ action, categories, habit }: Props) {
-  const { t, dict } = useI18n();
+  const { t, locale } = useI18n();
   const cfg = parseFrequencyConfig(habit?.frequencyConfig ?? null);
 
   const [goalType, setGoalType] = useState(habit?.goalType ?? "binary");
@@ -60,7 +60,7 @@ export function HabitForm({ action, categories, habit }: Props) {
                   borderColor: active ? "var(--color-text)" : "var(--color-border)",
                 }}
               >
-                {categoryLabel(c.id, dict)}
+                {categoryDisplayName(c, locale)}
               </button>
             );
           })}
@@ -206,6 +206,17 @@ export function HabitForm({ action, categories, habit }: Props) {
           <input type="hidden" name="hardMode" value={hardMode ? "on" : ""} />
         </div>
       </div>
+
+      <Field label={t("habit.fieldSkipDays")}>
+        <input
+          name="skipDaysAllowed"
+          type="number"
+          min={0}
+          max={10}
+          defaultValue={habit?.skipDaysAllowed ?? 0}
+          className="w-24 rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-text"
+        />
+      </Field>
 
       <Field label={t("habit.fieldStartDate")}>
         <input

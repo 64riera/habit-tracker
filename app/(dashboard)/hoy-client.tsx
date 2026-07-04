@@ -2,10 +2,20 @@
 
 import { ContentHeader } from "@/components/nav/content-header";
 import { HabitCheckRow } from "@/components/habit/habit-check-row";
+import { RoutineQuickActions } from "@/components/habit/routine-quick-actions";
 import { useI18n } from "@/lib/i18n/client";
 import type { HabitWithExtras } from "@/lib/queries/habits";
+import type { RoutineToday } from "@/lib/queries/routines";
 
-export function HoyClient({ habits, date }: { habits: HabitWithExtras[]; date: string }) {
+export function HoyClient({
+  habits,
+  routines,
+  date,
+}: {
+  habits: HabitWithExtras[];
+  routines: RoutineToday[];
+  date: string;
+}) {
   const { t } = useI18n();
 
   const total = habits.length;
@@ -50,6 +60,8 @@ export function HoyClient({ habits, date }: { habits: HabitWithExtras[]; date: s
               {t("checkin.bestStreak", { days: best.streak.longest, habit: best.name })}
             </div>
           )}
+
+          <RoutineQuickActions routines={routines} date={date} />
 
           <div className="flex flex-col">
             {habits.map((habit) => (

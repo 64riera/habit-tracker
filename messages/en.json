@@ -72,6 +72,7 @@
     "deleteConfirm": "Archive this habit? You can restore it later.",
     "pin": "Pin",
     "unpin": "Unpin",
+    "reorder": "Reorder",
     "freqShort": {
       "daily": "daily",
       "everyNDays": "every {n} days",
@@ -85,6 +86,7 @@
     "summary": "{done} of {total} completed",
     "summaryWithProgress": "{done} of {total} completed · {inProgress} in progress",
     "markDone": "Mark done",
+    "moreOptions": "More options",
     "logStatus": {
       "done": "Done",
       "partial": "Partial",
@@ -106,7 +108,9 @@
   "streak": {
     "current": "Current streak",
     "longest": "Longest streak",
-    "days": "{count} days"
+    "days": "{count} days",
+    "newRecord": "New personal record!",
+    "toRecord": "{days} days to beat your record"
   },
   "history": {
     "heatmap": "Heatmap",
@@ -117,7 +121,8 @@
     "filterRange": "Last 90 days",
     "empty": "No records in this range.",
     "exportCsv": "Export CSV",
-    "exportJson": "Export JSON"
+    "exportJson": "Export JSON",
+    "cellLevel": "{date} — level {level} of 4"
   },
   "stats": {
     "last7": "7 days",
@@ -133,11 +138,13 @@
     "vsLastWeek": "vs. last week",
     "vsLastMonth": "vs. last month",
     "worstWeekday": "Weekday with most misses",
-    "moodCorrelation": "Correlation with low mood"
+    "moodCorrelation": "Correlation with low mood",
+    "bestMonthSoFar": "This is your best {month} yet"
   },
   "categories": {
     "manage": "Manage categories",
     "newCategory": "+ New category",
+    "confirmDelete": "Delete this category? Assigned habits will become uncategorized.",
     "fieldNameEs": "Name (Spanish)",
     "fieldNameEn": "Name (English)",
     "fieldColor": "Color",
@@ -153,8 +160,10 @@
     "newRoutine": "+ New routine",
     "fieldName": "Routine name",
     "markAllDone": "Mark whole routine",
+    "confirmDelete": "Delete this routine? Habits themselves are not affected.",
     "empty": "You don't have any routines yet.",
-    "completion": "Routine completion"
+    "completion": "Routine completion",
+    "completionPct": "30d completion: {pct}%"
   },
   "achievements": {
     "title": "Achievements",

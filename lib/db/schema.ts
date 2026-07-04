@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, real, uniqueIndex, index } from "drizzle-orm/sqlite-core";
 import { relations, sql } from "drizzle-orm";
 
 export const categories = sqliteTable("categories", {
@@ -10,30 +10,34 @@ export const categories = sqliteTable("categories", {
   sortOrder: integer("sort_order").notNull().default(0),
 });
 
-export const habits = sqliteTable("habits", {
-  id: text("id").primaryKey(),
-  categoryId: text("category_id").references(() => categories.id),
-  name: text("name").notNull(),
-  description: text("description"),
-  icon: text("icon"),
-  color: text("color"),
-  goalType: text("goal_type", { enum: ["binary", "quantitative", "duration"] }).notNull(),
-  goalTarget: real("goal_target"),
-  goalUnit: text("goal_unit"),
-  frequencyType: text("frequency_type", {
-    enum: ["daily", "weekdays", "x_per_week", "x_per_month", "custom_interval"],
-  }).notNull(),
-  frequencyConfig: text("frequency_config"), // JSON
-  reminders: text("reminders"), // JSON array of "HH:MM"
-  hardMode: integer("hard_mode", { mode: "boolean" }).notNull().default(false),
-  skipDaysAllowed: integer("skip_days_allowed").notNull().default(0),
-  startDate: text("start_date").notNull(),
-  endDate: text("end_date"),
-  status: text("status", { enum: ["active", "paused", "archived"] }).notNull().default("active"),
-  isPinned: integer("is_pinned", { mode: "boolean" }).notNull().default(false),
-  sortOrder: integer("sort_order").notNull().default(0),
-  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-});
+export const habits = sqliteTable(
+  "habits",
+  {
+    id: text("id").primaryKey(),
+    categoryId: text("category_id").references(() => categories.id),
+    name: text("name").notNull(),
+    description: text("description"),
+    icon: text("icon"),
+    color: text("color"),
+    goalType: text("goal_type", { enum: ["binary", "quantitative", "duration"] }).notNull(),
+    goalTarget: real("goal_target"),
+    goalUnit: text("goal_unit"),
+    frequencyType: text("frequency_type", {
+      enum: ["daily", "weekdays", "x_per_week", "x_per_month", "custom_interval"],
+    }).notNull(),
+    frequencyConfig: text("frequency_config"), // JSON
+    reminders: text("reminders"), // JSON array of "HH:MM"
+    hardMode: integer("hard_mode", { mode: "boolean" }).notNull().default(false),
+    skipDaysAllowed: integer("skip_days_allowed").notNull().default(0),
+    startDate: text("start_date").notNull(),
+    endDate: text("end_date"),
+    status: text("status", { enum: ["active", "paused", "archived"] }).notNull().default("active"),
+    isPinned: integer("is_pinned", { mode: "boolean" }).notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [index("habits_status_idx").on(t.status)]
+);
 
 export const habitLogs = sqliteTable(
   "habit_logs",
@@ -49,7 +53,10 @@ export const habitLogs = sqliteTable(
     mood: integer("mood"),
     loggedAt: text("logged_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
-  (t) => [uniqueIndex("habit_logs_habit_date_idx").on(t.habitId, t.date)]
+  (t) => [
+    uniqueIndex("habit_logs_habit_date_idx").on(t.habitId, t.date),
+    index("habit_logs_date_idx").on(t.date),
+  ]
 );
 
 export const habitStreaks = sqliteTable("habit_streaks", {

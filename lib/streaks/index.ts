@@ -2,11 +2,10 @@ import "server-only";
 import { and, eq, gte } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { habitLogs, habitStreaks, habits } from "@/lib/db/schema";
-import { dateRange, getTodayDateString } from "@/lib/date";
+import { dateRange, getTodayDateString, monthKey } from "@/lib/date";
 import { isDateApplicable } from "@/lib/habits/frequency";
+import { overLimitSkipDates, keepsStreakOn, FREEZE_MONTHLY_ALLOWANCE } from "@/lib/habits/status";
 import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
-
-const KEEPS_STREAK = new Set(["done", "partial", "justified", "skipped", "frozen"]);
 
 export type StreakResult = { current: number; longest: number };
 
@@ -28,6 +27,7 @@ export async function recalcStreakForHabit(habitId: string): Promise<StreakResul
   const applicableDates = dateRange(habit.startDate, today).filter((d) =>
     isDateApplicable(habit, d)
   );
+  const overLimit = overLimitSkipDates(habit, applicableDates, statusByDate);
 
   let longest = 0;
   let running = 0;
@@ -37,7 +37,7 @@ export async function recalcStreakForHabit(habitId: string): Promise<StreakResul
     const status = statusByDate.get(date);
     const isToday = date === today;
 
-    if (status && KEEPS_STREAK.has(status)) {
+    if (keepsStreakOn(status, date, overLimit)) {
       running += 1;
       longest = Math.max(longest, running);
     } else if (!status && isToday) {
@@ -48,17 +48,31 @@ export async function recalcStreakForHabit(habitId: string): Promise<StreakResul
   }
   current = running;
 
+  const currentMonth = monthKey(today);
+  const freezesUsedThisMonth = applicableDates.filter(
+    (date) => monthKey(date) === currentMonth && statusByDate.get(date) === "frozen"
+  ).length;
+  const freezesAvailable = Math.max(0, FREEZE_MONTHLY_ALLOWANCE - freezesUsedThisMonth);
+
   await db
     .insert(habitStreaks)
     .values({
       habitId,
       currentStreak: current,
       longestStreak: longest,
+      freezesAvailable,
+      freezesUsedThisMonth,
       lastComputedDate: today,
     })
     .onConflictDoUpdate({
       target: habitStreaks.habitId,
-      set: { currentStreak: current, longestStreak: longest, lastComputedDate: today },
+      set: {
+        currentStreak: current,
+        longestStreak: longest,
+        freezesAvailable,
+        freezesUsedThisMonth,
+        lastComputedDate: today,
+      },
     });
 
   return { current, longest };

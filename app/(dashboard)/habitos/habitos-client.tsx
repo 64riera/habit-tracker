@@ -1,21 +1,33 @@
 "use client";
 
+import { useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ContentHeader } from "@/components/nav/content-header";
+import { ReorderableList } from "@/components/ui/reorderable-list";
 import { useI18n } from "@/lib/i18n/client";
-import { categoryLabel, describeFrequency } from "@/lib/habits/describe";
+import { categoryDisplayName, describeFrequency } from "@/lib/habits/describe";
+import { reorderHabits, togglePinHabit } from "@/lib/actions/habits";
 import type { HabitWithExtras } from "@/lib/queries/habits";
 
-const CAT_COLOR: Record<string, string> = {
-  creatividad: "var(--color-cat-creatividad)",
-  fitness: "var(--color-cat-fitness)",
-  aprendizaje: "var(--color-cat-aprendizaje)",
-  estudio: "var(--color-cat-estudio)",
-  bienestar: "var(--color-cat-bienestar)",
-};
-
 export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
-  const { t, dict } = useI18n();
+  const { t, dict, locale } = useI18n();
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+
+  function handleReorder(orderedIds: string[]) {
+    startTransition(async () => {
+      await reorderHabits(orderedIds);
+      router.refresh();
+    });
+  }
+
+  function handleTogglePin(habitId: string, pinned: boolean) {
+    startTransition(async () => {
+      await togglePinHabit(habitId, pinned);
+      router.refresh();
+    });
+  }
 
   return (
     <div>
@@ -24,29 +36,49 @@ export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
       {habits.length === 0 ? (
         <p className="text-sm text-muted">{t("habit.empty")}</p>
       ) : (
-        <div className="flex flex-col gap-0.5">
-          {habits.map((habit) => {
-            const color = habit.categoryId
-              ? (CAT_COLOR[habit.categoryId] ?? "var(--color-text)")
-              : "var(--color-text)";
+        <ReorderableList
+          items={habits}
+          onReorder={handleReorder}
+          renderItem={(habit, dragHandleProps) => {
+            const color = habit.category?.color ?? "var(--color-text)";
             return (
-              <Link
-                key={habit.id}
-                href={`/habitos/${habit.id}`}
-                className="flex items-center gap-3 border-b border-border py-3"
-              >
-                <span
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-serif-italic text-[13px] font-semibold"
-                  style={{ background: `color-mix(in oklch, ${color} 16%, transparent)`, color }}
+              <div className="flex items-center gap-2.5 border-b border-border py-3">
+                <button
+                  type="button"
+                  onPointerDown={dragHandleProps.onPointerDown}
+                  onKeyDown={dragHandleProps.onKeyDown}
+                  className="shrink-0 cursor-grab select-none px-0.5 text-muted"
+                  style={{ touchAction: "none" }}
+                  aria-label={t("habit.reorder")}
                 >
-                  {habit.name.charAt(0).toUpperCase()}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-[13px] font-semibold">{habit.name}</div>
-                  <div className="mt-0.5 truncate text-[10.5px] text-muted">
-                    {categoryLabel(habit.categoryId, dict)} · {describeFrequency(habit, dict)}
+                  ⠿
+                </button>
+                <Link
+                  href={`/habitos/${habit.id}`}
+                  className="flex min-w-0 flex-1 items-center gap-3"
+                >
+                  <span
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-serif-italic text-[13px] font-semibold"
+                    style={{ background: `color-mix(in oklch, ${color} 16%, transparent)`, color }}
+                  >
+                    {habit.name.charAt(0).toUpperCase()}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[13px] font-semibold">{habit.name}</div>
+                    <div className="mt-0.5 truncate text-[10.5px] text-muted">
+                      {categoryDisplayName(habit.category, locale)} · {describeFrequency(habit, dict)}
+                    </div>
                   </div>
-                </div>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => handleTogglePin(habit.id, !habit.isPinned)}
+                  aria-label={habit.isPinned ? t("habit.unpin") : t("habit.pin")}
+                  className="shrink-0 text-sm"
+                  style={{ color: habit.isPinned ? "var(--color-accent)" : "var(--color-border)" }}
+                >
+                  ★
+                </button>
                 <div
                   className="shrink-0 text-[9.5px] font-semibold"
                   style={{
@@ -56,18 +88,38 @@ export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
                 >
                   {t(`habit.status.${habit.status}`)}
                 </div>
-              </Link>
+              </div>
             );
-          })}
-        </div>
+          }}
+        />
       )}
 
-      <Link
-        href="/habitos/nuevo"
-        className="mt-3.5 block rounded-xl border border-dashed border-border py-2.5 text-center text-xs text-muted"
-      >
-        {t("habit.newHabit")}
-      </Link>
+      <div className="mt-3.5 grid grid-cols-2 gap-2.5">
+        <Link
+          href="/habitos/nuevo"
+          className="rounded-xl border border-dashed border-border py-2.5 text-center text-xs text-muted"
+        >
+          {t("habit.newHabit")}
+        </Link>
+        <Link
+          href="/habitos/categorias"
+          className="rounded-xl border border-dashed border-border py-2.5 text-center text-xs text-muted"
+        >
+          {t("categories.manage")}
+        </Link>
+        <Link
+          href="/habitos/rutinas"
+          className="rounded-xl border border-dashed border-border py-2.5 text-center text-xs text-muted"
+        >
+          {t("routines.title")}
+        </Link>
+        <Link
+          href="/habitos/logros"
+          className="rounded-xl border border-dashed border-border py-2.5 text-center text-xs text-muted"
+        >
+          {t("achievements.title")}
+        </Link>
+      </div>
     </div>
   );
 }

@@ -72,6 +72,7 @@
     "deleteConfirm": "¿Archivar este hábito? Podrás restaurarlo luego.",
     "pin": "Destacar",
     "unpin": "Quitar destacado",
+    "reorder": "Reordenar",
     "freqShort": {
       "daily": "diario",
       "everyNDays": "cada {n} días",
@@ -85,6 +86,7 @@
     "summary": "{done} de {total} completados",
     "summaryWithProgress": "{done} de {total} completados · {inProgress} en progreso",
     "markDone": "Marcar hecho",
+    "moreOptions": "Más opciones",
     "logStatus": {
       "done": "Hecho",
       "partial": "Parcial",
@@ -106,7 +108,9 @@
   "streak": {
     "current": "Racha actual",
     "longest": "Racha máxima",
-    "days": "{count} días"
+    "days": "{count} días",
+    "newRecord": "¡Nuevo récord personal!",
+    "toRecord": "{days} días para superar tu récord"
   },
   "history": {
     "heatmap": "Mapa de calor",
@@ -117,7 +121,8 @@
     "filterRange": "Últimos 90 días",
     "empty": "Sin registros en este rango.",
     "exportCsv": "Exportar CSV",
-    "exportJson": "Exportar JSON"
+    "exportJson": "Exportar JSON",
+    "cellLevel": "{date} — nivel {level} de 4"
   },
   "stats": {
     "last7": "7 días",
@@ -133,11 +138,13 @@
     "vsLastWeek": "vs. semana anterior",
     "vsLastMonth": "vs. mes anterior",
     "worstWeekday": "Día con más fallos",
-    "moodCorrelation": "Correlación con ánimo bajo"
+    "moodCorrelation": "Correlación con ánimo bajo",
+    "bestMonthSoFar": "Llevas tu mejor {month} hasta ahora"
   },
   "categories": {
     "manage": "Gestionar categorías",
     "newCategory": "+ Nueva categoría",
+    "confirmDelete": "¿Eliminar esta categoría? Los hábitos asignados quedarán sin categoría.",
     "fieldNameEs": "Nombre (Español)",
     "fieldNameEn": "Nombre (Inglés)",
     "fieldColor": "Color",
@@ -153,8 +160,10 @@
     "newRoutine": "+ Nueva rutina",
     "fieldName": "Nombre de la rutina",
     "markAllDone": "Marcar toda la rutina",
+    "confirmDelete": "¿Eliminar esta rutina? Los hábitos no se ven afectados.",
     "empty": "Aún no tienes rutinas.",
-    "completion": "Cumplimiento de la rutina"
+    "completion": "Cumplimiento de la rutina",
+    "completionPct": "Cumplimiento 30d: {pct}%"
   },
   "achievements": {
     "title": "Logros",

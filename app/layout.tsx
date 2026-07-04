@@ -2,6 +2,10 @@ import type { Metadata, Viewport } from "next";
 import { Newsreader, Public_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { I18nProvider } from "@/lib/i18n/client";
+import { ToastProvider } from "@/lib/toast/client";
+import { OfflineProvider } from "@/lib/offline/client";
+import { RegisterServiceWorker } from "@/components/pwa/register-sw";
+import { OfflineIndicator } from "@/components/pwa/offline-indicator";
 import { getCurrentLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import "./globals.css";
@@ -52,7 +56,13 @@ export default async function RootLayout({
       <body className="min-h-full">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <I18nProvider locale={locale} dict={dict}>
-            {children}
+            <ToastProvider>
+              <OfflineProvider>
+                <RegisterServiceWorker />
+                <OfflineIndicator />
+                {children}
+              </OfflineProvider>
+            </ToastProvider>
           </I18nProvider>
         </ThemeProvider>
       </body>

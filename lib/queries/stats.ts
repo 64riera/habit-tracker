@@ -4,9 +4,8 @@ import { db } from "@/lib/db/client";
 import { habitLogs, habits, categories, habitStreaks } from "@/lib/db/schema";
 import { addDays, dateRange } from "@/lib/date";
 import { isDateApplicable } from "@/lib/habits/frequency";
+import { overLimitSkipDates, keepsStreakOn } from "@/lib/habits/status";
 import type { HabitRow } from "@/lib/queries/habits";
-
-const KEEPS_STREAK = new Set(["done", "partial", "justified", "skipped", "frozen"]);
 
 async function logsSince(habitIds: string[], from: string) {
   if (habitIds.length === 0) return [];
@@ -26,10 +25,8 @@ function completionRatio(
   if (start > to) return 0;
   const applicable = dateRange(start, to).filter((d) => isDateApplicable(habit, d));
   if (applicable.length === 0) return 0;
-  const kept = applicable.filter((d) => {
-    const s = logsByDate.get(d);
-    return s && KEEPS_STREAK.has(s);
-  }).length;
+  const overLimit = overLimitSkipDates(habit, applicable, logsByDate);
+  const kept = applicable.filter((d) => keepsStreakOn(logsByDate.get(d), d, overLimit)).length;
   return Math.round((kept / applicable.length) * 100);
 }
 
@@ -108,19 +105,26 @@ export async function getTrend(today: string, days: number): Promise<TrendPoint[
   const from = addDays(today, -(days - 1));
   const logs = await logsSince(ids, from);
 
-  const byDateHabit = new Map<string, Map<string, string>>();
+  const byHabit = new Map<string, Map<string, string>>();
   for (const log of logs) {
-    if (!byDateHabit.has(log.date)) byDateHabit.set(log.date, new Map());
-    byDateHabit.get(log.date)!.set(log.habitId, log.status);
+    if (!byHabit.has(log.habitId)) byHabit.set(log.habitId, new Map());
+    byHabit.get(log.habitId)!.set(log.date, log.status);
+  }
+
+  const overLimitByHabit = new Map<string, Set<string>>();
+  for (const h of activeHabits) {
+    const statusByDate = byHabit.get(h.id) ?? new Map();
+    const applicable = dateRange(from, today).filter((d) => isDateApplicable(h, d) && h.startDate <= d);
+    overLimitByHabit.set(h.id, overLimitSkipDates(h, applicable, statusByDate));
   }
 
   return dateRange(from, today).map((date) => {
     const applicable = activeHabits.filter((h) => isDateApplicable(h, date) && h.startDate <= date);
     if (applicable.length === 0) return { date, pct: 0 };
-    const statuses = byDateHabit.get(date) ?? new Map();
     const kept = applicable.filter((h) => {
-      const s = statuses.get(h.id);
-      return s && KEEPS_STREAK.has(s);
+      const statusByDate = byHabit.get(h.id) ?? new Map();
+      const overLimit = overLimitByHabit.get(h.id)!;
+      return keepsStreakOn(statusByDate.get(date), date, overLimit);
     }).length;
     return { date, pct: Math.round((kept / applicable.length) * 100) };
   });
