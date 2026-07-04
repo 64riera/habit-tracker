@@ -139,7 +139,8 @@
     "vsLastMonth": "vs. mes anterior",
     "worstWeekday": "Día con más fallos",
     "moodCorrelation": "Correlación con ánimo bajo",
-    "bestMonthSoFar": "Llevas tu mejor {month} hasta ahora"
+    "bestMonthSoFar": "Llevas tu mejor {month} hasta ahora",
+    "trendBarLabel": "{date}: {pct}%"
   },
   "categories": {
     "manage": "Gestionar categorías",

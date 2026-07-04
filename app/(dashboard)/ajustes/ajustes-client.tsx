@@ -2,6 +2,7 @@
 
 import { useTheme } from "next-themes";
 import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { ContentHeader } from "@/components/nav/content-header";
 import { useI18n } from "@/lib/i18n/client";
 import { logout } from "@/lib/actions/auth";
@@ -12,12 +13,15 @@ export function AjustesClient({ cutoffHour }: { cutoffHour: number }) {
   const { t, locale } = useI18n();
   const { resolvedTheme } = useTheme();
   const mounted = useHasMounted();
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   function onCutoffChange(hour: number) {
     startTransition(async () => {
       await setDayCutoffHour(hour);
-      window.location.reload();
+      // El corte del dia cambia que fecha es "hoy" para todas las paginas;
+      // router.refresh() vuelve a pedir esos datos sin recargar el navegador.
+      router.refresh();
     });
   }
 

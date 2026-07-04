@@ -139,7 +139,8 @@
     "vsLastMonth": "vs. last month",
     "worstWeekday": "Weekday with most misses",
     "moodCorrelation": "Correlation with low mood",
-    "bestMonthSoFar": "This is your best {month} yet"
+    "bestMonthSoFar": "This is your best {month} yet",
+    "trendBarLabel": "{date}: {pct}%"
   },
   "categories": {
     "manage": "Manage categories",

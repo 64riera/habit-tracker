@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { parseFrequencyConfig } from "@/lib/habits/frequency";
@@ -240,14 +241,22 @@ export function HabitForm({ action, categories, habit }: Props) {
       </label>
 
       <div className="mt-auto flex items-center gap-2.5 pt-3">
-        <button
-          type="submit"
-          className="rounded-lg bg-text px-5 py-2.5 text-[12.5px] font-semibold text-surface"
-        >
-          {t("common.save")}
-        </button>
+        <SaveButton label={t("common.save")} loadingLabel={t("common.loading")} />
       </div>
     </form>
+  );
+}
+
+function SaveButton({ label, loadingLabel }: { label: string; loadingLabel: string }) {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="rounded-lg bg-text px-5 py-2.5 text-[12.5px] font-semibold text-surface disabled:opacity-60"
+    >
+      {pending ? loadingLabel : label}
+    </button>
   );
 }
 

@@ -2,8 +2,14 @@
 
 import { createContext, useContext, useMemo, useState, useTransition } from "react";
 import type { Dictionary, Locale } from "./dictionaries";
+import esDict from "@/messages/es.json";
+import enDict from "@/messages/en.json";
 import { translate } from "./t";
 import { setLocale as setLocaleAction } from "@/lib/actions/preferences";
+
+// Ambos diccionarios viven en el cliente para que cambiar de idioma sea
+// instantaneo, sin depender de un reload ni de un round-trip al servidor.
+const DICTS = { es: esDict, en: enDict } as Record<Locale, Dictionary>;
 
 type I18nContextValue = {
   locale: Locale;
@@ -26,23 +32,24 @@ export function I18nProvider({
 }) {
   const [current, setCurrent] = useState(locale);
   const [isPending, startTransition] = useTransition();
+  const activeDict = DICTS[current] ?? dict;
 
   const value = useMemo<I18nContextValue>(
     () => ({
       locale: current,
-      dict,
-      t: (path, vars) => translate(dict, path, vars),
+      dict: activeDict,
+      t: (path, vars) => translate(activeDict, path, vars),
       setLocale: (next) => {
         setCurrent(next);
         startTransition(() => {
-          void setLocaleAction(next).then(() => {
-            window.location.reload();
-          });
+          // Persiste la preferencia para la proxima visita/SSR; la UI ya
+          // cambio de idioma de inmediato con el diccionario local.
+          void setLocaleAction(next);
         });
       },
       isPending,
     }),
-    [current, dict, isPending]
+    [current, activeDict, isPending]
   );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
