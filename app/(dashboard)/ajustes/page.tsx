@@ -1,11 +1,7 @@
-"use client";
+import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { AjustesClient } from "./ajustes-client";
 
-import { ContentHeader } from "@/components/nav/content-header";
-
-export default function AjustesPage() {
-  return (
-    <div>
-      <ContentHeader titleKey="screens.ajustes.title" subtitleKey="screens.ajustes.subtitle" />
-    </div>
-  );
+export default async function AjustesPage() {
+  const cutoffHour = await getDayCutoffHour();
+  return <AjustesClient cutoffHour={cutoffHour} />;
 }

@@ -1,14 +1,12 @@
-"use client";
+import { getAllHabitsForManagement } from "@/lib/queries/habits";
+import { getTodayDateString } from "@/lib/date";
+import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { HabitosClient } from "./habitos-client";
 
-import { ContentHeader } from "@/components/nav/content-header";
-import { useI18n } from "@/lib/i18n/client";
+export default async function HabitosPage() {
+  const cutoffHour = await getDayCutoffHour();
+  const today = getTodayDateString(cutoffHour);
+  const habits = await getAllHabitsForManagement(today);
 
-export default function HabitosPage() {
-  const { t } = useI18n();
-  return (
-    <div>
-      <ContentHeader titleKey="screens.habitos.title" subtitleKey="screens.habitos.subtitle" />
-      <p className="text-sm text-muted">{t("habit.empty")}</p>
-    </div>
-  );
+  return <HabitosClient habits={habits} />;
 }

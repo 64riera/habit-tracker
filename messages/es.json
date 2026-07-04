@@ -71,7 +71,15 @@
     "empty": "Aún no tienes hábitos. Crea el primero.",
     "deleteConfirm": "¿Archivar este hábito? Podrás restaurarlo luego.",
     "pin": "Destacar",
-    "unpin": "Quitar destacado"
+    "unpin": "Quitar destacado",
+    "freqShort": {
+      "daily": "diario",
+      "everyNDays": "cada {n} días",
+      "xPerWeek": "{n}x por semana",
+      "xPerMonth": "{n}x por mes",
+      "weekdaysShort": "días específicos"
+    },
+    "weekdayShort": { "1": "L", "2": "M", "3": "X", "4": "J", "5": "V", "6": "S", "7": "D" }
   },
   "checkin": {
     "summary": "{done} de {total} completados",

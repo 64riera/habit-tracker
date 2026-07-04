@@ -1,5 +1,23 @@
 # Fase 1 — MVP: Núcleo de Hábitos
 
+## Estado: ✅ COMPLETADA
+
+CRUD completo de hábitos (binario/cuantitativo/duración, todas las frecuencias del
+plan maestro), check-in de "Hoy" con UI optimista (1 tap para binarios, stepper de
+4 pasos para cuantitativos/duración), cálculo de rachas (`lib/streaks`) que ya
+respeta desde el inicio los estados `justified`/`skipped`/`frozen` de la Fase 2/3
+(evita rehacer el algoritmo más adelante), heatmap + calendario mensual en
+`/historial`, y tarjetas de % de cumplimiento (7/30/90 días) + racha por hábito en
+`/estadisticas`. Verificado end-to-end en navegador real (Playwright): crear
+hábito → aparece en Hoy → marcar hecho actualiza racha y heatmap sin recargar →
+editar/archivar hábito → estadísticas reflejan los datos reales.
+
+Nota: el motor de rachas y el heatmap ya soportan los 6 estados de registro del
+esquema (`done/partial/missed/justified/skipped/frozen`) aunque la UI de Fase 1
+sólo produce `done`/`partial` — la Fase 2 añade los controles para que el usuario
+elija `justified`/`skipped` explícitamente.
+
+
 ## Objetivo
 Tener la funcionalidad mínima usable a diario: crear hábitos, marcarlos como hechos, ver racha actual y un historial visual básico. Al terminar esta fase, la app ya reemplaza cualquier lista/checklist manual que uses hoy.
 

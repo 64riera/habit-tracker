@@ -1,14 +1,33 @@
-"use client";
+import { getActiveHabits } from "@/lib/queries/habits";
+import { getCalendarMonth, getHeatmapRange, getRecentLog } from "@/lib/queries/history";
+import { addDays, getTodayDateString, startOfMonth } from "@/lib/date";
+import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { HistorialClient } from "./historial-client";
 
-import { ContentHeader } from "@/components/nav/content-header";
-import { useI18n } from "@/lib/i18n/client";
+export default async function HistorialPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ habit?: string }>;
+}) {
+  const { habit: habitId } = await searchParams;
+  const cutoffHour = await getDayCutoffHour();
+  const today = getTodayDateString(cutoffHour);
 
-export default function HistorialPage() {
-  const { t } = useI18n();
+  const [habits, heatmap, calendar, log] = await Promise.all([
+    getActiveHabits(today),
+    getHeatmapRange(addDays(today, -139), today, habitId),
+    getCalendarMonth(startOfMonth(today), today, habitId),
+    getRecentLog(20, habitId),
+  ]);
+
   return (
-    <div>
-      <ContentHeader titleKey="screens.historial.title" subtitleKey="screens.historial.subtitle" />
-      <p className="text-sm text-muted">{t("history.empty")}</p>
-    </div>
+    <HistorialClient
+      habits={habits}
+      heatmap={heatmap}
+      calendar={calendar}
+      log={log}
+      selectedHabit={habitId ?? ""}
+      today={today}
+    />
   );
 }

@@ -1,14 +1,20 @@
-"use client";
+import { getTodayDateString } from "@/lib/date";
+import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { getCategoryStats, getHabitStatCards, getOverallStats, getTrend } from "@/lib/queries/stats";
+import { EstadisticasClient } from "./estadisticas-client";
 
-import { ContentHeader } from "@/components/nav/content-header";
+export default async function EstadisticasPage() {
+  const cutoffHour = await getDayCutoffHour();
+  const today = getTodayDateString(cutoffHour);
 
-export default function EstadisticasPage() {
+  const [overall, trend, categories, cards] = await Promise.all([
+    getOverallStats(today),
+    getTrend(today, 14),
+    getCategoryStats(today, 30),
+    getHabitStatCards(today),
+  ]);
+
   return (
-    <div>
-      <ContentHeader
-        titleKey="screens.estadisticas.title"
-        subtitleKey="screens.estadisticas.subtitle"
-      />
-    </div>
+    <EstadisticasClient overall={overall} trend={trend} categories={categories} cards={cards} />
   );
 }

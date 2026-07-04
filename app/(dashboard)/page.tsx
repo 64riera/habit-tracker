@@ -1,14 +1,12 @@
-"use client";
+import { getHabitsForToday } from "@/lib/queries/habits";
+import { getTodayDateString } from "@/lib/date";
+import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { HoyClient } from "./hoy-client";
 
-import { ContentHeader } from "@/components/nav/content-header";
-import { useI18n } from "@/lib/i18n/client";
+export default async function HoyPage() {
+  const cutoffHour = await getDayCutoffHour();
+  const today = getTodayDateString(cutoffHour);
+  const habits = await getHabitsForToday(today);
 
-export default function HoyPage() {
-  const { t } = useI18n();
-  return (
-    <div>
-      <ContentHeader titleKey="screens.hoy.title" subtitleKey="screens.hoy.subtitle" />
-      <p className="text-sm text-muted">{t("checkin.noHabitsToday")}</p>
-    </div>
-  );
+  return <HoyClient habits={habits} date={today} />;
 }
