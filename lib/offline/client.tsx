@@ -73,9 +73,9 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
         if (result && "unlocked" in result) notifyAchievements(result.unlocked);
         await removeQueuedMutation(mutation.id);
       }
-      await refreshPendingCount();
-      router.refresh();
       if (queued.length > 0) {
+        await refreshPendingCount();
+        router.refresh();
         setJustSynced(true);
         setTimeout(() => setJustSynced(false), SYNCED_BANNER_MS);
       }
@@ -93,11 +93,19 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
     refreshPendingCount();
   }, [refreshPendingCount]);
 
+  // `drainQueue` se recrea cuando cambian sus dependencias (p. ej. `t` tras un
+  // router.refresh()); guardarlo en un ref evita que ese cambio de identidad
+  // por sí solo dispare el efecto de abajo, lo que causaba un ciclo:
+  // refresh -> nuevo `t` -> nuevo drainQueue -> efecto -> refresh -> ...
+  const drainQueueRef = useRef(drainQueue);
+  useEffect(() => {
+    drainQueueRef.current = drainQueue;
+  });
+
   useEffect(() => {
     // Reintenta la cola cuando el navegador recupera conexión (evento externo real).
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (isOnline) drainQueue();
-  }, [isOnline, drainQueue]);
+    if (isOnline) drainQueueRef.current();
+  }, [isOnline]);
 
   const runOrQueue = useCallback(
     async (mutation: QueuedMutation) => {
