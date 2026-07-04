@@ -14,7 +14,7 @@ export default async function RutinasPage() {
   return (
     <div>
       <RutinasClient routines={routines} />
-      <div className="mt-6 border-t border-border pt-5">
+      <div id="crear-rutina" className="mt-6 scroll-mt-6 border-t border-border pt-5">
         <RoutineForm action={createRoutine} habits={habits} />
       </div>
     </div>

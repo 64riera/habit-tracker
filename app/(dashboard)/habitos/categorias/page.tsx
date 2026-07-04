@@ -9,7 +9,7 @@ export default async function CategoriasPage() {
   return (
     <div>
       <CategoriasClient categories={categories} />
-      <div className="mt-6 border-t border-border pt-5">
+      <div id="crear-categoria" className="mt-6 scroll-mt-6 border-t border-border pt-5">
         <CategoryForm action={createCategory} />
       </div>
     </div>

@@ -8,7 +8,7 @@ export default async function NuevoHabitoPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <ContentHeader titleKey="habit.newHabit" subtitleKey="screens.habitos.subtitle" />
+      <ContentHeader titleKey="habit.newHabit" subtitleKey="habit.newHabitSubtitle" />
       <HabitForm action={createHabit} categories={categories} />
     </div>
   );

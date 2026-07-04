@@ -7,7 +7,7 @@ import { ContentHeader } from "@/components/nav/content-header";
 import { ReorderableList } from "@/components/ui/reorderable-list";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName, describeFrequency } from "@/lib/habits/describe";
-import { reorderHabits, togglePinHabit } from "@/lib/actions/habits";
+import { reorderHabits, restoreHabit, togglePinHabit } from "@/lib/actions/habits";
 import type { HabitWithExtras } from "@/lib/queries/habits";
 
 export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
@@ -15,6 +15,10 @@ export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [pinnedOverrides, setPinnedOverrides] = useState<Record<string, boolean>>({});
+  const [restoredIds, setRestoredIds] = useState<Set<string>>(new Set());
+
+  const visibleHabits = habits.filter((h) => h.status !== "archived");
+  const archivedHabits = habits.filter((h) => h.status === "archived" && !restoredIds.has(h.id));
 
   function handleReorder(orderedIds: string[]) {
     startTransition(async () => {
@@ -31,15 +35,23 @@ export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
     });
   }
 
+  function handleRestore(habitId: string) {
+    setRestoredIds((prev) => new Set(prev).add(habitId));
+    startTransition(async () => {
+      await restoreHabit(habitId);
+      router.refresh();
+    });
+  }
+
   return (
     <div>
       <ContentHeader titleKey="screens.habitos.title" subtitleKey="screens.habitos.subtitle" />
 
-      {habits.length === 0 ? (
+      {visibleHabits.length === 0 ? (
         <p className="text-sm text-muted">{t("habit.empty")}</p>
       ) : (
         <ReorderableList
-          items={habits}
+          items={visibleHabits}
           onReorder={handleReorder}
           renderItem={(habit, dragHandleProps) => {
             const color = habit.category?.color ?? "var(--color-text)";
@@ -95,6 +107,33 @@ export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
             );
           }}
         />
+      )}
+
+      {archivedHabits.length > 0 && (
+        <div className="mt-5">
+          <div className="mb-1 text-[10px] tracking-wide text-muted uppercase">
+            {t("habit.archivedSection")}
+          </div>
+          <div className="flex flex-col">
+            {archivedHabits.map((habit) => (
+              <div
+                key={habit.id}
+                className="flex items-center gap-2.5 border-b border-border py-3 opacity-60"
+              >
+                <div className="min-w-0 flex-1 truncate text-[13px] font-semibold">
+                  {habit.name}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRestore(habit.id)}
+                  className="shrink-0 rounded-full border border-border px-3 py-1 text-[11px] font-medium text-muted"
+                >
+                  {t("habit.restore")}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       <div className="mt-3.5 grid grid-cols-2 gap-2.5">

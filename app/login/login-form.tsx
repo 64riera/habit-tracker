@@ -30,7 +30,11 @@ export function LoginForm({ next }: { next: string }) {
         placeholder={t("auth.pinLabel")}
         className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-center text-sm tracking-widest outline-none focus:border-text"
       />
-      {state.error && <div className="text-xs text-cat-fitness">{t("auth.error")}</div>}
+      {state.error && (
+        <div role="alert" className="text-xs text-cat-fitness">
+          {t("auth.error")}
+        </div>
+      )}
       <button
         type="submit"
         disabled={pending}

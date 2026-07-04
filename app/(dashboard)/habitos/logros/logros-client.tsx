@@ -19,7 +19,7 @@ export function LogrosClient({ habits }: { habits: HabitAchievements[] }) {
 
   return (
     <div>
-      <ContentHeader titleKey="achievements.title" subtitleKey="screens.habitos.subtitle" />
+      <ContentHeader titleKey="achievements.title" subtitleKey="achievements.subtitle" />
 
       {habits.length === 0 ? (
         <p className="text-sm text-muted">{t("habit.empty")}</p>

@@ -11,7 +11,15 @@ export function CategoriasClient({ categories }: { categories: CategoryRow[] }) 
 
   return (
     <div>
-      <ContentHeader titleKey="categories.manage" subtitleKey="screens.habitos.subtitle" />
+      <ContentHeader titleKey="categories.manage" subtitleKey="categories.subtitle" />
+      <div className="mb-3 flex justify-end">
+        <a
+          href="#crear-categoria"
+          className="rounded-full border border-dashed border-border px-3 py-1.5 text-[11px] text-muted"
+        >
+          {t("categories.newCategory")}
+        </a>
+      </div>
       <div className="flex flex-col gap-0.5">
         {categories.map((c) => (
           <Link
@@ -29,7 +37,7 @@ export function CategoriasClient({ categories }: { categories: CategoryRow[] }) 
           </Link>
         ))}
         {categories.length === 0 && (
-          <p className="py-2 text-sm text-muted">{t("categories.newCategory")}</p>
+          <p className="py-2 text-sm text-muted">{t("categories.empty")}</p>
         )}
       </div>
     </div>

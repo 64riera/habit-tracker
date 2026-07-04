@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ContentHeader } from "@/components/nav/content-header";
 import { HabitCheckRow } from "@/components/habit/habit-check-row";
 import { RoutineQuickActions } from "@/components/habit/routine-quick-actions";
@@ -33,7 +34,15 @@ export function HoyClient({
       <ContentHeader titleKey="screens.hoy.title" subtitleKey="screens.hoy.subtitle" />
 
       {total === 0 ? (
-        <p className="text-sm text-muted">{t("checkin.noHabitsToday")}</p>
+        <div className="flex flex-col items-start gap-3">
+          <p className="text-sm text-muted">{t("checkin.noHabitsToday")}</p>
+          <Link
+            href="/habitos/nuevo"
+            className="rounded-full border border-dashed border-border px-4 py-2 text-xs text-muted"
+          >
+            {t("habit.newHabit")}
+          </Link>
+        </div>
       ) : (
         <div className="flex flex-col gap-4 md:gap-[22px]">
           <div>

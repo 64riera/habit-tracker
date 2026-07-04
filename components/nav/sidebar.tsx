@@ -20,6 +20,7 @@ export function Sidebar({ streakMax }: { streakMax?: number | null }) {
             <Link
               key={item.key}
               href={item.href}
+              aria-current={active ? "page" : undefined}
               className={cn(
                 "border-b border-transparent py-2.5 text-sm font-medium transition-colors",
                 active ? "text-accent" : "text-muted"

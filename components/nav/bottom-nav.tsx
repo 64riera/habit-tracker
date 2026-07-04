@@ -11,15 +11,16 @@ export function BottomNav() {
   const { t } = useI18n();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 flex justify-around border-t border-border bg-bg px-2.5 py-3.5 md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-20 flex border-t border-border bg-bg px-1 md:hidden">
       {NAV_ITEMS.map((item) => {
         const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
         return (
           <Link
             key={item.key}
             href={item.href}
+            aria-current={active ? "page" : undefined}
             className={cn(
-              "text-[9.5px] font-semibold transition-colors",
+              "flex min-h-11 flex-1 items-center justify-center py-2.5 text-[9.5px] font-semibold transition-colors",
               active ? "text-accent" : "text-muted"
             )}
           >

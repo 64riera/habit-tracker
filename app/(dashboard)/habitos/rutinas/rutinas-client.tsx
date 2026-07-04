@@ -10,7 +10,15 @@ export function RutinasClient({ routines }: { routines: RoutineWithStats[] }) {
 
   return (
     <div>
-      <ContentHeader titleKey="routines.title" subtitleKey="screens.habitos.subtitle" />
+      <ContentHeader titleKey="routines.title" subtitleKey="routines.subtitle" />
+      <div className="mb-3 flex justify-end">
+        <a
+          href="#crear-rutina"
+          className="rounded-full border border-dashed border-border px-3 py-1.5 text-[11px] text-muted"
+        >
+          {t("routines.newRoutine")}
+        </a>
+      </div>
       <div className="flex flex-col gap-0.5">
         {routines.map((r) => (
           <Link

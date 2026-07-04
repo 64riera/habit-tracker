@@ -1,18 +1,16 @@
 "use client";
 
-import { useTheme } from "next-themes";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ContentHeader } from "@/components/nav/content-header";
+import { ThemeToggle } from "@/components/nav/theme-toggle";
+import { LangToggle } from "@/components/nav/lang-toggle";
 import { useI18n } from "@/lib/i18n/client";
 import { logout } from "@/lib/actions/auth";
 import { setDayCutoffHour } from "@/lib/actions/preferences";
-import { useHasMounted } from "@/lib/hooks/use-has-mounted";
 
 export function AjustesClient({ cutoffHour }: { cutoffHour: number }) {
-  const { t, locale } = useI18n();
-  const { resolvedTheme } = useTheme();
-  const mounted = useHasMounted();
+  const { t } = useI18n();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -25,23 +23,11 @@ export function AjustesClient({ cutoffHour }: { cutoffHour: number }) {
     });
   }
 
+  // Tema e idioma usan los mismos controles interactivos del header, para
+  // que esta fila haga lo que dice en vez de solo mostrar el valor actual.
   const rows: { label: string; sub?: string; control: React.ReactNode }[] = [
-    {
-      label: t("settings.theme"),
-      control: (
-        <span className="text-[12.5px] font-medium text-muted">
-          {mounted && resolvedTheme === "dark" ? t("settings.themeDark") : t("settings.themeLight")}
-        </span>
-      ),
-    },
-    {
-      label: t("settings.language"),
-      control: (
-        <span className="text-[12.5px] font-medium text-muted">
-          {locale === "es" ? "Español" : "English"}
-        </span>
-      ),
-    },
+    { label: t("settings.theme"), control: <ThemeToggle /> },
+    { label: t("settings.language"), control: <LangToggle /> },
     {
       label: t("settings.dayCutoff"),
       sub: t("settings.dayCutoffSub"),
@@ -59,10 +45,6 @@ export function AjustesClient({ cutoffHour }: { cutoffHour: number }) {
           ))}
         </select>
       ),
-    },
-    {
-      label: t("settings.reminders"),
-      control: <span className="text-[12.5px] font-medium text-muted">{t("settings.remindersOn")}</span>,
     },
   ];
 

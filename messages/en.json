@@ -47,6 +47,7 @@
   },
   "habit": {
     "newHabit": "+ New habit",
+    "newHabitSubtitle": "Set up how you want to track it",
     "editHabit": "Edit habit",
     "fieldName": "Name",
     "fieldDescription": "Description",
@@ -70,9 +71,12 @@
     "status": { "active": "Active", "paused": "Paused", "archived": "Archived" },
     "empty": "You don't have any habits yet. Create the first one.",
     "deleteConfirm": "Archive this habit? You can restore it later.",
+    "formError": "Check the fields: the name is missing or a value isn't valid.",
     "pin": "Pin",
     "unpin": "Unpin",
     "reorder": "Reorder",
+    "archivedSection": "Archived",
+    "restore": "Restore",
     "freqShort": {
       "daily": "daily",
       "everyNDays": "every {n} days",
@@ -144,7 +148,9 @@
   },
   "categories": {
     "manage": "Manage categories",
+    "subtitle": "Organize and color your habits",
     "newCategory": "+ New category",
+    "empty": "You don't have any categories yet.",
     "confirmDelete": "Delete this category? Assigned habits will become uncategorized.",
     "fieldNameEs": "Name (Spanish)",
     "fieldNameEn": "Name (English)",
@@ -158,6 +164,7 @@
   },
   "routines": {
     "title": "Routines",
+    "subtitle": "Group habits to check them together",
     "newRoutine": "+ New routine",
     "fieldName": "Routine name",
     "markAllDone": "Mark whole routine",
@@ -168,6 +175,7 @@
   },
   "achievements": {
     "title": "Achievements",
+    "subtitle": "Milestones you unlock with your streaks",
     "unlockedOn": "Unlocked on {date}",
     "locked": "Not yet earned",
     "toastTitle": "New achievement unlocked!",
@@ -186,9 +194,6 @@
     "language": "Language",
     "dayCutoff": "Day cutoff time",
     "dayCutoffSub": "\"Today\" ends at this hour",
-    "reminders": "Reminders",
-    "remindersOn": "On",
-    "remindersOff": "Off",
     "exportHistory": "Export history",
     "lastSync": "Last synced",
     "logout": "Log out",

@@ -28,6 +28,8 @@ function buildFrequencyConfig(input: {
   }
 }
 
+export type HabitFormState = { error?: string };
+
 function parseFormData(formData: FormData) {
   const weekdays = formData.getAll("weekdays").map(Number);
   return habitFormSchema.parse({
@@ -49,8 +51,16 @@ function parseFormData(formData: FormData) {
   });
 }
 
-export async function createHabit(formData: FormData) {
-  const values = parseFormData(formData);
+export async function createHabit(
+  _prevState: HabitFormState,
+  formData: FormData
+): Promise<HabitFormState> {
+  let values;
+  try {
+    values = parseFormData(formData);
+  } catch {
+    return { error: "invalid" };
+  }
   const frequencyConfig = buildFrequencyConfig(values);
 
   await db.insert(habits).values({
@@ -76,8 +86,17 @@ export async function createHabit(formData: FormData) {
   redirect("/habitos");
 }
 
-export async function updateHabit(habitId: string, formData: FormData) {
-  const values = parseFormData(formData);
+export async function updateHabit(
+  habitId: string,
+  _prevState: HabitFormState,
+  formData: FormData
+): Promise<HabitFormState> {
+  let values;
+  try {
+    values = parseFormData(formData);
+  } catch {
+    return { error: "invalid" };
+  }
   const frequencyConfig = buildFrequencyConfig(values);
 
   await db

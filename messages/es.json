@@ -47,6 +47,7 @@
   },
   "habit": {
     "newHabit": "+ Nuevo hábito",
+    "newHabitSubtitle": "Configura cómo quieres seguirlo",
     "editHabit": "Editar hábito",
     "fieldName": "Nombre",
     "fieldDescription": "Descripción",
@@ -70,9 +71,12 @@
     "status": { "active": "Activo", "paused": "Pausado", "archived": "Archivado" },
     "empty": "Aún no tienes hábitos. Crea el primero.",
     "deleteConfirm": "¿Archivar este hábito? Podrás restaurarlo luego.",
+    "formError": "Revisa los campos: falta el nombre o algún valor no es válido.",
     "pin": "Destacar",
     "unpin": "Quitar destacado",
     "reorder": "Reordenar",
+    "archivedSection": "Archivados",
+    "restore": "Restaurar",
     "freqShort": {
       "daily": "diario",
       "everyNDays": "cada {n} días",
@@ -144,7 +148,9 @@
   },
   "categories": {
     "manage": "Gestionar categorías",
+    "subtitle": "Organiza y colorea tus hábitos",
     "newCategory": "+ Nueva categoría",
+    "empty": "Aún no tienes categorías.",
     "confirmDelete": "¿Eliminar esta categoría? Los hábitos asignados quedarán sin categoría.",
     "fieldNameEs": "Nombre (Español)",
     "fieldNameEn": "Nombre (Inglés)",
@@ -158,6 +164,7 @@
   },
   "routines": {
     "title": "Rutinas",
+    "subtitle": "Agrupa hábitos para marcarlos juntos",
     "newRoutine": "+ Nueva rutina",
     "fieldName": "Nombre de la rutina",
     "markAllDone": "Marcar toda la rutina",
@@ -168,6 +175,7 @@
   },
   "achievements": {
     "title": "Logros",
+    "subtitle": "Hitos que desbloqueas con tus rachas",
     "unlockedOn": "Desbloqueado el {date}",
     "locked": "Aún por lograr",
     "toastTitle": "¡Nuevo logro desbloqueado!",
@@ -186,9 +194,6 @@
     "language": "Idioma",
     "dayCutoff": "Hora de corte del día",
     "dayCutoffSub": "El día \"de hoy\" termina a esta hora",
-    "reminders": "Recordatorios",
-    "remindersOn": "Activados",
-    "remindersOff": "Desactivados",
     "exportHistory": "Exportar historial",
     "lastSync": "Última sincronización",
     "logout": "Cerrar sesión",

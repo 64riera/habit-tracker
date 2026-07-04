@@ -1,16 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { parseFrequencyConfig } from "@/lib/habits/frequency";
 import { cn } from "@/lib/utils";
 import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
+import type { HabitFormState } from "@/lib/actions/habits";
 import { toISODate } from "@/lib/date";
 
 type Props = {
-  action: (formData: FormData) => void | Promise<void>;
+  action: (state: HabitFormState, formData: FormData) => Promise<HabitFormState>;
   categories: CategoryRow[];
   habit?: HabitWithExtras;
 };
@@ -21,6 +22,7 @@ const FREQ_TYPES = ["daily", "weekdays", "x_per_week", "x_per_month", "custom_in
 export function HabitForm({ action, categories, habit }: Props) {
   const { t, locale } = useI18n();
   const cfg = parseFrequencyConfig(habit?.frequencyConfig ?? null);
+  const [state, formAction] = useActionState(action, {});
 
   const [goalType, setGoalType] = useState(habit?.goalType ?? "binary");
   const [frequencyType, setFrequencyType] = useState(habit?.frequencyType ?? "daily");
@@ -30,10 +32,19 @@ export function HabitForm({ action, categories, habit }: Props) {
   const [isPinned, setIsPinned] = useState(habit?.isPinned ?? false);
 
   return (
-    <form action={action} className="flex flex-1 flex-col gap-5 min-w-0">
+    <form action={formAction} className="flex flex-1 flex-col gap-5 min-w-0">
       <div className="text-sm font-semibold">
         {habit ? t("habit.editHabit") : t("habit.newHabit")}
       </div>
+
+      {state.error && (
+        <div
+          role="alert"
+          className="rounded-lg border border-cat-fitness/40 px-3.5 py-2.5 text-[12px] text-cat-fitness"
+        >
+          {t("habit.formError")}
+        </div>
+      )}
 
       <Field label={t("habit.fieldName")}>
         <input
@@ -267,11 +278,27 @@ export function ArchiveHabitButton({
 }) {
   const { t } = useI18n();
   return (
-    <form action={action}>
-      <button type="submit" className="px-4 py-2.5 text-[12.5px] text-muted">
-        {t("common.archive")}
-      </button>
+    <form
+      action={action}
+      onSubmit={(e) => {
+        if (!confirm(t("habit.deleteConfirm"))) e.preventDefault();
+      }}
+    >
+      <ArchiveSubmitButton label={t("common.archive")} loadingLabel={t("common.loading")} />
     </form>
+  );
+}
+
+function ArchiveSubmitButton({ label, loadingLabel }: { label: string; loadingLabel: string }) {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="px-4 py-2.5 text-[12.5px] text-muted disabled:opacity-60"
+    >
+      {pending ? loadingLabel : label}
+    </button>
   );
 }
 

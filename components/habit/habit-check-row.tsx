@@ -149,7 +149,7 @@ export function HabitCheckRow({ habit, date, compact }: Props) {
             aria-label={t("checkin.moreOptions")}
             aria-expanded={editorOpen}
             onClick={() => setEditorOpen((v) => !v)}
-            className="shrink-0 text-sm text-muted"
+            className="-m-2 shrink-0 p-2 text-sm text-muted"
           >
             ⋯
           </button>
@@ -159,14 +159,18 @@ export function HabitCheckRow({ habit, date, compact }: Props) {
           aria-label={t("checkin.markDone")}
           onClick={handleClick}
           disabled={isPending}
-          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors md:h-7 md:w-7"
-          style={{ borderColor: visual.border, background: visual.background }}
+          className="-m-2 flex shrink-0 items-center justify-center p-2"
         >
-          {visual.icon && (
-            <span className="text-[11px]" style={{ color: visual.iconColor }}>
-              {visual.icon}
-            </span>
-          )}
+          <span
+            className="flex h-6 w-6 items-center justify-center rounded-full border-[1.5px] transition-colors md:h-7 md:w-7"
+            style={{ borderColor: visual.border, background: visual.background }}
+          >
+            {visual.icon && (
+              <span className="text-[11px]" style={{ color: visual.iconColor }}>
+                {visual.icon}
+              </span>
+            )}
+          </span>
         </button>
       </div>
       {editorOpen && (
