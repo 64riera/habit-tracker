@@ -35,12 +35,11 @@ export async function maybeUnlockAchievements(
 ): Promise<AchievementType[]> {
   const unlocked: AchievementType[] = [];
 
-  const [streak] = await db
-    .select()
-    .from(habitStreaks)
-    .where(eq(habitStreaks.habitId, habitId))
-    .limit(1);
-  if (!streak) return unlocked;
+  const [[streak], [habit]] = await Promise.all([
+    db.select().from(habitStreaks).where(eq(habitStreaks.habitId, habitId)).limit(1),
+    db.select().from(habits).where(eq(habits.id, habitId)).limit(1),
+  ]);
+  if (!streak || !habit) return unlocked;
 
   for (const milestone of STREAK_MILESTONES) {
     if (streak.currentStreak >= milestone.days && !(await alreadyUnlocked(habitId, milestone.type))) {
@@ -56,7 +55,7 @@ export async function maybeUnlockAchievements(
     }
   }
 
-  if (await checkPerfectMonth(habitId)) {
+  if (await checkPerfectMonth(habit)) {
     if (!(await alreadyUnlocked(habitId, "perfect_month"))) {
       await unlock(habitId, "perfect_month");
       unlocked.push("perfect_month");
@@ -66,32 +65,30 @@ export async function maybeUnlockAchievements(
   return unlocked;
 }
 
-async function checkPerfectMonth(habitId: string): Promise<boolean> {
-  const [habit] = await db.select().from(habits).where(eq(habits.id, habitId)).limit(1);
-  if (!habit) return false;
-
+async function checkPerfectMonth(habit: typeof habits.$inferSelect): Promise<boolean> {
   const cutoffHour = await getDayCutoffHour();
   const today = getTodayDateString(cutoffHour);
   const currentMonth = monthKey(today);
   const monthStart = `${currentMonth}-01`;
   if (monthStart < habit.startDate) return false;
 
-  // Sólo se evalúa el mes si ya se completó (hoy pertenece al mes siguiente)
-  // o si estamos en el último día calendario aplicable del mes.
+  // Corte por fechas (sin tocar la base) antes del scan de logs: evita una
+  // consulta completa del historial en cada check-in durante la primera
+  // semana de cada mes, cuando el mes no puede ser "perfecto" todavía.
+  const daysInMonth = dateRange(monthStart, today).filter((d) => monthKey(d) === currentMonth);
+  const applicable = daysInMonth.filter((d) => isDateApplicable(habit, d) && d <= today);
+  if (applicable.length < 7) return false; // evita falsos positivos muy al inicio del mes
+
   const logs = await db
     .select({ date: habitLogs.date, status: habitLogs.status })
     .from(habitLogs)
-    .where(eq(habitLogs.habitId, habitId));
+    .where(eq(habitLogs.habitId, habit.id));
   const statusByDate = new Map(logs.map((l) => [l.date, l.status]));
 
   // El límite de skips se calcula sobre todo el historial del hábito, ya que un
   // período semanal puede empezar antes del mes en curso.
   const allApplicable = dateRange(habit.startDate, today).filter((d) => isDateApplicable(habit, d));
   const overLimit = overLimitSkipDates(habit, allApplicable, statusByDate);
-
-  const daysInMonth = dateRange(monthStart, today).filter((d) => monthKey(d) === currentMonth);
-  const applicable = daysInMonth.filter((d) => isDateApplicable(habit, d) && d <= today);
-  if (applicable.length < 7) return false; // evita falsos positivos muy al inicio del mes
 
   return applicable.every((d) => {
     const status = statusByDate.get(d);
