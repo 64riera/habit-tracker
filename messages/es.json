@@ -1,0 +1,189 @@
+{
+  "app": {
+    "name": "Hábito.",
+    "tagline": "Editorial Calma"
+  },
+  "nav": {
+    "hoy": "Hoy",
+    "historial": "Historial",
+    "estadisticas": "Estadísticas",
+    "habitos": "Hábitos",
+    "ajustes": "Ajustes"
+  },
+  "screens": {
+    "hoy": { "title": "Hoy", "subtitle": "Registro diario sin fricción" },
+    "historial": { "title": "Historial", "subtitle": "Cada día, con contexto" },
+    "estadisticas": { "title": "Estadísticas", "subtitle": "Progreso a lo largo del tiempo" },
+    "habitos": { "title": "Hábitos", "subtitle": "Gestiona y personaliza" },
+    "habitoDetalle": { "title": "Editar hábito", "subtitle": "Ajusta los detalles de tu hábito" },
+    "ajustes": { "title": "Ajustes", "subtitle": "Apariencia, idioma y datos" }
+  },
+  "common": {
+    "save": "Guardar cambios",
+    "cancel": "Cancelar",
+    "archive": "Archivar hábito",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "new": "Nuevo",
+    "loading": "Cargando…",
+    "days": "días",
+    "day": "día",
+    "back": "Volver",
+    "all": "Todos",
+    "confirm": "Confirmar",
+    "optional": "opcional",
+    "yes": "Sí",
+    "no": "No",
+    "export": "Exportar",
+    "filter": "Filtrar"
+  },
+  "auth": {
+    "title": "Hábito.",
+    "subtitle": "Ingresa tu PIN para continuar",
+    "pinLabel": "PIN de acceso",
+    "submit": "Entrar",
+    "error": "PIN incorrecto"
+  },
+  "habit": {
+    "newHabit": "+ Nuevo hábito",
+    "editHabit": "Editar hábito",
+    "fieldName": "Nombre",
+    "fieldDescription": "Descripción",
+    "fieldCategory": "Categoría",
+    "fieldGoalType": "Tipo de meta",
+    "fieldGoal": "Objetivo",
+    "fieldGoalUnit": "Unidad",
+    "fieldFrequency": "Frecuencia",
+    "fieldReminder": "Recordatorio",
+    "fieldHardMode": "Modo exigente",
+    "fieldStartDate": "Fecha de inicio",
+    "fieldSkipDays": "Días libres permitidos",
+    "goalType": { "binary": "Binario", "quantitative": "Cuantitativo", "duration": "Duración" },
+    "frequency": {
+      "daily": "Diario",
+      "weekdays": "Días específicos",
+      "x_per_week": "X veces por semana",
+      "x_per_month": "X veces por mes",
+      "custom_interval": "Intervalo personalizado"
+    },
+    "status": { "active": "Activo", "paused": "Pausado", "archived": "Archivado" },
+    "empty": "Aún no tienes hábitos. Crea el primero.",
+    "deleteConfirm": "¿Archivar este hábito? Podrás restaurarlo luego.",
+    "pin": "Destacar",
+    "unpin": "Quitar destacado"
+  },
+  "checkin": {
+    "summary": "{done} de {total} completados",
+    "summaryWithProgress": "{done} de {total} completados · {inProgress} en progreso",
+    "markDone": "Marcar hecho",
+    "logStatus": {
+      "done": "Hecho",
+      "partial": "Parcial",
+      "missed": "Pendiente",
+      "justified": "Justificado",
+      "skipped": "Libre",
+      "frozen": "Congelado"
+    },
+    "noteLabel": "Nota (opcional)",
+    "notePlaceholder": "¿Qué pasó?",
+    "moodLabel": "¿Cómo te sentiste?",
+    "valueLabel": "Cantidad lograda",
+    "useFreeze": "Usar comodín de racha",
+    "freezeUsed": "Racha protegida con comodín",
+    "freezesLeft": "{count} comodines disponibles este mes",
+    "noHabitsToday": "No tienes hábitos programados para hoy.",
+    "bestStreak": "Racha más larga: {days} días — {habit}"
+  },
+  "streak": {
+    "current": "Racha actual",
+    "longest": "Racha máxima",
+    "days": "{count} días"
+  },
+  "history": {
+    "heatmap": "Mapa de calor",
+    "calendar": "Calendario",
+    "log": "Registro reciente",
+    "filterHabit": "Todos los hábitos",
+    "filterCategory": "Todas las categorías",
+    "filterRange": "Últimos 90 días",
+    "empty": "Sin registros en este rango.",
+    "exportCsv": "Exportar CSV",
+    "exportJson": "Exportar JSON"
+  },
+  "stats": {
+    "last7": "7 días",
+    "last30": "30 días",
+    "last90": "90 días",
+    "trend": "Últimos 14 días",
+    "byCategory": "Por categoría",
+    "weeklySummary": "Resumen semanal",
+    "monthlySummary": "Resumen mensual",
+    "completed": "Cumplidos",
+    "failed": "Fallados",
+    "bestStreakLabel": "Mejor racha",
+    "vsLastWeek": "vs. semana anterior",
+    "vsLastMonth": "vs. mes anterior",
+    "worstWeekday": "Día con más fallos",
+    "moodCorrelation": "Correlación con ánimo bajo"
+  },
+  "categories": {
+    "manage": "Gestionar categorías",
+    "newCategory": "+ Nueva categoría",
+    "fieldNameEs": "Nombre (Español)",
+    "fieldNameEn": "Nombre (Inglés)",
+    "fieldColor": "Color",
+    "fieldIcon": "Ícono",
+    "creatividad": "Creatividad",
+    "fitness": "Fitness",
+    "aprendizaje": "Aprendizaje",
+    "estudio": "Estudio",
+    "bienestar": "Bienestar"
+  },
+  "routines": {
+    "title": "Rutinas",
+    "newRoutine": "+ Nueva rutina",
+    "fieldName": "Nombre de la rutina",
+    "markAllDone": "Marcar toda la rutina",
+    "empty": "Aún no tienes rutinas.",
+    "completion": "Cumplimiento de la rutina"
+  },
+  "achievements": {
+    "title": "Logros",
+    "unlockedOn": "Desbloqueado el {date}",
+    "locked": "Aún por lograr",
+    "toastTitle": "¡Nuevo logro desbloqueado!",
+    "types": {
+      "7_days": "7 días",
+      "30_days": "30 días",
+      "100_days": "100 días",
+      "perfect_month": "Mes perfecto",
+      "comeback": "Regreso triunfal"
+    }
+  },
+  "settings": {
+    "theme": "Tema",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
+    "language": "Idioma",
+    "dayCutoff": "Hora de corte del día",
+    "dayCutoffSub": "El día \"de hoy\" termina a esta hora",
+    "reminders": "Recordatorios",
+    "remindersOn": "Activados",
+    "remindersOff": "Desactivados",
+    "exportHistory": "Exportar historial",
+    "lastSync": "Última sincronización",
+    "logout": "Cerrar sesión",
+    "installApp": "Instalar aplicación"
+  },
+  "offline": {
+    "offline": "Sin conexión",
+    "syncing": "Sincronizando…",
+    "synced": "Todo sincronizado"
+  },
+  "pwa": {
+    "installTitle": "Instalar Hábito.",
+    "installBody": "Agrégala a tu pantalla de inicio para un acceso instantáneo.",
+    "installIos": "Toca compartir y luego \"Agregar a inicio\"."
+  }
+}

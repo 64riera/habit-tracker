@@ -1,0 +1,59 @@
+/** Fecha efectiva "de hoy" en formato YYYY-MM-DD, respetando la hora de corte del día. */
+export function getTodayDateString(cutoffHour: number = 3, now: Date = new Date()): string {
+  const effective = new Date(now);
+  if (now.getHours() < cutoffHour) {
+    effective.setDate(effective.getDate() - 1);
+  }
+  return toISODate(effective);
+}
+
+export function toISODate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+export function parseISODate(value: string): Date {
+  const [y, m, d] = value.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+export function addDays(value: string, amount: number): string {
+  const date = parseISODate(value);
+  date.setDate(date.getDate() + amount);
+  return toISODate(date);
+}
+
+/** Día de la semana en formato lunes=1 ... domingo=7 */
+export function isoWeekday(value: string): number {
+  const jsDay = parseISODate(value).getDay(); // 0=domingo..6=sábado
+  return jsDay === 0 ? 7 : jsDay;
+}
+
+export function daysBetween(from: string, to: string): number {
+  const a = parseISODate(from).getTime();
+  const b = parseISODate(to).getTime();
+  return Math.round((b - a) / 86_400_000);
+}
+
+/** Genera un rango inclusivo de fechas YYYY-MM-DD */
+export function dateRange(from: string, to: string): string[] {
+  const n = daysBetween(from, to);
+  if (n < 0) return [];
+  return Array.from({ length: n + 1 }, (_, i) => addDays(from, i));
+}
+
+export function startOfWeek(value: string): string {
+  const wd = isoWeekday(value);
+  return addDays(value, -(wd - 1));
+}
+
+export function startOfMonth(value: string): string {
+  const d = parseISODate(value);
+  return toISODate(new Date(d.getFullYear(), d.getMonth(), 1));
+}
+
+export function monthKey(value: string): string {
+  return value.slice(0, 7); // YYYY-MM
+}
