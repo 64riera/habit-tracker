@@ -54,7 +54,7 @@ export default async function RootLayout({
       className={`${newsreader.variable} ${publicSans.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <I18nProvider locale={locale} dict={dict}>
             <ToastProvider>
               <OfflineProvider>
