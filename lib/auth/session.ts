@@ -69,4 +69,9 @@ export async function getCurrentUserIdOrNull(): Promise<string | null> {
   }
 }
 
+/** Evita open redirects: solo permite rutas internas (empiezan con "/"). */
+export function safeNextPath(next: string): string {
+  return next.startsWith("/") ? next : "/";
+}
+
 export { SESSION_COOKIE };

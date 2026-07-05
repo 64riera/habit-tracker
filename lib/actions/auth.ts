@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { categories, users } from "@/lib/db/schema";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
-import { createSessionCookie, destroySessionCookie } from "@/lib/auth/session";
+import { createSessionCookie, destroySessionCookie, safeNextPath } from "@/lib/auth/session";
 
 export type AuthState = { error?: string };
 
@@ -22,10 +22,6 @@ const DEFAULT_CATEGORIES = [
 
 function normalizeUsername(raw: string): string {
   return raw.trim().toLowerCase();
-}
-
-function safeNext(next: string): string {
-  return next.startsWith("/") ? next : "/";
 }
 
 export async function signup(_prevState: AuthState, formData: FormData): Promise<AuthState> {
@@ -66,7 +62,7 @@ export async function signup(_prevState: AuthState, formData: FormData): Promise
   );
 
   await createSessionCookie(userId);
-  redirect(safeNext(next));
+  redirect(safeNextPath(next));
 }
 
 export async function login(_prevState: AuthState, formData: FormData): Promise<AuthState> {
@@ -80,7 +76,7 @@ export async function login(_prevState: AuthState, formData: FormData): Promise<
   }
 
   await createSessionCookie(user.id);
-  redirect(safeNext(next));
+  redirect(safeNextPath(next));
 }
 
 export async function logout() {
