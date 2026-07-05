@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { useI18n } from "@/lib/i18n/client";
 import type { RoutineWithStats } from "@/lib/queries/routines";
@@ -14,8 +15,9 @@ export function RutinasClient({ routines }: { routines: RoutineWithStats[] }) {
       <div className="mb-3 flex justify-end">
         <a
           href="#crear-rutina"
-          className="rounded-full border border-dashed border-border px-3 py-1.5 text-[11px] text-muted"
+          className="flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1.5 text-[11px] text-muted"
         >
+          <Plus size={13} strokeWidth={2} aria-hidden />
           {t("routines.newRoutine")}
         </a>
       </div>

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Check, CheckCheck } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { useOffline } from "@/lib/offline/client";
 import type { RoutineToday } from "@/lib/queries/routines";
@@ -52,13 +53,14 @@ export function RoutineQuickActions({ routines, date }: { routines: RoutineToday
                   router.refresh();
                 });
               }}
-              className="shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold disabled:opacity-60"
+              className="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold disabled:opacity-60"
               style={{
                 background: complete ? "transparent" : "var(--color-text)",
                 color: complete ? "var(--color-muted)" : "var(--color-surface)",
                 border: complete ? "1px solid var(--color-border)" : "none",
               }}
             >
+              {complete ? <Check size={13} strokeWidth={2.4} aria-hidden /> : <CheckCheck size={13} strokeWidth={2.2} aria-hidden />}
               {complete ? t("checkin.logStatus.done") : t("routines.markAllDone")}
             </button>
           </div>

@@ -16,16 +16,18 @@ export function Sidebar({ streakMax }: { streakMax?: number | null }) {
       <nav className="flex flex-col gap-0.5">
         {NAV_ITEMS.map((item) => {
           const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+          const Icon = item.icon;
           return (
             <Link
               key={item.key}
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "border-b border-transparent py-2.5 text-sm font-medium transition-colors",
+                "flex items-center gap-2.5 border-b border-transparent py-2.5 text-sm font-medium transition-colors",
                 active ? "text-accent" : "text-muted"
               )}
             >
+              <Icon size={16} strokeWidth={2} aria-hidden />
               {t(item.dictKey)}
             </Link>
           );

@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { Archive } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { parseFrequencyConfig } from "@/lib/habits/frequency";
@@ -295,8 +296,9 @@ function ArchiveSubmitButton({ label, loadingLabel }: { label: string; loadingLa
     <button
       type="submit"
       disabled={pending}
-      className="px-4 py-2.5 text-[12.5px] text-muted disabled:opacity-60"
+      className="flex items-center gap-1.5 px-4 py-2.5 text-[12.5px] text-muted disabled:opacity-60"
     >
+      <Archive size={13} strokeWidth={2} aria-hidden />
       {pending ? loadingLabel : label}
     </button>
   );

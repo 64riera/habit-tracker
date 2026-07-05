@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Download } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { Heatmap } from "@/components/heatmap/heatmap";
 import { CalendarMonth } from "@/components/heatmap/calendar-month";
@@ -111,14 +112,16 @@ export function HistorialClient({
         </select>
         <a
           href={`/api/export?format=csv&${exportParams.toString()}`}
-          className="rounded-full border border-border px-3 py-1.5 text-[11px] font-medium text-muted"
+          className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[11px] font-medium text-muted"
         >
+          <Download size={12} strokeWidth={2.2} aria-hidden />
           {t("history.exportCsv")}
         </a>
         <a
           href={`/api/export?format=json&${exportParams.toString()}`}
-          className="rounded-full border border-border px-3 py-1.5 text-[11px] font-medium text-muted"
+          className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[11px] font-medium text-muted"
         >
+          <Download size={12} strokeWidth={2.2} aria-hidden />
           {t("history.exportJson")}
         </a>
       </div>

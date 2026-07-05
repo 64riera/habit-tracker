@@ -2,12 +2,15 @@
 
 import { useTransition } from "react";
 import { useTheme } from "next-themes";
+import { Sun, Moon, Monitor } from "lucide-react";
 import { useHasMounted } from "@/lib/hooks/use-has-mounted";
 import { useI18n } from "@/lib/i18n/client";
 import { setThemePreference } from "@/lib/actions/preferences";
 
 const OPTIONS = ["light", "dark", "system"] as const;
 type ThemeOption = (typeof OPTIONS)[number];
+
+const ICONS = { light: Sun, dark: Moon, system: Monitor };
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -36,19 +39,22 @@ export function ThemeToggle() {
     >
       {OPTIONS.map((opt) => {
         const active = current === opt;
+        const Icon = ICONS[opt];
         return (
           <button
             type="button"
             key={opt}
             onClick={() => handleChange(opt)}
             aria-pressed={active}
-            className="rounded-full px-[9px] py-[4px] text-[10px] font-semibold transition-colors md:px-[11px] md:py-[5px] md:text-[11px]"
+            aria-label={label(opt)}
+            title={label(opt)}
+            className="flex h-[22px] w-[22px] items-center justify-center rounded-full transition-colors md:h-[26px] md:w-[26px]"
             style={{
               background: active ? "var(--color-accent)" : "transparent",
               color: active ? "var(--color-accent-contrast)" : "var(--color-muted)",
             }}
           >
-            {label(opt)}
+            <Icon size={13} strokeWidth={2.2} />
           </button>
         );
       })}

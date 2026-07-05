@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { HabitCheckRow } from "@/components/habit/habit-check-row";
 import { RoutineQuickActions } from "@/components/habit/routine-quick-actions";
@@ -38,9 +39,10 @@ export function HoyClient({
           <p className="text-sm text-muted">{t("checkin.noHabitsToday")}</p>
           <Link
             href="/habitos/nuevo"
-            className="rounded-full border border-dashed border-border px-4 py-2 text-xs text-muted"
+            className="flex items-center gap-1.5 rounded-full border border-dashed border-border px-4 py-2 text-xs text-muted"
           >
-            {t("habit.newHabit")}
+            <Plus size={14} strokeWidth={2} aria-hidden />
+            {t("habit.newHabitShort")}
           </Link>
         </div>
       ) : (

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Plus, Tags, Repeat, Trophy, RotateCcw } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { ReorderableList } from "@/components/ui/reorderable-list";
 import { useI18n } from "@/lib/i18n/client";
@@ -126,8 +127,9 @@ export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
                 <button
                   type="button"
                   onClick={() => handleRestore(habit.id)}
-                  className="shrink-0 rounded-full border border-border px-3 py-1 text-[11px] font-medium text-muted"
+                  className="flex shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-1 text-[11px] font-medium text-muted"
                 >
+                  <RotateCcw size={12} strokeWidth={2.2} aria-hidden />
                   {t("habit.restore")}
                 </button>
               </div>
@@ -139,26 +141,30 @@ export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
       <div className="mt-3.5 grid grid-cols-2 gap-2.5">
         <Link
           href="/habitos/nuevo"
-          className="rounded-xl border border-dashed border-border py-2.5 text-center text-xs text-muted"
+          className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-center text-xs text-muted"
         >
-          {t("habit.newHabit")}
+          <Plus size={14} strokeWidth={2} aria-hidden />
+          {t("habit.newHabitShort")}
         </Link>
         <Link
           href="/habitos/categorias"
-          className="rounded-xl border border-dashed border-border py-2.5 text-center text-xs text-muted"
+          className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-center text-xs text-muted"
         >
+          <Tags size={14} strokeWidth={2} aria-hidden />
           {t("categories.manage")}
         </Link>
         <Link
           href="/habitos/rutinas"
-          className="rounded-xl border border-dashed border-border py-2.5 text-center text-xs text-muted"
+          className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-center text-xs text-muted"
         >
+          <Repeat size={14} strokeWidth={2} aria-hidden />
           {t("routines.title")}
         </Link>
         <Link
           href="/habitos/logros"
-          className="rounded-xl border border-dashed border-border py-2.5 text-center text-xs text-muted"
+          className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-center text-xs text-muted"
         >
+          <Trophy size={14} strokeWidth={2} aria-hidden />
           {t("achievements.title")}
         </Link>
       </div>

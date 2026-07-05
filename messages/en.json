@@ -59,6 +59,7 @@
   },
   "habit": {
     "newHabit": "+ New habit",
+    "newHabitShort": "New habit",
     "newHabitSubtitle": "Set up how you want to track it",
     "editHabit": "Edit habit",
     "fieldName": "Name",
@@ -161,7 +162,7 @@
   "categories": {
     "manage": "Manage categories",
     "subtitle": "Organize and color your habits",
-    "newCategory": "+ New category",
+    "newCategory": "New category",
     "empty": "You don't have any categories yet.",
     "confirmDelete": "Delete this category? Assigned habits will become uncategorized.",
     "fieldNameEs": "Name (Spanish)",
@@ -177,7 +178,7 @@
   "routines": {
     "title": "Routines",
     "subtitle": "Group habits to check them together",
-    "newRoutine": "+ New routine",
+    "newRoutine": "New routine",
     "fieldName": "Routine name",
     "markAllDone": "Mark whole routine",
     "confirmDelete": "Delete this routine? Habits themselves are not affected.",

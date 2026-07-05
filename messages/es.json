@@ -59,6 +59,7 @@
   },
   "habit": {
     "newHabit": "+ Nuevo hábito",
+    "newHabitShort": "Nuevo hábito",
     "newHabitSubtitle": "Configura cómo quieres seguirlo",
     "editHabit": "Editar hábito",
     "fieldName": "Nombre",
@@ -161,7 +162,7 @@
   "categories": {
     "manage": "Gestionar categorías",
     "subtitle": "Organiza y colorea tus hábitos",
-    "newCategory": "+ Nueva categoría",
+    "newCategory": "Nueva categoría",
     "empty": "Aún no tienes categorías.",
     "confirmDelete": "¿Eliminar esta categoría? Los hábitos asignados quedarán sin categoría.",
     "fieldNameEs": "Nombre (Español)",
@@ -177,7 +178,7 @@
   "routines": {
     "title": "Rutinas",
     "subtitle": "Agrupa hábitos para marcarlos juntos",
-    "newRoutine": "+ Nueva rutina",
+    "newRoutine": "Nueva rutina",
     "fieldName": "Nombre de la rutina",
     "markAllDone": "Marcar toda la rutina",
     "confirmDelete": "¿Eliminar esta rutina? Los hábitos no se ven afectados.",

@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { ThemeToggle } from "@/components/nav/theme-toggle";
 import { LangToggle } from "@/components/nav/lang-toggle";
@@ -65,7 +66,8 @@ export function AjustesClient({ cutoffHour }: { cutoffHour: number }) {
       </div>
 
       <form action={logout} className="mt-6">
-        <button type="submit" className="text-[12.5px] font-medium text-muted">
+        <button type="submit" className="flex items-center gap-1.5 text-[12.5px] font-medium text-muted">
+          <LogOut size={14} strokeWidth={2} aria-hidden />
           {t("settings.logout")}
         </button>
       </form>
