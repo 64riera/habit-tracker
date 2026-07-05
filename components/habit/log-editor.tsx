@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { RotateCcw } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { useToast } from "@/lib/toast/client";
 import { useOffline } from "@/lib/offline/client";
@@ -20,7 +21,7 @@ export function LogEditor({
 }: {
   habit: HabitWithExtras;
   date: string;
-  onSaved: (status: LogStatus, value?: number) => void;
+  onSaved: (status: LogStatus | null, value?: number) => void;
   onClose: () => void;
 }) {
   const { t } = useI18n();
@@ -54,6 +55,15 @@ export function LogEditor({
           mood: mood ?? undefined,
         },
       });
+      router.refresh();
+    });
+  }
+
+  /** Deshace el registro de hoy por completo — pensado para cuando se marcó por accidente. */
+  function handleClear() {
+    onSaved(null);
+    startTransition(async () => {
+      await runOrQueue({ type: "delete", habitId: habit.id, date });
       router.refresh();
     });
   }
@@ -160,7 +170,7 @@ export function LogEditor({
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={handleSave}
@@ -172,6 +182,17 @@ export function LogEditor({
         <button type="button" onClick={onClose} className="px-3 py-1.5 text-[11.5px] text-muted">
           {t("common.cancel")}
         </button>
+        {habit.todayLog && (
+          <button
+            type="button"
+            onClick={handleClear}
+            disabled={isPending}
+            className="ml-auto flex items-center gap-1.5 text-[11.5px] text-muted disabled:opacity-60"
+          >
+            <RotateCcw size={12} strokeWidth={2.2} aria-hidden />
+            {t("checkin.clearToday")}
+          </button>
+        )}
       </div>
     </div>
   );

@@ -70,10 +70,15 @@
     "fieldGoalUnit": "Unit",
     "fieldFrequency": "Frequency",
     "fieldReminder": "Reminder",
-    "fieldHardMode": "Hard mode",
     "fieldStartDate": "Start date",
     "fieldSkipDays": "Allowed free days",
+    "fieldSkipDaysHelp": "How many times you can mark \"Free\" within your frequency's period without breaking the streak.",
     "goalType": { "binary": "Binary", "quantitative": "Quantitative", "duration": "Duration" },
+    "goalTypeHelp": {
+      "binary": "Marked simply as done or not done — no amounts to log.",
+      "quantitative": "You log an amount each day, e.g. \"8 glasses of water\".",
+      "duration": "You log the time spent, in minutes."
+    },
     "frequency": {
       "daily": "Daily",
       "weekdays": "Specific days",
@@ -103,7 +108,9 @@
     "summary": "{done} of {total} completed",
     "summaryWithProgress": "{done} of {total} completed · {inProgress} in progress",
     "markDone": "Mark done",
+    "unmark": "Undo mark done",
     "moreOptions": "More options",
+    "clearToday": "Clear today's entry",
     "logStatus": {
       "done": "Done",
       "partial": "Partial",

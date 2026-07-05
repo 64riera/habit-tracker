@@ -70,10 +70,15 @@
     "fieldGoalUnit": "Unidad",
     "fieldFrequency": "Frecuencia",
     "fieldReminder": "Recordatorio",
-    "fieldHardMode": "Modo exigente",
     "fieldStartDate": "Fecha de inicio",
     "fieldSkipDays": "Días libres permitidos",
+    "fieldSkipDaysHelp": "Cuántas veces puedes marcar \"Libre\" en el período de tu frecuencia sin romper la racha.",
     "goalType": { "binary": "Binario", "quantitative": "Cuantitativo", "duration": "Duración" },
+    "goalTypeHelp": {
+      "binary": "Se marca como hecho o no hecho — sin cantidades que registrar.",
+      "quantitative": "Registras una cantidad cada día, por ejemplo \"8 vasos de agua\".",
+      "duration": "Registras el tiempo dedicado, en minutos."
+    },
     "frequency": {
       "daily": "Diario",
       "weekdays": "Días específicos",
@@ -103,7 +108,9 @@
     "summary": "{done} de {total} completados",
     "summaryWithProgress": "{done} de {total} completados · {inProgress} en progreso",
     "markDone": "Marcar hecho",
+    "unmark": "Quitar marca de hecho",
     "moreOptions": "Más opciones",
+    "clearToday": "Quitar registro de hoy",
     "logStatus": {
       "done": "Hecho",
       "partial": "Parcial",

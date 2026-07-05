@@ -160,7 +160,7 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
         )}
         <button
           type="button"
-          aria-label={t("checkin.markDone")}
+          aria-label={isDone ? t("checkin.unmark") : t("checkin.markDone")}
           onClick={handleClick}
           disabled={isPending}
           className="-m-2 flex shrink-0 items-center justify-center p-2"

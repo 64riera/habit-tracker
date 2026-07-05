@@ -39,7 +39,6 @@ export function HabitForm({ categories, habit }: Props) {
   const [frequencyType, setFrequencyType] = useState(habit?.frequencyType ?? "daily");
   const [categoryId, setCategoryId] = useState(habit?.categoryId ?? categories[0]?.id ?? "");
   const [weekdays, setWeekdays] = useState<number[]>(cfg.days ?? [1, 2, 3, 4, 5]);
-  const [hardMode, setHardMode] = useState(habit?.hardMode ?? false);
   const [isPinned, setIsPinned] = useState(habit?.isPinned ?? false);
 
   return (
@@ -117,6 +116,7 @@ export function HabitForm({ categories, habit }: Props) {
             ))}
           </div>
           <input type="hidden" name="goalType" value={goalType} />
+          <p className="text-[11px] text-muted">{t(`habit.goalTypeHelp.${goalType}`)}</p>
         </Field>
 
         {goalType !== "binary" && (
@@ -208,34 +208,21 @@ export function HabitForm({ categories, habit }: Props) {
         )}
       </Field>
 
-      <div className="flex gap-5">
-        <Field label={t("habit.fieldReminder")} className="flex-1">
-          <input
-            name="reminderTime"
-            type="time"
-            defaultValue={
-              habit?.reminders ? (JSON.parse(habit.reminders) as string[])[0] : ""
-            }
-            className="w-full rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-text"
-          />
-        </Field>
+      <Field label={t("habit.fieldReminder")}>
+        <input
+          name="reminderTime"
+          type="time"
+          defaultValue={
+            habit?.reminders ? (JSON.parse(habit.reminders) as string[])[0] : ""
+          }
+          className="w-fit rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-text"
+        />
+      </Field>
 
-        <div className="flex items-center gap-2.5 pt-6">
-          <span className="text-[11.5px]">{t("habit.fieldHardMode")}</span>
-          <button
-            type="button"
-            onClick={() => setHardMode((v) => !v)}
-            className="flex h-[19px] w-[34px] items-center rounded-full bg-border p-[2px]"
-            style={{ justifyContent: hardMode ? "flex-end" : "flex-start" }}
-          >
-            <span
-              className="h-[15px] w-[15px] rounded-full"
-              style={{ background: hardMode ? "var(--color-accent)" : "var(--color-muted)" }}
-            />
-          </button>
-          <input type="hidden" name="hardMode" value={hardMode ? "on" : ""} />
-        </div>
-      </div>
+      {/* hardMode se preserva sin exponer control: hoy no cambia ningún cálculo
+          (racha, comodines, días libres), así que un interruptor sin efecto
+          real solo genera confusión — ver discusión con el usuario. */}
+      <input type="hidden" name="hardMode" value={habit?.hardMode ? "on" : ""} />
 
       <Field label={t("habit.fieldSkipDays")}>
         <input
@@ -246,6 +233,7 @@ export function HabitForm({ categories, habit }: Props) {
           defaultValue={habit?.skipDaysAllowed ?? 0}
           className="w-24 rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-text"
         />
+        <p className="text-[11px] text-muted">{t("habit.fieldSkipDaysHelp")}</p>
       </Field>
 
       <Field label={t("habit.fieldStartDate")}>
