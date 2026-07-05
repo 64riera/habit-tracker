@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useTransition } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Plus, Trash2 } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
+import { SwipeableRow, SwipeableListProvider } from "@/components/ui/swipeable-row";
 import { useI18n } from "@/lib/i18n/client";
 import { useOffline } from "@/lib/offline/client";
 import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
@@ -24,7 +26,9 @@ export function RutinasClient({
   habits: { id: string; name: string }[];
 }) {
   const { t } = useI18n();
-  const { pendingMutations } = useOffline();
+  const router = useRouter();
+  const { pendingMutations, runOrQueue } = useOffline();
+  const [, startTransition] = useTransition();
 
   const pendingNew = pendingRoutineCreates(pendingMutations);
   const pendingEdits = pendingRoutineUpdates(pendingMutations);
@@ -42,6 +46,14 @@ export function RutinasClient({
     return [...overlaid, ...ghosts];
   }, [routines, pendingEdits, pendingDeleteIds, pendingNew, habits]);
 
+  function handleDelete(routineId: string) {
+    if (!confirm(t("routines.confirmDelete"))) return;
+    startTransition(async () => {
+      await runOrQueue({ type: "deleteRoutine", routineId });
+      router.refresh();
+    });
+  }
+
   return (
     <div>
       <ContentHeader titleKey="routines.title" subtitleKey="routines.subtitle" />
@@ -54,35 +66,50 @@ export function RutinasClient({
           {t("routines.newRoutine")}
         </a>
       </div>
-      <div className="flex flex-col gap-0.5">
-        {displayRoutines.map((r) => {
-          const isPending = pendingIds.has(r.id);
-          return (
-            <Link
-              key={r.id}
-              href={`/habitos/rutinas/${r.id}`}
-              className="flex items-center justify-between gap-3 border-b border-border py-3"
-              style={isPending ? { opacity: 0.6 } : undefined}
-            >
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 truncate text-[13px] font-semibold">
-                  <span className="truncate">{r.name}</span>
-                  {isPending && <PendingSyncBadge />}
-                </div>
-                <div className="mt-0.5 truncate text-[11px] text-muted">
-                  {r.habits.map((h) => h.name).join(" · ")}
-                </div>
-              </div>
-              <span className="shrink-0 text-[11px] font-semibold text-muted">
-                {t("routines.completionPct", { pct: r.completionPct30 })}
-              </span>
-            </Link>
-          );
-        })}
-        {displayRoutines.length === 0 && (
-          <p className="py-2 text-sm text-muted">{t("routines.empty")}</p>
-        )}
-      </div>
+      <SwipeableListProvider>
+        <div className="flex flex-col gap-0.5">
+          {displayRoutines.map((r) => {
+            const isPending = pendingIds.has(r.id);
+            return (
+              <SwipeableRow
+                key={r.id}
+                id={r.id}
+                trailingActions={[
+                  {
+                    key: "delete",
+                    label: t("common.delete"),
+                    icon: <Trash2 size={16} strokeWidth={2} aria-hidden />,
+                    background: "var(--color-cat-fitness)",
+                    onAction: () => handleDelete(r.id),
+                  },
+                ]}
+              >
+                <Link
+                  href={`/habitos/rutinas/${r.id}`}
+                  className="flex items-center justify-between gap-3 border-b border-border py-3"
+                  style={isPending ? { opacity: 0.6 } : undefined}
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 truncate text-[13px] font-semibold">
+                      <span className="truncate">{r.name}</span>
+                      {isPending && <PendingSyncBadge />}
+                    </div>
+                    <div className="mt-0.5 truncate text-[11px] text-muted">
+                      {r.habits.map((h) => h.name).join(" · ")}
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-[11px] font-semibold text-muted">
+                    {t("routines.completionPct", { pct: r.completionPct30 })}
+                  </span>
+                </Link>
+              </SwipeableRow>
+            );
+          })}
+          {displayRoutines.length === 0 && (
+            <p className="py-2 text-sm text-muted">{t("routines.empty")}</p>
+          )}
+        </div>
+      </SwipeableListProvider>
     </div>
   );
 }

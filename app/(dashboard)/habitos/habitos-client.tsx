@@ -3,9 +3,10 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Tags, Repeat, Trophy, RotateCcw } from "lucide-react";
+import { Plus, Tags, Repeat, Trophy, RotateCcw, Archive, Star } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { ReorderableList } from "@/components/ui/reorderable-list";
+import { SwipeableRow, SwipeableListProvider } from "@/components/ui/swipeable-row";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName, describeFrequency } from "@/lib/habits/describe";
 import { useOffline } from "@/lib/offline/client";
@@ -33,6 +34,7 @@ export function HabitosClient({
   const [, startTransition] = useTransition();
   const [pinnedOverrides, setPinnedOverrides] = useState<Record<string, boolean>>({});
   const [restoredIds, setRestoredIds] = useState<Set<string>>(new Set());
+  const [archivedOverrides, setArchivedOverrides] = useState<Record<string, boolean>>({});
 
   const pendingNewHabits = pendingHabitCreates(pendingMutations);
   const pendingEdits = pendingHabitUpdates(pendingMutations);
@@ -52,11 +54,11 @@ export function HabitosClient({
   }, [habits, pendingEdits, pendingNewHabits, categories]);
 
   const visibleHabits = displayHabits.filter(
-    (h) => h.status !== "archived" && !pendingArchiveIds.has(h.id)
+    (h) => h.status !== "archived" && !pendingArchiveIds.has(h.id) && !archivedOverrides[h.id]
   );
   const archivedHabits = displayHabits.filter(
     (h) =>
-      (h.status === "archived" || pendingArchiveIds.has(h.id)) &&
+      (h.status === "archived" || pendingArchiveIds.has(h.id) || archivedOverrides[h.id]) &&
       !restoredIds.has(h.id) &&
       !pendingRestoreIds.has(h.id)
   );
@@ -84,6 +86,15 @@ export function HabitosClient({
     });
   }
 
+  function handleArchive(habitId: string) {
+    if (!confirm(t("habit.deleteConfirm"))) return;
+    setArchivedOverrides((prev) => ({ ...prev, [habitId]: true }));
+    startTransition(async () => {
+      await runOrQueue({ type: "archiveHabit", habitId });
+      router.refresh();
+    });
+  }
+
   return (
     <div>
       <ContentHeader titleKey="screens.habitos.title" subtitleKey="screens.habitos.subtitle" />
@@ -91,67 +102,95 @@ export function HabitosClient({
       {visibleHabits.length === 0 ? (
         <p className="text-sm text-muted">{t("habit.empty")}</p>
       ) : (
-        <ReorderableList
-          items={visibleHabits}
-          onReorder={handleReorder}
-          renderItem={(habit, dragHandleProps) => {
-            const color = habit.category?.color ?? "var(--color-text)";
-            const isPinned = pinnedOverrides[habit.id] ?? habit.isPinned;
-            const isPending = pendingIds.has(habit.id);
-            return (
-              <div className="flex items-center gap-2.5 border-b border-border py-3" style={isPending ? { opacity: 0.6 } : undefined}>
-                <button
-                  type="button"
-                  onPointerDown={dragHandleProps.onPointerDown}
-                  onKeyDown={dragHandleProps.onKeyDown}
-                  className="shrink-0 cursor-grab select-none px-0.5 text-muted"
-                  style={{ touchAction: "none" }}
-                  aria-label={t("habit.reorder")}
+        <SwipeableListProvider>
+          <ReorderableList
+            items={visibleHabits}
+            onReorder={handleReorder}
+            renderItem={(habit, dragHandleProps) => {
+              const color = habit.category?.color ?? "var(--color-text)";
+              const isPinned = pinnedOverrides[habit.id] ?? habit.isPinned;
+              const isPending = pendingIds.has(habit.id);
+              return (
+                <SwipeableRow
+                  id={habit.id}
+                  leadingActions={[
+                    {
+                      key: "pin",
+                      label: isPinned ? t("habit.unpin") : t("habit.pin"),
+                      icon: <Star size={16} strokeWidth={2} fill={isPinned ? "currentColor" : "none"} aria-hidden />,
+                      background: "var(--color-accent)",
+                      color: "var(--color-accent-contrast)",
+                      onAction: () => handleTogglePin(habit.id, !isPinned),
+                    },
+                  ]}
+                  trailingActions={[
+                    {
+                      key: "archive",
+                      label: t("common.archive"),
+                      icon: <Archive size={16} strokeWidth={2} aria-hidden />,
+                      background: "var(--color-cat-fitness)",
+                      onAction: () => handleArchive(habit.id),
+                    },
+                  ]}
                 >
-                  ⠿
-                </button>
-                <Link
-                  href={`/habitos/${habit.id}`}
-                  className="flex min-w-0 flex-1 items-center gap-3"
-                >
-                  <span
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-serif-italic text-[13px] font-semibold"
-                    style={{ background: `color-mix(in oklch, ${color} 16%, transparent)`, color }}
+                  <div
+                    className="flex items-center gap-2.5 border-b border-border py-3"
+                    style={isPending ? { opacity: 0.6 } : undefined}
                   >
-                    {habit.name.charAt(0).toUpperCase()}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 truncate text-[13px] font-semibold">
-                      <span className="truncate">{habit.name}</span>
-                      {isPending && <PendingSyncBadge />}
-                    </div>
-                    <div className="mt-0.5 truncate text-[10.5px] text-muted">
-                      {categoryDisplayName(habit.category, locale)} · {describeFrequency(habit, dict)}
+                    <button
+                      type="button"
+                      onPointerDown={dragHandleProps.onPointerDown}
+                      onKeyDown={dragHandleProps.onKeyDown}
+                      className="shrink-0 cursor-grab select-none px-0.5 text-muted"
+                      style={{ touchAction: "none" }}
+                      aria-label={t("habit.reorder")}
+                    >
+                      ⠿
+                    </button>
+                    <Link
+                      href={`/habitos/${habit.id}`}
+                      className="flex min-w-0 flex-1 items-center gap-3"
+                    >
+                      <span
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-serif-italic text-[13px] font-semibold"
+                        style={{ background: `color-mix(in oklch, ${color} 16%, transparent)`, color }}
+                      >
+                        {habit.name.charAt(0).toUpperCase()}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 truncate text-[13px] font-semibold">
+                          <span className="truncate">{habit.name}</span>
+                          {isPending && <PendingSyncBadge />}
+                        </div>
+                        <div className="mt-0.5 truncate text-[10.5px] text-muted">
+                          {categoryDisplayName(habit.category, locale)} · {describeFrequency(habit, dict)}
+                        </div>
+                      </div>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePin(habit.id, !isPinned)}
+                      aria-label={isPinned ? t("habit.unpin") : t("habit.pin")}
+                      className="shrink-0 text-sm"
+                      style={{ color: isPinned ? "var(--color-accent)" : "var(--color-border)" }}
+                    >
+                      ★
+                    </button>
+                    <div
+                      className="shrink-0 text-[9.5px] font-semibold"
+                      style={{
+                        color:
+                          habit.status === "active" ? "var(--color-text)" : "var(--color-muted)",
+                      }}
+                    >
+                      {t(`habit.status.${habit.status}`)}
                     </div>
                   </div>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => handleTogglePin(habit.id, !isPinned)}
-                  aria-label={isPinned ? t("habit.unpin") : t("habit.pin")}
-                  className="shrink-0 text-sm"
-                  style={{ color: isPinned ? "var(--color-accent)" : "var(--color-border)" }}
-                >
-                  ★
-                </button>
-                <div
-                  className="shrink-0 text-[9.5px] font-semibold"
-                  style={{
-                    color:
-                      habit.status === "active" ? "var(--color-text)" : "var(--color-muted)",
-                  }}
-                >
-                  {t(`habit.status.${habit.status}`)}
-                </div>
-              </div>
-            );
-          }}
-        />
+                </SwipeableRow>
+              );
+            }}
+          />
+        </SwipeableListProvider>
       )}
 
       {archivedHabits.length > 0 && (
@@ -159,26 +198,40 @@ export function HabitosClient({
           <div className="mb-1 text-[10px] tracking-wide text-muted uppercase">
             {t("habit.archivedSection")}
           </div>
-          <div className="flex flex-col">
-            {archivedHabits.map((habit) => (
-              <div
-                key={habit.id}
-                className="flex items-center gap-2.5 border-b border-border py-3 opacity-60"
-              >
-                <div className="min-w-0 flex-1 truncate text-[13px] font-semibold">
-                  {habit.name}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleRestore(habit.id)}
-                  className="flex shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-1 text-[11px] font-medium text-muted"
+          <SwipeableListProvider>
+            <div className="flex flex-col">
+              {archivedHabits.map((habit) => (
+                <SwipeableRow
+                  key={habit.id}
+                  id={habit.id}
+                  trailingActions={[
+                    {
+                      key: "restore",
+                      label: t("habit.restore"),
+                      icon: <RotateCcw size={16} strokeWidth={2} aria-hidden />,
+                      background: "var(--color-accent)",
+                      color: "var(--color-accent-contrast)",
+                      onAction: () => handleRestore(habit.id),
+                    },
+                  ]}
                 >
-                  <RotateCcw size={12} strokeWidth={2.2} aria-hidden />
-                  {t("habit.restore")}
-                </button>
-              </div>
-            ))}
-          </div>
+                  <div className="flex items-center gap-2.5 border-b border-border py-3 opacity-60">
+                    <div className="min-w-0 flex-1 truncate text-[13px] font-semibold">
+                      {habit.name}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRestore(habit.id)}
+                      className="flex shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-1 text-[11px] font-medium text-muted"
+                    >
+                      <RotateCcw size={12} strokeWidth={2.2} aria-hidden />
+                      {t("habit.restore")}
+                    </button>
+                  </div>
+                </SwipeableRow>
+              ))}
+            </div>
+          </SwipeableListProvider>
         </div>
       )}
 
