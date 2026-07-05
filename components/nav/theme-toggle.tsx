@@ -4,22 +4,42 @@ import { useTheme } from "next-themes";
 import { useHasMounted } from "@/lib/hooks/use-has-mounted";
 import { useI18n } from "@/lib/i18n/client";
 
+const OPTIONS = ["light", "dark", "system"] as const;
+type ThemeOption = (typeof OPTIONS)[number];
+
 export function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { t } = useI18n();
   const mounted = useHasMounted();
+  const current: ThemeOption = mounted && OPTIONS.includes(theme as ThemeOption) ? (theme as ThemeOption) : "system";
 
-  const isDark = mounted && resolvedTheme === "dark";
+  const label = (opt: ThemeOption) =>
+    opt === "light" ? t("settings.themeLight") : opt === "dark" ? t("settings.themeDark") : t("settings.themeSystem");
 
   return (
-    <button
-      type="button"
+    <div
+      role="group"
       aria-label={t("settings.theme")}
-      onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="flex h-[19px] w-[34px] shrink-0 items-center rounded-full bg-border p-[2px] md:h-[22px] md:w-[40px]"
-      style={{ justifyContent: isDark ? "flex-end" : "flex-start" }}
+      className="flex gap-[2px] rounded-full bg-border p-[2px]"
     >
-      <span className="h-[15px] w-[15px] rounded-full bg-accent md:h-[18px] md:w-[18px]" />
-    </button>
+      {OPTIONS.map((opt) => {
+        const active = current === opt;
+        return (
+          <button
+            type="button"
+            key={opt}
+            onClick={() => setTheme(opt)}
+            aria-pressed={active}
+            className="rounded-full px-[9px] py-[4px] text-[10px] font-semibold transition-colors md:px-[11px] md:py-[5px] md:text-[11px]"
+            style={{
+              background: active ? "var(--color-accent)" : "transparent",
+              color: active ? "var(--color-accent-contrast)" : "var(--color-muted)",
+            }}
+          >
+            {label(opt)}
+          </button>
+        );
+      })}
+    </div>
   );
 }

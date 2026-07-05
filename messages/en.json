@@ -203,6 +203,7 @@
     "theme": "Theme",
     "themeLight": "Light",
     "themeDark": "Dark",
+    "themeSystem": "Auto",
     "language": "Language",
     "dayCutoff": "Day cutoff time",
     "dayCutoffSub": "\"Today\" ends at this hour",
