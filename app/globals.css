@@ -48,9 +48,18 @@
 html,
 body {
   height: 100%;
+  /* Nada dentro de la app debe poder abrir scroll horizontal de pagina;
+     los pocos elementos que legitimamente son mas anchos que la pantalla
+     (heatmap, calendario, grafica de tendencia) manejan su propio scroll
+     interno con overflow-x-auto. */
+  overflow-x: hidden;
 }
 
 body {
+  width: 100%;
+  /* Una palabra larga sin espacios (URL en una nota, nombre de habito) no
+     debe poder empujar el ancho de la pagina. */
+  overflow-wrap: break-word;
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-public-sans), sans-serif;
