@@ -4,7 +4,7 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      # Reutiliza tus variables de desarrollo (APP_PASSWORD, APP_JWT_SECRET, etc.).
+      # Reutiliza tus variables de desarrollo (APP_JWT_SECRET, etc.).
       # Si quieres Turso remoto en vez de SQLite local, define aquí
       # TURSO_DATABASE_URL / TURSO_AUTH_TOKEN sin comentar.
       - .env.local

@@ -31,7 +31,7 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Correr con Docker
 
-Requiere que exista `.env.local` (mismo archivo que usas en desarrollo, con `APP_PASSWORD` y `APP_JWT_SECRET`).
+Requiere que exista `.env.local` (mismo archivo que usas en desarrollo, con `APP_JWT_SECRET`). La autenticación es por cuenta (usuario/contraseña, `/signup`), no por variable de entorno.
 
 ```bash
 docker compose up --build
