@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Tags, Repeat, Trophy, RotateCcw } from "lucide-react";
@@ -8,22 +8,61 @@ import { ContentHeader } from "@/components/nav/content-header";
 import { ReorderableList } from "@/components/ui/reorderable-list";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName, describeFrequency } from "@/lib/habits/describe";
-import { reorderHabits, restoreHabit, togglePinHabit } from "@/lib/actions/habits";
-import type { HabitWithExtras } from "@/lib/queries/habits";
+import { useOffline } from "@/lib/offline/client";
+import {
+  pendingHabitCreates,
+  pendingHabitUpdates,
+  pendingHabitArchiveIds,
+  pendingHabitRestoreIds,
+  buildGhostHabit,
+  applyPendingHabitEdit,
+} from "@/lib/offline/pending-selectors";
+import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
 
-export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
+export function HabitosClient({
+  habits,
+  categories,
+}: {
+  habits: HabitWithExtras[];
+  categories: CategoryRow[];
+}) {
   const { t, dict, locale } = useI18n();
   const router = useRouter();
+  const { pendingMutations, runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
   const [pinnedOverrides, setPinnedOverrides] = useState<Record<string, boolean>>({});
   const [restoredIds, setRestoredIds] = useState<Set<string>>(new Set());
 
-  const visibleHabits = habits.filter((h) => h.status !== "archived");
-  const archivedHabits = habits.filter((h) => h.status === "archived" && !restoredIds.has(h.id));
+  const pendingNewHabits = pendingHabitCreates(pendingMutations);
+  const pendingEdits = pendingHabitUpdates(pendingMutations);
+  const pendingArchiveIds = pendingHabitArchiveIds(pendingMutations);
+  const pendingRestoreIds = pendingHabitRestoreIds(pendingMutations);
+  const pendingIds = useMemo(
+    () => new Set([...pendingNewHabits.map((m) => m.id), ...pendingEdits.keys()]),
+    [pendingNewHabits, pendingEdits]
+  );
+
+  const displayHabits = useMemo(() => {
+    const overlaid = habits.map((h) =>
+      pendingEdits.has(h.id) ? applyPendingHabitEdit(h, pendingEdits.get(h.id)!, categories) : h
+    );
+    const ghosts = pendingNewHabits.map((m) => buildGhostHabit(m.id, m.values, categories));
+    return [...overlaid, ...ghosts];
+  }, [habits, pendingEdits, pendingNewHabits, categories]);
+
+  const visibleHabits = displayHabits.filter(
+    (h) => h.status !== "archived" && !pendingArchiveIds.has(h.id)
+  );
+  const archivedHabits = displayHabits.filter(
+    (h) =>
+      (h.status === "archived" || pendingArchiveIds.has(h.id)) &&
+      !restoredIds.has(h.id) &&
+      !pendingRestoreIds.has(h.id)
+  );
 
   function handleReorder(orderedIds: string[]) {
     startTransition(async () => {
-      await reorderHabits(orderedIds);
+      await runOrQueue({ type: "reorderHabits", orderedIds });
       router.refresh();
     });
   }
@@ -31,7 +70,7 @@ export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
   function handleTogglePin(habitId: string, pinned: boolean) {
     setPinnedOverrides((prev) => ({ ...prev, [habitId]: pinned }));
     startTransition(async () => {
-      await togglePinHabit(habitId, pinned);
+      await runOrQueue({ type: "togglePinHabit", habitId, pinned });
       router.refresh();
     });
   }
@@ -39,7 +78,7 @@ export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
   function handleRestore(habitId: string) {
     setRestoredIds((prev) => new Set(prev).add(habitId));
     startTransition(async () => {
-      await restoreHabit(habitId);
+      await runOrQueue({ type: "restoreHabit", habitId });
       router.refresh();
     });
   }
@@ -57,8 +96,9 @@ export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
           renderItem={(habit, dragHandleProps) => {
             const color = habit.category?.color ?? "var(--color-text)";
             const isPinned = pinnedOverrides[habit.id] ?? habit.isPinned;
+            const isPending = pendingIds.has(habit.id);
             return (
-              <div className="flex items-center gap-2.5 border-b border-border py-3">
+              <div className="flex items-center gap-2.5 border-b border-border py-3" style={isPending ? { opacity: 0.6 } : undefined}>
                 <button
                   type="button"
                   onPointerDown={dragHandleProps.onPointerDown}
@@ -83,6 +123,7 @@ export function HabitosClient({ habits }: { habits: HabitWithExtras[] }) {
                     <div className="truncate text-[13px] font-semibold">{habit.name}</div>
                     <div className="mt-0.5 truncate text-[10.5px] text-muted">
                       {categoryDisplayName(habit.category, locale)} · {describeFrequency(habit, dict)}
+                      {isPending && ` · ${t("offline.pendingItem")}`}
                     </div>
                   </div>
                 </Link>

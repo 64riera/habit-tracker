@@ -20,6 +20,28 @@ export const habitFormSchema = z.object({
 
 export type HabitFormValues = z.infer<typeof habitFormSchema>;
 
+/** Extrae los campos crudos del formulario de hábito, listos para `habitFormSchema.safeParse`. */
+export function extractHabitFields(formData: FormData): unknown {
+  const weekdays = formData.getAll("weekdays").map(Number);
+  return {
+    name: formData.get("name"),
+    description: formData.get("description") ?? "",
+    categoryId: formData.get("categoryId") ?? "",
+    goalType: formData.get("goalType"),
+    goalTarget: formData.get("goalTarget") || undefined,
+    goalUnit: formData.get("goalUnit") ?? "",
+    frequencyType: formData.get("frequencyType"),
+    weekdays,
+    timesPerPeriod: formData.get("timesPerPeriod") || undefined,
+    intervalDays: formData.get("intervalDays") || undefined,
+    reminderTime: formData.get("reminderTime") ?? "",
+    hardMode: formData.get("hardMode") === "on",
+    skipDaysAllowed: formData.get("skipDaysAllowed") || 0,
+    startDate: formData.get("startDate"),
+    isPinned: formData.get("isPinned") === "on",
+  };
+}
+
 export const logSchema = z.object({
   habitId: z.string().min(1),
   date: z.string().min(1),

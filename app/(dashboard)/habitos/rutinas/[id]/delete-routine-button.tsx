@@ -2,13 +2,15 @@
 
 import { Trash2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
+import { deleteRoutine } from "@/lib/actions/routines";
+import { useOfflineIdAction } from "@/lib/offline/form";
 
-export function DeleteRoutineButton({
-  action,
-}: {
-  action: (formData: FormData) => void | Promise<void>;
-}) {
+export function DeleteRoutineButton({ routineId }: { routineId: string }) {
   const { t } = useI18n();
+  const action = useOfflineIdAction({
+    onlineAction: () => deleteRoutine(routineId),
+    buildMutation: () => ({ type: "deleteRoutine", routineId }),
+  });
   return (
     <form
       action={action}

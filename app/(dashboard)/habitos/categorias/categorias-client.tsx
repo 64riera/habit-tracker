@@ -1,14 +1,39 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName } from "@/lib/habits/describe";
+import { useOffline } from "@/lib/offline/client";
+import {
+  pendingCategoryCreates,
+  pendingCategoryUpdates,
+  pendingCategoryDeleteIds,
+  buildGhostCategory,
+} from "@/lib/offline/pending-selectors";
 import type { CategoryRow } from "@/lib/queries/habits";
 
 export function CategoriasClient({ categories }: { categories: CategoryRow[] }) {
   const { t, locale } = useI18n();
+  const { pendingMutations } = useOffline();
+
+  const pendingNew = pendingCategoryCreates(pendingMutations);
+  const pendingEdits = pendingCategoryUpdates(pendingMutations);
+  const pendingDeleteIds = pendingCategoryDeleteIds(pendingMutations);
+  const pendingIds = useMemo(
+    () => new Set([...pendingNew.map((m) => m.id), ...pendingEdits.keys()]),
+    [pendingNew, pendingEdits]
+  );
+
+  const displayCategories = useMemo(() => {
+    const overlaid = categories
+      .filter((c) => !pendingDeleteIds.has(c.id))
+      .map((c) => (pendingEdits.has(c.id) ? { ...c, ...pendingEdits.get(c.id)! } : c));
+    const ghosts = pendingNew.map((m) => buildGhostCategory(m.id, m.values));
+    return [...overlaid, ...ghosts];
+  }, [categories, pendingEdits, pendingDeleteIds, pendingNew]);
 
   return (
     <div>
@@ -23,22 +48,29 @@ export function CategoriasClient({ categories }: { categories: CategoryRow[] }) 
         </a>
       </div>
       <div className="flex flex-col gap-0.5">
-        {categories.map((c) => (
-          <Link
-            key={c.id}
-            href={`/habitos/categorias/${c.id}`}
-            className="flex items-center gap-3 border-b border-border py-3"
-          >
-            <span
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs"
-              style={{ background: `color-mix(in oklch, ${c.color} 20%, transparent)`, color: c.color }}
+        {displayCategories.map((c) => {
+          const isPending = pendingIds.has(c.id);
+          return (
+            <Link
+              key={c.id}
+              href={`/habitos/categorias/${c.id}`}
+              className="flex items-center gap-3 border-b border-border py-3"
+              style={isPending ? { opacity: 0.6 } : undefined}
             >
-              {c.icon}
-            </span>
-            <span className="text-[13px] font-semibold">{categoryDisplayName(c, locale)}</span>
-          </Link>
-        ))}
-        {categories.length === 0 && (
+              <span
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs"
+                style={{ background: `color-mix(in oklch, ${c.color} 20%, transparent)`, color: c.color }}
+              >
+                {c.icon}
+              </span>
+              <span className="text-[13px] font-semibold">
+                {categoryDisplayName(c, locale)}
+                {isPending && ` · ${t("offline.pendingItem")}`}
+              </span>
+            </Link>
+          );
+        })}
+        {displayCategories.length === 0 && (
           <p className="py-2 text-sm text-muted">{t("categories.empty")}</p>
         )}
       </div>

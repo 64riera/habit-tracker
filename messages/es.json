@@ -118,6 +118,7 @@
     "valueLabel": "Cantidad lograda",
     "useFreeze": "Usar comodín de racha",
     "freezeUsed": "Racha protegida con comodín",
+    "freezeQuotaExhausted": "Ya no quedan comodines este mes; el congelamiento en cola no se aplicó.",
     "freezesLeft": "{count} comodines disponibles este mes",
     "noHabitsToday": "No tienes hábitos programados para hoy.",
     "bestStreak": "Racha más larga: {days} días — {habit}"
@@ -164,6 +165,7 @@
     "subtitle": "Organiza y colorea tus hábitos",
     "newCategory": "Nueva categoría",
     "empty": "Aún no tienes categorías.",
+    "formError": "Revisa los campos: falta un nombre o el color no es válido.",
     "confirmDelete": "¿Eliminar esta categoría? Los hábitos asignados quedarán sin categoría.",
     "fieldNameEs": "Nombre (Español)",
     "fieldNameEn": "Nombre (Inglés)",
@@ -180,6 +182,7 @@
     "subtitle": "Agrupa hábitos para marcarlos juntos",
     "newRoutine": "Nueva rutina",
     "fieldName": "Nombre de la rutina",
+    "formError": "Revisa los campos: falta el nombre o no hay hábitos seleccionados.",
     "markAllDone": "Marcar toda la rutina",
     "confirmDelete": "¿Eliminar esta rutina? Los hábitos no se ven afectados.",
     "empty": "Aún no tienes rutinas.",
@@ -216,7 +219,9 @@
   "offline": {
     "offline": "Sin conexión",
     "syncing": "Sincronizando…",
-    "synced": "Todo sincronizado"
+    "synced": "Todo sincronizado",
+    "pendingItem": "Pendiente de sincronizar",
+    "savedOffline": "Guardado sin conexión. Se sincronizará automáticamente."
   },
   "pwa": {
     "installTitle": "Instalar Hábito.",

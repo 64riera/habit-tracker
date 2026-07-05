@@ -1,6 +1,5 @@
 import { getRoutinesWithStats } from "@/lib/queries/routines";
 import { getHabitNames } from "@/lib/queries/habits";
-import { createRoutine } from "@/lib/actions/routines";
 import { getTodayDateString } from "@/lib/date";
 import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
 import { RoutineForm } from "@/components/habit/routine-form";
@@ -13,9 +12,9 @@ export default async function RutinasPage() {
 
   return (
     <div>
-      <RutinasClient routines={routines} />
+      <RutinasClient routines={routines} habits={habits} />
       <div id="crear-rutina" className="mt-6 scroll-mt-6 border-t border-border pt-5">
-        <RoutineForm action={createRoutine} habits={habits} />
+        <RoutineForm habits={habits} />
       </div>
     </div>
   );

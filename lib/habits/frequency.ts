@@ -26,6 +26,26 @@ export function parseFrequencyConfig(raw: string | null): FrequencyConfig {
   }
 }
 
+/** Construye el `frequency_config` a partir de los campos crudos de un formulario de hábito. */
+export function buildFrequencyConfig(input: {
+  frequencyType: string;
+  weekdays?: number[];
+  timesPerPeriod?: number;
+  intervalDays?: number;
+}): FrequencyConfig {
+  switch (input.frequencyType) {
+    case "weekdays":
+      return { days: input.weekdays ?? [] };
+    case "x_per_week":
+    case "x_per_month":
+      return { timesPerPeriod: input.timesPerPeriod ?? 1 };
+    case "custom_interval":
+      return { intervalDays: input.intervalDays ?? 1 };
+    default:
+      return {};
+  }
+}
+
 export type HabitFrequencyInfo = {
   frequencyType: string;
   frequencyConfig: string | null;

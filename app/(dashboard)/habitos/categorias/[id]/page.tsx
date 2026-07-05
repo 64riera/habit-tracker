@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { getCategories } from "@/lib/queries/habits";
-import { deleteCategory, updateCategory } from "@/lib/actions/categories";
 import { CategoryForm } from "@/components/habit/category-form";
 import { ContentHeader } from "@/components/nav/content-header";
 import { DeleteCategoryButton } from "./delete-category-button";
@@ -15,15 +14,12 @@ export default async function CategoriaDetallePage({
   const category = categories.find((c) => c.id === id);
   if (!category) notFound();
 
-  const updateAction = updateCategory.bind(null, id);
-  const deleteAction = deleteCategory.bind(null, id);
-
   return (
     <div>
       <ContentHeader titleKey="categories.manage" subtitleKey="screens.habitos.subtitle" />
-      <CategoryForm action={updateAction} category={category} />
+      <CategoryForm category={category} />
       <div className="mt-3">
-        <DeleteCategoryButton action={deleteAction} />
+        <DeleteCategoryButton categoryId={id} />
       </div>
     </div>
   );

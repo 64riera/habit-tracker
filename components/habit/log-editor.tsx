@@ -3,9 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/client";
-import { useAchievementToast, useToast } from "@/lib/toast/client";
+import { useToast } from "@/lib/toast/client";
 import { useOffline } from "@/lib/offline/client";
-import { freezeHabitDay } from "@/lib/actions/logs";
 import type { HabitWithExtras } from "@/lib/queries/habits";
 import type { LogStatus } from "@/lib/habits/status";
 
@@ -26,7 +25,6 @@ export function LogEditor({
 }) {
   const { t } = useI18n();
   const { push } = useToast();
-  const notifyAchievements = useAchievementToast();
   const { runOrQueue } = useOffline();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -61,12 +59,14 @@ export function LogEditor({
   }
 
   function handleUseFreeze() {
+    // Optimista, igual que handleSave: si el cupo ya se agotó al sincronizar
+    // (otro congelado se aplicó primero), el aviso llega vía el toast
+    // centralizado de la cola offline, no aquí.
+    onSaved("frozen");
+    push(t("checkin.freezeUsed"));
     startTransition(async () => {
-      const { ok, unlocked } = await freezeHabitDay(habit.id, date);
-      if (!ok) return;
-      notifyAchievements(unlocked);
-      push(t("checkin.freezeUsed"));
-      onSaved("frozen");
+      await runOrQueue({ type: "freeze", habitId: habit.id, date });
+      router.refresh();
     });
   }
 

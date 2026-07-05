@@ -1,5 +1,4 @@
 import { getCategories } from "@/lib/queries/habits";
-import { createHabit } from "@/lib/actions/habits";
 import { HabitForm } from "@/components/habit/habit-form";
 import { ContentHeader } from "@/components/nav/content-header";
 
@@ -9,7 +8,7 @@ export default async function NuevoHabitoPage() {
   return (
     <div className="flex flex-1 flex-col">
       <ContentHeader titleKey="habit.newHabit" subtitleKey="habit.newHabitSubtitle" />
-      <HabitForm action={createHabit} categories={categories} />
+      <HabitForm categories={categories} />
     </div>
   );
 }

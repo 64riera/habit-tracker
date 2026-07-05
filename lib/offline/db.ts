@@ -1,12 +1,28 @@
 "use client";
 
 import type { LogInput } from "@/lib/actions/logs";
+import type { HabitFormValues } from "@/lib/validation/habit";
+import type { CategoryFormValues } from "@/lib/validation/category";
+import type { RoutineFormValues } from "@/lib/validation/routine";
 
 export type QueuedMutation =
   | { type: "log"; input: LogInput }
-  | { type: "delete"; habitId: string; date: string };
+  | { type: "delete"; habitId: string; date: string }
+  | { type: "freeze"; habitId: string; date: string }
+  | { type: "createHabit"; id: string; values: HabitFormValues }
+  | { type: "updateHabit"; habitId: string; values: HabitFormValues }
+  | { type: "archiveHabit"; habitId: string }
+  | { type: "restoreHabit"; habitId: string }
+  | { type: "togglePinHabit"; habitId: string; pinned: boolean }
+  | { type: "reorderHabits"; orderedIds: string[] }
+  | { type: "createCategory"; id: string; values: CategoryFormValues }
+  | { type: "updateCategory"; categoryId: string; values: CategoryFormValues }
+  | { type: "deleteCategory"; categoryId: string }
+  | { type: "createRoutine"; id: string; values: RoutineFormValues }
+  | { type: "updateRoutine"; routineId: string; values: RoutineFormValues }
+  | { type: "deleteRoutine"; routineId: string };
 
-type QueuedRecord = QueuedMutation & { id: number; createdAt: number };
+export type QueuedRecord = QueuedMutation & { id: number; createdAt: number };
 
 const DB_NAME = "habito-offline";
 const STORE_NAME = "mutations";

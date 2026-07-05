@@ -2,17 +2,19 @@
 
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { nanoid } from "nanoid";
 import { Archive } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { parseFrequencyConfig } from "@/lib/habits/frequency";
 import { cn } from "@/lib/utils";
 import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
-import type { HabitFormState } from "@/lib/actions/habits";
+import { createHabit, updateHabit, archiveHabit } from "@/lib/actions/habits";
+import { habitFormSchema, extractHabitFields } from "@/lib/validation/habit";
+import { useOfflineFormAction, useOfflineIdAction } from "@/lib/offline/form";
 import { toISODate } from "@/lib/date";
 
 type Props = {
-  action: (state: HabitFormState, formData: FormData) => Promise<HabitFormState>;
   categories: CategoryRow[];
   habit?: HabitWithExtras;
 };
@@ -20,9 +22,17 @@ type Props = {
 const GOAL_TYPES = ["binary", "quantitative", "duration"] as const;
 const FREQ_TYPES = ["daily", "weekdays", "x_per_week", "x_per_month", "custom_interval"] as const;
 
-export function HabitForm({ action, categories, habit }: Props) {
+export function HabitForm({ categories, habit }: Props) {
   const { t, locale } = useI18n();
   const cfg = parseFrequencyConfig(habit?.frequencyConfig ?? null);
+  const [id] = useState(() => habit?.id ?? nanoid());
+  const action = useOfflineFormAction({
+    schema: habitFormSchema,
+    extractFields: extractHabitFields,
+    buildMutation: (id, values) =>
+      habit ? { type: "updateHabit", habitId: habit.id, values } : { type: "createHabit", id, values },
+    onlineAction: habit ? (prevState, formData) => updateHabit(habit.id, prevState, formData) : createHabit,
+  });
   const [state, formAction] = useActionState(action, {});
 
   const [goalType, setGoalType] = useState(habit?.goalType ?? "binary");
@@ -34,6 +44,7 @@ export function HabitForm({ action, categories, habit }: Props) {
 
   return (
     <form action={formAction} className="flex flex-1 flex-col gap-5 min-w-0">
+      <input type="hidden" name="id" value={id} />
       <div className="text-sm font-semibold">
         {habit ? t("habit.editHabit") : t("habit.newHabit")}
       </div>
@@ -44,6 +55,12 @@ export function HabitForm({ action, categories, habit }: Props) {
           className="rounded-lg border border-cat-fitness/40 px-3.5 py-2.5 text-[12px] text-cat-fitness"
         >
           {t("habit.formError")}
+        </div>
+      )}
+
+      {state.queued && (
+        <div role="status" className="rounded-lg border border-border px-3.5 py-2.5 text-[12px] text-muted">
+          {t("offline.savedOffline")}
         </div>
       )}
 
@@ -272,12 +289,12 @@ function SaveButton({ label, loadingLabel }: { label: string; loadingLabel: stri
   );
 }
 
-export function ArchiveHabitButton({
-  action,
-}: {
-  action: (formData: FormData) => void | Promise<void>;
-}) {
+export function ArchiveHabitButton({ habitId }: { habitId: string }) {
   const { t } = useI18n();
+  const action = useOfflineIdAction({
+    onlineAction: () => archiveHabit(habitId),
+    buildMutation: () => ({ type: "archiveHabit", habitId }),
+  });
   return (
     <form
       action={action}

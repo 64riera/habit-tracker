@@ -2,13 +2,15 @@
 
 import { Trash2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
+import { deleteCategory } from "@/lib/actions/categories";
+import { useOfflineIdAction } from "@/lib/offline/form";
 
-export function DeleteCategoryButton({
-  action,
-}: {
-  action: (formData: FormData) => void | Promise<void>;
-}) {
+export function DeleteCategoryButton({ categoryId }: { categoryId: string }) {
   const { t } = useI18n();
+  const action = useOfflineIdAction({
+    onlineAction: () => deleteCategory(categoryId),
+    buildMutation: () => ({ type: "deleteCategory", categoryId }),
+  });
   return (
     <form
       action={action}

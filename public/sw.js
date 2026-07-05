@@ -72,3 +72,18 @@ self.addEventListener("fetch", (event) => {
     );
   }
 });
+
+// Mejora progresiva (Background Sync, no soportado en Safari/iOS): el SW no puede
+// re-ejecutar Server Actions directamente (su protocolo de invocación es interno de
+// cada build de Next), así que solo avisa a las pestañas abiertas para que ellas,
+// que sí tienen las referencias reales a las funciones, hagan el replay.
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-mutations") {
+    event.waitUntil(notifyClientsToDrain());
+  }
+});
+
+async function notifyClientsToDrain() {
+  const clients = await self.clients.matchAll({ type: "window" });
+  for (const client of clients) client.postMessage({ type: "drain-queue" });
+}

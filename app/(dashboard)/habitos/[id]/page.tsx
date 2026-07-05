@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { getCategories, getHabitById } from "@/lib/queries/habits";
-import { archiveHabit, updateHabit } from "@/lib/actions/habits";
 import { getBestMonthCheck, getHabitMonthSummary } from "@/lib/queries/summary";
 import { getTodayDateString } from "@/lib/date";
 import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
@@ -27,9 +26,6 @@ export default async function HabitoDetallePage({
 
   if (!habit) notFound();
 
-  const updateAction = updateHabit.bind(null, id);
-  const archiveAction = archiveHabit.bind(null, id);
-
   return (
     <div className="flex flex-1 flex-col">
       <ContentHeader
@@ -49,9 +45,9 @@ export default async function HabitoDetallePage({
         </div>
       </div>
 
-      <HabitForm action={updateAction} categories={categories} habit={habit} />
+      <HabitForm categories={categories} habit={habit} />
       <div className="mt-2">
-        <ArchiveHabitButton action={archiveAction} />
+        <ArchiveHabitButton habitId={id} />
       </div>
     </div>
   );

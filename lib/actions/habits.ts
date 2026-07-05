@@ -1,72 +1,48 @@
 "use server";
 
-import { nanoid } from "nanoid";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { habits } from "@/lib/db/schema";
-import { habitFormSchema } from "@/lib/validation/habit";
+import { habitFormSchema, extractHabitFields } from "@/lib/validation/habit";
 import { getCurrentUserId } from "@/lib/auth/session";
-import type { FrequencyConfig } from "@/lib/habits/frequency";
-
-function buildFrequencyConfig(input: {
-  frequencyType: string;
-  weekdays?: number[];
-  timesPerPeriod?: number;
-  intervalDays?: number;
-}): FrequencyConfig {
-  switch (input.frequencyType) {
-    case "weekdays":
-      return { days: input.weekdays ?? [] };
-    case "x_per_week":
-    case "x_per_month":
-      return { timesPerPeriod: input.timesPerPeriod ?? 1 };
-    case "custom_interval":
-      return { intervalDays: input.intervalDays ?? 1 };
-    default:
-      return {};
-  }
-}
+import { buildFrequencyConfig } from "@/lib/habits/frequency";
 
 export type HabitFormState = { error?: string };
 
-function parseFormData(formData: FormData) {
-  const weekdays = formData.getAll("weekdays").map(Number);
-  return habitFormSchema.parse({
-    name: formData.get("name"),
-    description: formData.get("description") ?? "",
-    categoryId: formData.get("categoryId") ?? "",
-    goalType: formData.get("goalType"),
-    goalTarget: formData.get("goalTarget") || undefined,
-    goalUnit: formData.get("goalUnit") ?? "",
-    frequencyType: formData.get("frequencyType"),
-    weekdays,
-    timesPerPeriod: formData.get("timesPerPeriod") || undefined,
-    intervalDays: formData.get("intervalDays") || undefined,
-    reminderTime: formData.get("reminderTime") ?? "",
-    hardMode: formData.get("hardMode") === "on",
-    skipDaysAllowed: formData.get("skipDaysAllowed") || 0,
-    startDate: formData.get("startDate"),
-    isPinned: formData.get("isPinned") === "on",
-  });
-}
-
+/**
+ * Ruta online (formulario/`useActionState`): delega la escritura al core y
+ * redirige aquí (real navegación server-side, no vista por el registro de
+ * replay offline, que llama a `createHabitCore` directo).
+ */
 export async function createHabit(
   _prevState: HabitFormState,
   formData: FormData
 ): Promise<HabitFormState> {
-  let values;
-  try {
-    values = parseFormData(formData);
-  } catch {
-    return { error: "invalid" };
-  }
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "invalid" };
+  const result = await createHabitCore(id, extractHabitFields(formData));
+  if (result.error) return result;
+  redirect("/habitos");
+}
+
+/**
+ * Núcleo reutilizado por `createHabit` (ruta online) y por el registro de
+ * replay offline. No redirige: la navegación la decide quien llama.
+ */
+export async function createHabitCore(id: string, rawValues: unknown): Promise<HabitFormState> {
+  const parsed = habitFormSchema.safeParse(rawValues);
+  if (!parsed.success) return { error: "invalid" };
+  const values = parsed.data;
   const userId = await getCurrentUserId();
   const frequencyConfig = buildFrequencyConfig(values);
 
+  // onConflictDoNothing: si el replay offline se reintenta (p. ej. el drenado se
+  // interrumpió justo después de insertar pero antes de retirar la mutación de la
+  // cola), reintentar la misma creación no debe fallar por choque de id.
   await db.insert(habits).values({
-    id: nanoid(),
+    id,
     userId,
     categoryId: values.categoryId || null,
     name: values.name,
@@ -82,11 +58,11 @@ export async function createHabit(
     startDate: values.startDate,
     isPinned: values.isPinned ?? false,
     status: "active",
-  });
+  }).onConflictDoNothing({ target: habits.id });
 
   revalidatePath("/");
   revalidatePath("/habitos");
-  redirect("/habitos");
+  return {};
 }
 
 export async function updateHabit(
@@ -94,12 +70,15 @@ export async function updateHabit(
   _prevState: HabitFormState,
   formData: FormData
 ): Promise<HabitFormState> {
-  let values;
-  try {
-    values = parseFormData(formData);
-  } catch {
-    return { error: "invalid" };
-  }
+  const result = await updateHabitCore(habitId, extractHabitFields(formData));
+  if (result.error) return result;
+  redirect("/habitos");
+}
+
+export async function updateHabitCore(habitId: string, rawValues: unknown): Promise<HabitFormState> {
+  const parsed = habitFormSchema.safeParse(rawValues);
+  if (!parsed.success) return { error: "invalid" };
+  const values = parsed.data;
   const userId = await getCurrentUserId();
   const frequencyConfig = buildFrequencyConfig(values);
 
@@ -125,10 +104,16 @@ export async function updateHabit(
   revalidatePath("/");
   revalidatePath("/habitos");
   revalidatePath(`/habitos/${habitId}`);
+  return {};
+}
+
+/** Ruta online: escribe vía el core y redirige. El replay offline usa `archiveHabitCore` directo. */
+export async function archiveHabit(habitId: string): Promise<void> {
+  await archiveHabitCore(habitId);
   redirect("/habitos");
 }
 
-export async function archiveHabit(habitId: string) {
+export async function archiveHabitCore(habitId: string): Promise<void> {
   const userId = await getCurrentUserId();
   await db
     .update(habits)
@@ -136,7 +121,6 @@ export async function archiveHabit(habitId: string) {
     .where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
   revalidatePath("/");
   revalidatePath("/habitos");
-  redirect("/habitos");
 }
 
 export async function restoreHabit(habitId: string) {
