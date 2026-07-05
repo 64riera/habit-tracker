@@ -159,6 +159,15 @@ export function HabitosClient({
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 truncate text-[13px] font-semibold">
+                          {isPinned && (
+                            <Star
+                              size={12}
+                              strokeWidth={2}
+                              fill="currentColor"
+                              aria-hidden
+                              style={{ color: "var(--color-accent)" }}
+                            />
+                          )}
                           <span className="truncate">{habit.name}</span>
                           {isPending && <PendingSyncBadge />}
                         </div>
@@ -167,15 +176,6 @@ export function HabitosClient({
                         </div>
                       </div>
                     </Link>
-                    <button
-                      type="button"
-                      onClick={() => handleTogglePin(habit.id, !isPinned)}
-                      aria-label={isPinned ? t("habit.unpin") : t("habit.pin")}
-                      className="shrink-0 text-sm"
-                      style={{ color: isPinned ? "var(--color-accent)" : "var(--color-border)" }}
-                    >
-                      ★
-                    </button>
                     <div
                       className="shrink-0 text-[9.5px] font-semibold"
                       style={{
@@ -215,19 +215,14 @@ export function HabitosClient({
                     },
                   ]}
                 >
-                  <div className="flex items-center gap-2.5 border-b border-border py-3 opacity-60">
+                  <Link
+                    href={`/habitos/${habit.id}`}
+                    className="flex items-center gap-2.5 border-b border-border py-3 opacity-60"
+                  >
                     <div className="min-w-0 flex-1 truncate text-[13px] font-semibold">
                       {habit.name}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRestore(habit.id)}
-                      className="flex shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-1 text-[11px] font-medium text-muted"
-                    >
-                      <RotateCcw size={12} strokeWidth={2.2} aria-hidden />
-                      {t("habit.restore")}
-                    </button>
-                  </div>
+                  </Link>
                 </SwipeableRow>
               ))}
             </div>

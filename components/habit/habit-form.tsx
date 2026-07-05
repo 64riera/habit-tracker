@@ -3,13 +3,13 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { nanoid } from "nanoid";
-import { Archive } from "lucide-react";
+import { Archive, RotateCcw } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { parseFrequencyConfig } from "@/lib/habits/frequency";
 import { cn } from "@/lib/utils";
 import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
-import { createHabit, updateHabit, archiveHabit } from "@/lib/actions/habits";
+import { createHabit, updateHabit, archiveHabit, restoreHabit } from "@/lib/actions/habits";
 import { habitFormSchema, extractHabitFields } from "@/lib/validation/habit";
 import { useOfflineFormAction, useOfflineIdAction } from "@/lib/offline/form";
 import { toISODate } from "@/lib/date";
@@ -289,25 +289,44 @@ function SaveButton({ label, loadingLabel }: { label: string; loadingLabel: stri
   );
 }
 
-export function ArchiveHabitButton({ habitId }: { habitId: string }) {
+/**
+ * En la página de detalle: archiva (si el hábito está activo) o restaura (si ya
+ * está archivado). Es el único punto de restauración fuera del swipe de la lista,
+ * así que cubre a quien no puede o no sabe usar el gesto.
+ */
+export function ArchiveHabitButton({ habitId, status }: { habitId: string; status: string }) {
   const { t } = useI18n();
+  const isArchived = status === "archived";
   const action = useOfflineIdAction({
-    onlineAction: () => archiveHabit(habitId),
-    buildMutation: () => ({ type: "archiveHabit", habitId }),
+    onlineAction: () => (isArchived ? restoreHabit(habitId) : archiveHabit(habitId)),
+    buildMutation: () =>
+      isArchived ? { type: "restoreHabit", habitId } : { type: "archiveHabit", habitId },
   });
   return (
     <form
       action={action}
       onSubmit={(e) => {
-        if (!confirm(t("habit.deleteConfirm"))) e.preventDefault();
+        if (!isArchived && !confirm(t("habit.deleteConfirm"))) e.preventDefault();
       }}
     >
-      <ArchiveSubmitButton label={t("common.archive")} loadingLabel={t("common.loading")} />
+      <ArchiveSubmitButton
+        label={isArchived ? t("habit.restore") : t("common.archive")}
+        loadingLabel={t("common.loading")}
+        icon={isArchived ? <RotateCcw size={13} strokeWidth={2} aria-hidden /> : <Archive size={13} strokeWidth={2} aria-hidden />}
+      />
     </form>
   );
 }
 
-function ArchiveSubmitButton({ label, loadingLabel }: { label: string; loadingLabel: string }) {
+function ArchiveSubmitButton({
+  label,
+  loadingLabel,
+  icon,
+}: {
+  label: string;
+  loadingLabel: string;
+  icon: React.ReactNode;
+}) {
   const { pending } = useFormStatus();
   return (
     <button
@@ -315,7 +334,7 @@ function ArchiveSubmitButton({ label, loadingLabel }: { label: string; loadingLa
       disabled={pending}
       className="flex items-center gap-1.5 px-4 py-2.5 text-[12.5px] text-muted disabled:opacity-60"
     >
-      <Archive size={13} strokeWidth={2} aria-hidden />
+      {icon}
       {pending ? loadingLabel : label}
     </button>
   );

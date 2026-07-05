@@ -47,7 +47,7 @@ export default async function HabitoDetallePage({
 
       <HabitForm categories={categories} habit={habit} />
       <div className="mt-2">
-        <ArchiveHabitButton habitId={id} />
+        <ArchiveHabitButton habitId={id} status={habit.status} />
       </div>
     </div>
   );
