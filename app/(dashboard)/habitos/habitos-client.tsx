@@ -9,6 +9,7 @@ import { ReorderableList } from "@/components/ui/reorderable-list";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName, describeFrequency } from "@/lib/habits/describe";
 import { useOffline } from "@/lib/offline/client";
+import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
 import {
   pendingHabitCreates,
   pendingHabitUpdates,
@@ -120,10 +121,12 @@ export function HabitosClient({
                     {habit.name.charAt(0).toUpperCase()}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-[13px] font-semibold">{habit.name}</div>
+                    <div className="flex items-center gap-1.5 truncate text-[13px] font-semibold">
+                      <span className="truncate">{habit.name}</span>
+                      {isPending && <PendingSyncBadge />}
+                    </div>
                     <div className="mt-0.5 truncate text-[10.5px] text-muted">
                       {categoryDisplayName(habit.category, locale)} · {describeFrequency(habit, dict)}
-                      {isPending && ` · ${t("offline.pendingItem")}`}
                     </div>
                   </div>
                 </Link>

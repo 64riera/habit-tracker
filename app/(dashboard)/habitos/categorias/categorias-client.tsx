@@ -7,6 +7,7 @@ import { ContentHeader } from "@/components/nav/content-header";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { useOffline } from "@/lib/offline/client";
+import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
 import {
   pendingCategoryCreates,
   pendingCategoryUpdates,
@@ -63,9 +64,9 @@ export function CategoriasClient({ categories }: { categories: CategoryRow[] }) 
               >
                 {c.icon}
               </span>
-              <span className="text-[13px] font-semibold">
-                {categoryDisplayName(c, locale)}
-                {isPending && ` · ${t("offline.pendingItem")}`}
+              <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-semibold">
+                <span className="truncate">{categoryDisplayName(c, locale)}</span>
+                {isPending && <PendingSyncBadge />}
               </span>
             </Link>
           );

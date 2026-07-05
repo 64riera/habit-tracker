@@ -9,15 +9,18 @@ import type { HabitWithExtras } from "@/lib/queries/habits";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { LogEditor } from "./log-editor";
+import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
 import type { LogStatus } from "@/lib/habits/status";
 
 type Props = {
   habit: HabitWithExtras;
   date: string;
   compact?: boolean;
+  /** El hábito en sí (no el check-in) tiene una creación/edición/archivado sin sincronizar. */
+  isPendingSync?: boolean;
 };
 
-export function HabitCheckRow({ habit, date, compact }: Props) {
+export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
   const { t, dict, locale } = useI18n();
   const router = useRouter();
   const { runOrQueue } = useOffline();
@@ -106,7 +109,7 @@ export function HabitCheckRow({ habit, date, compact }: Props) {
   }
 
   return (
-    <div className={cn(isPending && "opacity-70")}>
+    <div className={cn((isPending || isPendingSync) && "opacity-70")}>
       <div className="flex items-center gap-4 border-b border-border py-3.5">
         <Link
           href={`/habitos/${habit.id}`}
@@ -116,13 +119,14 @@ export function HabitCheckRow({ habit, date, compact }: Props) {
           {habit.name.charAt(0).toUpperCase()}
         </Link>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[13.5px] font-semibold md:text-[15px]">
+          <div className="flex items-center gap-1.5 truncate text-[13.5px] font-semibold md:text-[15px]">
             {habit.isPinned && (
               <span className="mr-1" style={{ color: "var(--color-accent)" }} aria-hidden>
                 ★
               </span>
             )}
-            {habit.name}
+            <span className="truncate">{habit.name}</span>
+            {isPendingSync && <PendingSyncBadge />}
           </div>
           <div className="mt-0.5 truncate text-[11px] text-muted md:text-xs">
             {!compact && habit.category ? `${categoryDisplayName(habit.category, locale)} · ` : ""}

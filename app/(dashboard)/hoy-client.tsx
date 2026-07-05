@@ -1,31 +1,60 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { HabitCheckRow } from "@/components/habit/habit-check-row";
 import { RoutineQuickActions } from "@/components/habit/routine-quick-actions";
 import { useI18n } from "@/lib/i18n/client";
-import type { HabitWithExtras } from "@/lib/queries/habits";
+import { useOffline } from "@/lib/offline/client";
+import {
+  pendingHabitCreates,
+  pendingHabitUpdates,
+  pendingHabitArchiveIds,
+  buildGhostHabit,
+  applyPendingHabitEdit,
+} from "@/lib/offline/pending-selectors";
+import { isDateApplicable } from "@/lib/habits/frequency";
+import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
 import type { RoutineToday } from "@/lib/queries/routines";
 
 export function HoyClient({
   habits,
   routines,
   date,
+  categories,
 }: {
   habits: HabitWithExtras[];
   routines: RoutineToday[];
   date: string;
+  categories: CategoryRow[];
 }) {
   const { t } = useI18n();
+  const { pendingMutations } = useOffline();
 
-  const total = habits.length;
-  const done = habits.filter((h) => h.todayLog?.status === "done").length;
-  const inProgress = habits.filter((h) => h.todayLog?.status === "partial").length;
+  const pendingNewHabits = pendingHabitCreates(pendingMutations);
+  const pendingEdits = pendingHabitUpdates(pendingMutations);
+  const pendingArchiveIds = pendingHabitArchiveIds(pendingMutations);
+  const pendingIds = useMemo(
+    () => new Set([...pendingNewHabits.map((m) => m.id), ...pendingEdits.keys()]),
+    [pendingNewHabits, pendingEdits]
+  );
+
+  const displayHabits = useMemo(() => {
+    const overlaid = habits
+      .filter((h) => !pendingArchiveIds.has(h.id))
+      .map((h) => (pendingEdits.has(h.id) ? applyPendingHabitEdit(h, pendingEdits.get(h.id)!, categories) : h));
+    const ghosts = pendingNewHabits.map((m) => buildGhostHabit(m.id, m.values, categories));
+    return [...overlaid, ...ghosts].filter((h) => isDateApplicable(h, date));
+  }, [habits, pendingEdits, pendingArchiveIds, pendingNewHabits, categories, date]);
+
+  const total = displayHabits.length;
+  const done = displayHabits.filter((h) => h.todayLog?.status === "done").length;
+  const inProgress = displayHabits.filter((h) => h.todayLog?.status === "partial").length;
   const pct = total === 0 ? 0 : Math.round((done / total) * 100);
 
-  const best = habits.reduce<HabitWithExtras | null>((acc, h) => {
+  const best = displayHabits.reduce<HabitWithExtras | null>((acc, h) => {
     if (!acc || h.streak.longest > acc.streak.longest) return h;
     return acc;
   }, null);
@@ -75,8 +104,13 @@ export function HoyClient({
           <RoutineQuickActions routines={routines} date={date} />
 
           <div className="flex flex-col">
-            {habits.map((habit) => (
-              <HabitCheckRow key={habit.id} habit={habit} date={date} />
+            {displayHabits.map((habit) => (
+              <HabitCheckRow
+                key={habit.id}
+                habit={habit}
+                date={date}
+                isPendingSync={pendingIds.has(habit.id)}
+              />
             ))}
           </div>
         </div>

@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { useI18n } from "@/lib/i18n/client";
 import { useOffline } from "@/lib/offline/client";
+import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
 import {
   pendingRoutineCreates,
   pendingRoutineUpdates,
@@ -64,9 +65,9 @@ export function RutinasClient({
               style={isPending ? { opacity: 0.6 } : undefined}
             >
               <div className="min-w-0">
-                <div className="truncate text-[13px] font-semibold">
-                  {r.name}
-                  {isPending && ` · ${t("offline.pendingItem")}`}
+                <div className="flex items-center gap-1.5 truncate text-[13px] font-semibold">
+                  <span className="truncate">{r.name}</span>
+                  {isPending && <PendingSyncBadge />}
                 </div>
                 <div className="mt-0.5 truncate text-[11px] text-muted">
                   {r.habits.map((h) => h.name).join(" · ")}
