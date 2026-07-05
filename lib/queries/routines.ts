@@ -5,6 +5,7 @@ import { habitLogs, habits, routines } from "@/lib/db/schema";
 import { addDays, dateRange } from "@/lib/date";
 import { isDateApplicable } from "@/lib/habits/frequency";
 import { overLimitSkipDates, keepsStreakOn } from "@/lib/habits/status";
+import { getCurrentUserId } from "@/lib/auth/session";
 import type { HabitRow } from "@/lib/queries/habits";
 
 export type RoutineRow = typeof routines.$inferSelect;
@@ -33,7 +34,12 @@ function parseHabitIds(raw: string): string[] {
 }
 
 export async function getRoutines(): Promise<RoutineWithHabits[]> {
-  const rows = await db.select().from(routines).orderBy(routines.sortOrder);
+  const userId = await getCurrentUserId();
+  const rows = await db
+    .select()
+    .from(routines)
+    .where(eq(routines.userId, userId))
+    .orderBy(routines.sortOrder);
   if (rows.length === 0) return [];
 
   const allHabitIds = Array.from(new Set(rows.flatMap((r) => parseHabitIds(r.habitIds))));

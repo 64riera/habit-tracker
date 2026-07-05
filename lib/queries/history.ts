@@ -5,6 +5,7 @@ import { habitLogs, habits } from "@/lib/db/schema";
 import { dateRange, addDays, isoWeekday, startOfWeek } from "@/lib/date";
 import { isDateApplicable } from "@/lib/habits/frequency";
 import { overLimitSkipDates, keepsStreakOn } from "@/lib/habits/status";
+import { getCurrentUserId } from "@/lib/auth/session";
 
 export type HistoryFilters = { habitId?: string; categoryId?: string };
 
@@ -18,7 +19,8 @@ export type DayCell = {
 };
 
 async function getApplicableHabits(filters: HistoryFilters) {
-  const all = await db.select().from(habits);
+  const userId = await getCurrentUserId();
+  const all = await db.select().from(habits).where(eq(habits.userId, userId));
   return all.filter((h) => {
     if (filters.habitId && h.id !== filters.habitId) return false;
     if (filters.categoryId && h.categoryId !== filters.categoryId) return false;
@@ -142,7 +144,8 @@ export async function getRecentLog(
   filters: HistoryFilters = {},
   offset = 0
 ): Promise<LogEntry[]> {
-  const conditions = [];
+  const userId = await getCurrentUserId();
+  const conditions = [eq(habits.userId, userId)];
   if (filters.habitId) conditions.push(eq(habitLogs.habitId, filters.habitId));
   if (filters.categoryId) conditions.push(eq(habits.categoryId, filters.categoryId));
 
@@ -159,7 +162,7 @@ export async function getRecentLog(
     })
     .from(habitLogs)
     .innerJoin(habits, eq(habits.id, habitLogs.habitId))
-    .where(conditions.length ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(desc(habitLogs.date), desc(habitLogs.loggedAt))
     .limit(limit)
     .offset(offset);

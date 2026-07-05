@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { habitLogs, habits } from "@/lib/db/schema";
+import { getCurrentUserId } from "@/lib/auth/session";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -8,7 +9,8 @@ export async function GET(request: Request) {
   const habitId = url.searchParams.get("habit") ?? undefined;
   const categoryId = url.searchParams.get("category") ?? undefined;
 
-  const conditions = [];
+  const userId = await getCurrentUserId();
+  const conditions = [eq(habits.userId, userId)];
   if (habitId) conditions.push(eq(habitLogs.habitId, habitId));
   if (categoryId) conditions.push(eq(habits.categoryId, categoryId));
 
@@ -24,7 +26,7 @@ export async function GET(request: Request) {
     })
     .from(habitLogs)
     .innerJoin(habits, eq(habits.id, habitLogs.habitId))
-    .where(conditions.length ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(habitLogs.date);
 
   if (format === "json") {

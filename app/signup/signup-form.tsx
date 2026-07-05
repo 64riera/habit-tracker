@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { login, type AuthState } from "@/lib/actions/auth";
+import { signup, type AuthState } from "@/lib/actions/auth";
 import { useI18n } from "@/lib/i18n/client";
 import { LangToggle } from "@/components/nav/lang-toggle";
 
 const initialState: AuthState = {};
 
-export function LoginForm({ next }: { next: string }) {
+export function SignupForm({ next }: { next: string }) {
   const { t } = useI18n();
-  const [state, formAction, pending] = useActionState(login, initialState);
+  const [state, formAction, pending] = useActionState(signup, initialState);
 
   return (
     <form
@@ -20,7 +20,7 @@ export function LoginForm({ next }: { next: string }) {
       <LangToggle />
       <div className="text-center">
         <div className="font-serif-italic text-2xl font-semibold">{t("auth.title")}</div>
-        <div className="mt-1 text-[12.5px] text-muted">{t("auth.loginSubtitle")}</div>
+        <div className="mt-1 text-[12.5px] text-muted">{t("auth.signupSubtitle")}</div>
       </div>
       <input type="hidden" name="next" value={next} />
       <div className="flex w-full flex-col gap-2.5">
@@ -35,7 +35,7 @@ export function LoginForm({ next }: { next: string }) {
         <input
           name="password"
           type="password"
-          autoComplete="current-password"
+          autoComplete="new-password"
           placeholder={t("auth.passwordLabel")}
           className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm outline-none focus:border-text"
         />
@@ -50,15 +50,15 @@ export function LoginForm({ next }: { next: string }) {
         disabled={pending}
         className="w-full rounded-lg bg-text px-5 py-2.5 text-sm font-semibold text-surface disabled:opacity-60"
       >
-        {pending ? t("common.loading") : t("auth.loginSubmit")}
+        {pending ? t("common.loading") : t("auth.signupSubmit")}
       </button>
       <div className="text-xs text-muted">
-        {t("auth.noAccount")}{" "}
+        {t("auth.haveAccount")}{" "}
         <Link
-          href={`/signup?next=${encodeURIComponent(next)}`}
+          href={`/login?next=${encodeURIComponent(next)}`}
           className="font-semibold text-text underline"
         >
-          {t("auth.signupLink")}
+          {t("auth.loginLink")}
         </Link>
       </div>
     </form>

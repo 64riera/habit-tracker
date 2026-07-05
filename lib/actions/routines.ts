@@ -1,11 +1,12 @@
 "use server";
 
 import { nanoid } from "nanoid";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { routines } from "@/lib/db/schema";
+import { getCurrentUserId } from "@/lib/auth/session";
 import { z } from "zod";
 
 const routineSchema = z.object({
@@ -19,10 +20,12 @@ export async function createRoutine(formData: FormData) {
     habitIds: formData.getAll("habitIds"),
   });
 
-  const count = (await db.select().from(routines)).length;
+  const userId = await getCurrentUserId();
+  const count = (await db.select().from(routines).where(eq(routines.userId, userId))).length;
 
   await db.insert(routines).values({
     id: nanoid(),
+    userId,
     name: values.name,
     habitIds: JSON.stringify(values.habitIds),
     sortOrder: count,
@@ -39,10 +42,11 @@ export async function updateRoutine(routineId: string, formData: FormData) {
     habitIds: formData.getAll("habitIds"),
   });
 
+  const userId = await getCurrentUserId();
   await db
     .update(routines)
     .set({ name: values.name, habitIds: JSON.stringify(values.habitIds) })
-    .where(eq(routines.id, routineId));
+    .where(and(eq(routines.id, routineId), eq(routines.userId, userId)));
 
   revalidatePath("/");
   revalidatePath("/habitos/rutinas");
@@ -50,7 +54,8 @@ export async function updateRoutine(routineId: string, formData: FormData) {
 }
 
 export async function deleteRoutine(routineId: string) {
-  await db.delete(routines).where(eq(routines.id, routineId));
+  const userId = await getCurrentUserId();
+  await db.delete(routines).where(and(eq(routines.id, routineId), eq(routines.userId, userId)));
 
   revalidatePath("/");
   revalidatePath("/habitos/rutinas");

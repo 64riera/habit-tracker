@@ -1,11 +1,12 @@
 "use server";
 
 import { nanoid } from "nanoid";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { categories, habits } from "@/lib/db/schema";
+import { getCurrentUserId } from "@/lib/auth/session";
 import { z } from "zod";
 
 const categorySchema = z.object({
@@ -23,10 +24,12 @@ export async function createCategory(formData: FormData) {
     icon: formData.get("icon") ?? "",
   });
 
-  const count = (await db.select().from(categories)).length;
+  const userId = await getCurrentUserId();
+  const count = (await db.select().from(categories).where(eq(categories.userId, userId))).length;
 
   await db.insert(categories).values({
     id: nanoid(),
+    userId,
     nameEs: values.nameEs,
     nameEn: values.nameEn,
     color: values.color,
@@ -47,6 +50,7 @@ export async function updateCategory(categoryId: string, formData: FormData) {
     icon: formData.get("icon") ?? "",
   });
 
+  const userId = await getCurrentUserId();
   await db
     .update(categories)
     .set({
@@ -55,7 +59,7 @@ export async function updateCategory(categoryId: string, formData: FormData) {
       color: values.color,
       icon: values.icon || "●",
     })
-    .where(eq(categories.id, categoryId));
+    .where(and(eq(categories.id, categoryId), eq(categories.userId, userId)));
 
   revalidatePath("/habitos");
   revalidatePath("/habitos/categorias");
@@ -63,8 +67,12 @@ export async function updateCategory(categoryId: string, formData: FormData) {
 }
 
 export async function deleteCategory(categoryId: string) {
-  await db.update(habits).set({ categoryId: null }).where(eq(habits.categoryId, categoryId));
-  await db.delete(categories).where(eq(categories.id, categoryId));
+  const userId = await getCurrentUserId();
+  await db
+    .update(habits)
+    .set({ categoryId: null })
+    .where(and(eq(habits.categoryId, categoryId), eq(habits.userId, userId)));
+  await db.delete(categories).where(and(eq(categories.id, categoryId), eq(categories.userId, userId)));
 
   revalidatePath("/habitos");
   revalidatePath("/habitos/categorias");

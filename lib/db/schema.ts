@@ -1,19 +1,36 @@
 import { sqliteTable, text, integer, real, uniqueIndex, index } from "drizzle-orm/sqlite-core";
 import { relations, sql } from "drizzle-orm";
 
-export const categories = sqliteTable("categories", {
-  id: text("id").primaryKey(),
-  nameEs: text("name_es").notNull(),
-  nameEn: text("name_en").notNull(),
-  color: text("color").notNull(),
-  icon: text("icon").notNull(),
-  sortOrder: integer("sort_order").notNull().default(0),
-});
+export const users = sqliteTable(
+  "users",
+  {
+    id: text("id").primaryKey(),
+    username: text("username").notNull(),
+    passwordHash: text("password_hash").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [uniqueIndex("users_username_idx").on(t.username)]
+);
+
+export const categories = sqliteTable(
+  "categories",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    nameEs: text("name_es").notNull(),
+    nameEn: text("name_en").notNull(),
+    color: text("color").notNull(),
+    icon: text("icon").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+  },
+  (t) => [index("categories_user_idx").on(t.userId)]
+);
 
 export const habits = sqliteTable(
   "habits",
   {
     id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     categoryId: text("category_id").references(() => categories.id),
     name: text("name").notNull(),
     description: text("description"),
@@ -36,13 +53,14 @@ export const habits = sqliteTable(
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
-  (t) => [index("habits_status_idx").on(t.status)]
+  (t) => [index("habits_user_idx").on(t.userId), index("habits_status_idx").on(t.status)]
 );
 
 export const habitLogs = sqliteTable(
   "habit_logs",
   {
     id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     habitId: text("habit_id").notNull().references(() => habits.id, { onDelete: "cascade" }),
     date: text("date").notNull(), // YYYY-MM-DD
     status: text("status", {
@@ -56,11 +74,13 @@ export const habitLogs = sqliteTable(
   (t) => [
     uniqueIndex("habit_logs_habit_date_idx").on(t.habitId, t.date),
     index("habit_logs_date_idx").on(t.date),
+    index("habit_logs_user_idx").on(t.userId),
   ]
 );
 
 export const habitStreaks = sqliteTable("habit_streaks", {
   habitId: text("habit_id").primaryKey().references(() => habits.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   currentStreak: integer("current_streak").notNull().default(0),
   longestStreak: integer("longest_streak").notNull().default(0),
   freezesAvailable: integer("freezes_available").notNull().default(1),
@@ -68,26 +88,41 @@ export const habitStreaks = sqliteTable("habit_streaks", {
   lastComputedDate: text("last_computed_date"),
 });
 
-export const achievements = sqliteTable("achievements", {
-  id: text("id").primaryKey(),
-  habitId: text("habit_id").references(() => habits.id, { onDelete: "cascade" }),
-  type: text("type", {
-    enum: ["7_days", "30_days", "100_days", "perfect_month", "comeback"],
-  }).notNull(),
-  unlockedAt: text("unlocked_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-});
+export const achievements = sqliteTable(
+  "achievements",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    habitId: text("habit_id").references(() => habits.id, { onDelete: "cascade" }),
+    type: text("type", {
+      enum: ["7_days", "30_days", "100_days", "perfect_month", "comeback"],
+    }).notNull(),
+    unlockedAt: text("unlocked_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [index("achievements_user_idx").on(t.userId)]
+);
 
-export const routines = sqliteTable("routines", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  habitIds: text("habit_ids").notNull(), // JSON array
-  sortOrder: integer("sort_order").notNull().default(0),
-});
+export const routines = sqliteTable(
+  "routines",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    habitIds: text("habit_ids").notNull(), // JSON array
+    sortOrder: integer("sort_order").notNull().default(0),
+  },
+  (t) => [index("routines_user_idx").on(t.userId)]
+);
 
 export const settings = sqliteTable("settings", {
   key: text("key").primaryKey(),
   value: text("value"),
 });
+
+export const usersRelations = relations(users, ({ many }) => ({
+  categories: many(categories),
+  habits: many(habits),
+}));
 
 export const habitsRelations = relations(habits, ({ one, many }) => ({
   category: one(categories, { fields: [habits.categoryId], references: [categories.id] }),

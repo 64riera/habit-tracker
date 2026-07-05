@@ -1,12 +1,13 @@
 "use server";
 
 import { nanoid } from "nanoid";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { habits } from "@/lib/db/schema";
 import { habitFormSchema } from "@/lib/validation/habit";
+import { getCurrentUserId } from "@/lib/auth/session";
 import type { FrequencyConfig } from "@/lib/habits/frequency";
 
 function buildFrequencyConfig(input: {
@@ -61,10 +62,12 @@ export async function createHabit(
   } catch {
     return { error: "invalid" };
   }
+  const userId = await getCurrentUserId();
   const frequencyConfig = buildFrequencyConfig(values);
 
   await db.insert(habits).values({
     id: nanoid(),
+    userId,
     categoryId: values.categoryId || null,
     name: values.name,
     description: values.description || null,
@@ -97,6 +100,7 @@ export async function updateHabit(
   } catch {
     return { error: "invalid" };
   }
+  const userId = await getCurrentUserId();
   const frequencyConfig = buildFrequencyConfig(values);
 
   await db
@@ -116,7 +120,7 @@ export async function updateHabit(
       startDate: values.startDate,
       isPinned: values.isPinned ?? false,
     })
-    .where(eq(habits.id, habitId));
+    .where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
 
   revalidatePath("/");
   revalidatePath("/habitos");
@@ -125,28 +129,44 @@ export async function updateHabit(
 }
 
 export async function archiveHabit(habitId: string) {
-  await db.update(habits).set({ status: "archived" }).where(eq(habits.id, habitId));
+  const userId = await getCurrentUserId();
+  await db
+    .update(habits)
+    .set({ status: "archived" })
+    .where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
   revalidatePath("/");
   revalidatePath("/habitos");
   redirect("/habitos");
 }
 
 export async function restoreHabit(habitId: string) {
-  await db.update(habits).set({ status: "active" }).where(eq(habits.id, habitId));
+  const userId = await getCurrentUserId();
+  await db
+    .update(habits)
+    .set({ status: "active" })
+    .where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
   revalidatePath("/");
   revalidatePath("/habitos");
 }
 
 export async function togglePinHabit(habitId: string, pinned: boolean) {
-  await db.update(habits).set({ isPinned: pinned }).where(eq(habits.id, habitId));
+  const userId = await getCurrentUserId();
+  await db
+    .update(habits)
+    .set({ isPinned: pinned })
+    .where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
   revalidatePath("/");
   revalidatePath("/habitos");
 }
 
 export async function reorderHabits(orderedIds: string[]) {
+  const userId = await getCurrentUserId();
   await Promise.all(
     orderedIds.map((id, index) =>
-      db.update(habits).set({ sortOrder: index }).where(eq(habits.id, id))
+      db
+        .update(habits)
+        .set({ sortOrder: index })
+        .where(and(eq(habits.id, id), eq(habits.userId, userId)))
     )
   );
   revalidatePath("/");

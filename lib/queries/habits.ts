@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import { categories, habitLogs, habitStreaks, habits } from "@/lib/db/schema";
 import { isDateApplicable } from "@/lib/habits/frequency";
 import { FREEZE_MONTHLY_ALLOWANCE } from "@/lib/habits/status";
+import { getCurrentUserId } from "@/lib/auth/session";
 
 export type CategoryRow = typeof categories.$inferSelect;
 export type HabitRow = typeof habits.$inferSelect;
@@ -16,19 +17,25 @@ export type HabitWithExtras = HabitRow & {
 };
 
 export async function getCategories(): Promise<CategoryRow[]> {
-  return db.select().from(categories).orderBy(categories.sortOrder);
+  const userId = await getCurrentUserId();
+  return db.select().from(categories).where(eq(categories.userId, userId)).orderBy(categories.sortOrder);
 }
 
 export async function getHabitNames(): Promise<{ id: string; name: string }[]> {
-  return db.select({ id: habits.id, name: habits.name }).from(habits).orderBy(habits.sortOrder);
+  const userId = await getCurrentUserId();
+  return db
+    .select({ id: habits.id, name: habits.name })
+    .from(habits)
+    .where(eq(habits.userId, userId))
+    .orderBy(habits.sortOrder);
 }
 
-async function attachExtras(rows: HabitRow[], date: string): Promise<HabitWithExtras[]> {
+async function attachExtras(rows: HabitRow[], date: string, userId: string): Promise<HabitWithExtras[]> {
   if (rows.length === 0) return [];
   const ids = rows.map((r) => r.id);
 
   const [cats, logs, streaks] = await Promise.all([
-    db.select().from(categories),
+    db.select().from(categories).where(eq(categories.userId, userId)),
     db
       .select()
       .from(habitLogs)
@@ -53,9 +60,13 @@ async function attachExtras(rows: HabitRow[], date: string): Promise<HabitWithEx
 }
 
 export async function getHabitsForToday(date: string): Promise<HabitWithExtras[]> {
-  const active = await db.select().from(habits).where(eq(habits.status, "active"));
+  const userId = await getCurrentUserId();
+  const active = await db
+    .select()
+    .from(habits)
+    .where(and(eq(habits.userId, userId), eq(habits.status, "active")));
   const applicable = active.filter((h) => isDateApplicable(h, date));
-  const withExtras = await attachExtras(applicable, date);
+  const withExtras = await attachExtras(applicable, date, userId);
   return withExtras.sort((a, b) => {
     if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
     return a.sortOrder - b.sortOrder;
@@ -63,8 +74,12 @@ export async function getHabitsForToday(date: string): Promise<HabitWithExtras[]
 }
 
 export async function getActiveHabits(date: string): Promise<HabitWithExtras[]> {
-  const active = await db.select().from(habits).where(eq(habits.status, "active"));
-  const withExtras = await attachExtras(active, date);
+  const userId = await getCurrentUserId();
+  const active = await db
+    .select()
+    .from(habits)
+    .where(and(eq(habits.userId, userId), eq(habits.status, "active")));
+  const withExtras = await attachExtras(active, date, userId);
   return withExtras.sort((a, b) => {
     if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
     return a.sortOrder - b.sortOrder;
@@ -72,14 +87,20 @@ export async function getActiveHabits(date: string): Promise<HabitWithExtras[]> 
 }
 
 export async function getAllHabitsForManagement(date: string): Promise<HabitWithExtras[]> {
-  const all = await db.select().from(habits);
-  const withExtras = await attachExtras(all, date);
+  const userId = await getCurrentUserId();
+  const all = await db.select().from(habits).where(eq(habits.userId, userId));
+  const withExtras = await attachExtras(all, date, userId);
   return withExtras.sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
 export async function getHabitById(id: string): Promise<HabitWithExtras | null> {
-  const [habit] = await db.select().from(habits).where(eq(habits.id, id)).limit(1);
+  const userId = await getCurrentUserId();
+  const [habit] = await db
+    .select()
+    .from(habits)
+    .where(and(eq(habits.id, id), eq(habits.userId, userId)))
+    .limit(1);
   if (!habit) return null;
-  const [withExtras] = await attachExtras([habit], "9999-99-99");
+  const [withExtras] = await attachExtras([habit], "9999-99-99", userId);
   return withExtras;
 }

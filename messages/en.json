@@ -40,10 +40,22 @@
   },
   "auth": {
     "title": "Habit.",
-    "subtitle": "Enter your PIN to continue",
-    "pinLabel": "Access PIN",
-    "submit": "Enter",
-    "error": "Incorrect PIN"
+    "loginSubtitle": "Log in to your account",
+    "signupSubtitle": "Create your account to get started",
+    "usernameLabel": "Username",
+    "passwordLabel": "Password",
+    "loginSubmit": "Log in",
+    "signupSubmit": "Create account",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "signupLink": "Sign up",
+    "loginLink": "Log in",
+    "errors": {
+      "invalidCredentials": "Incorrect username or password",
+      "usernameTaken": "That username is already taken",
+      "usernameInvalid": "Username must be 3-30 characters (letters, numbers, . _ -)",
+      "passwordTooShort": "Password must be at least 8 characters"
+    }
   },
   "habit": {
     "newHabit": "+ New habit",

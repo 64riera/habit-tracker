@@ -6,12 +6,18 @@ import { dateRange, getTodayDateString, monthKey } from "@/lib/date";
 import { isDateApplicable } from "@/lib/habits/frequency";
 import { overLimitSkipDates, keepsStreakOn, FREEZE_MONTHLY_ALLOWANCE } from "@/lib/habits/status";
 import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { getCurrentUserId } from "@/lib/auth/session";
 
 export type StreakResult = { current: number; longest: number };
 
 /** Recalcula racha actual y máxima de un hábito a partir de habit_logs, y cachea el resultado. */
 export async function recalcStreakForHabit(habitId: string): Promise<StreakResult> {
-  const [habit] = await db.select().from(habits).where(eq(habits.id, habitId)).limit(1);
+  const userId = await getCurrentUserId();
+  const [habit] = await db
+    .select()
+    .from(habits)
+    .where(and(eq(habits.id, habitId), eq(habits.userId, userId)))
+    .limit(1);
   if (!habit) return { current: 0, longest: 0 };
 
   const cutoffHour = await getDayCutoffHour();
@@ -58,6 +64,7 @@ export async function recalcStreakForHabit(habitId: string): Promise<StreakResul
     .insert(habitStreaks)
     .values({
       habitId,
+      userId,
       currentStreak: current,
       longestStreak: longest,
       freezesAvailable,
@@ -79,18 +86,21 @@ export async function recalcStreakForHabit(habitId: string): Promise<StreakResul
 }
 
 export async function getStreakMax(): Promise<number | null> {
+  const userId = await getCurrentUserId();
   const rows = await db
     .select({ longestStreak: habitStreaks.longestStreak })
-    .from(habitStreaks);
+    .from(habitStreaks)
+    .where(eq(habitStreaks.userId, userId));
   if (rows.length === 0) return null;
   return Math.max(0, ...rows.map((r) => r.longestStreak));
 }
 
 export async function getStreakFor(habitId: string): Promise<StreakResult> {
+  const userId = await getCurrentUserId();
   const [row] = await db
     .select({ current: habitStreaks.currentStreak, longest: habitStreaks.longestStreak })
     .from(habitStreaks)
-    .where(eq(habitStreaks.habitId, habitId))
+    .where(and(eq(habitStreaks.habitId, habitId), eq(habitStreaks.userId, userId)))
     .limit(1);
   return row ? { current: row.current, longest: row.longest } : { current: 0, longest: 0 };
 }

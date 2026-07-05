@@ -1,7 +1,8 @@
 import "server-only";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { achievements, habits } from "@/lib/db/schema";
+import { getCurrentUserId } from "@/lib/auth/session";
 import type { AchievementType } from "@/lib/achievements";
 
 const ACHIEVEMENT_TYPES: AchievementType[] = [
@@ -19,9 +20,13 @@ export type HabitAchievements = {
 };
 
 export async function getAchievementsByHabit(): Promise<HabitAchievements[]> {
+  const userId = await getCurrentUserId();
   const [allHabits, unlocked] = await Promise.all([
-    db.select({ id: habits.id, name: habits.name }).from(habits).where(eq(habits.status, "active")),
-    db.select().from(achievements),
+    db
+      .select({ id: habits.id, name: habits.name })
+      .from(habits)
+      .where(and(eq(habits.userId, userId), eq(habits.status, "active"))),
+    db.select().from(achievements).where(eq(achievements.userId, userId)),
   ]);
 
   const byHabit = new Map<string, Map<AchievementType, string>>();

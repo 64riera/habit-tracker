@@ -11,8 +11,8 @@ function secretKey() {
   return new TextEncoder().encode(secret);
 }
 
-export async function createSessionCookie() {
-  const token = await new SignJWT({ sub: "habito-user" })
+export async function createSessionCookie(userId: string) {
+  const token = await new SignJWT({ sub: userId })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${MAX_AGE_SECONDS}s`)
@@ -43,6 +43,16 @@ export async function hasValidSession(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/** Id del usuario autenticado actual. Solo debe llamarse detras del proxy (rutas ya protegidas). */
+export async function getCurrentUserId(): Promise<string> {
+  const store = await cookies();
+  const token = store.get(SESSION_COOKIE)?.value;
+  if (!token) throw new Error("No hay sesión activa");
+  const { payload } = await jwtVerify(token, secretKey());
+  if (typeof payload.sub !== "string") throw new Error("Sesión inválida");
+  return payload.sub;
 }
 
 export { SESSION_COOKIE };

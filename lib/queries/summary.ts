@@ -5,6 +5,7 @@ import { habitLogs, habitStreaks, habits } from "@/lib/db/schema";
 import { addDays, dateRange, startOfMonth, startOfWeek } from "@/lib/date";
 import { isDateApplicable } from "@/lib/habits/frequency";
 import { overLimitSkipDates, keepsStreakOn } from "@/lib/habits/status";
+import { getCurrentUserId } from "@/lib/auth/session";
 
 export type PeriodSummary = {
   from: string;
@@ -17,9 +18,10 @@ export type PeriodSummary = {
 };
 
 async function computePeriodSummary(from: string, to: string, habitId?: string): Promise<PeriodSummary> {
+  const userId = await getCurrentUserId();
   const activeHabits = habitId
-    ? await db.select().from(habits).where(eq(habits.id, habitId))
-    : await db.select().from(habits).where(eq(habits.status, "active"));
+    ? await db.select().from(habits).where(and(eq(habits.id, habitId), eq(habits.userId, userId)))
+    : await db.select().from(habits).where(and(eq(habits.userId, userId), eq(habits.status, "active")));
   const ids = activeHabits.map((h) => h.id);
   const logs = ids.length
     ? await db
@@ -101,7 +103,12 @@ const MIN_DAYS_ELAPSED_TO_COMPARE = 5;
 
 /** ¿El mes en curso (a la fecha) es el de mejor cumplimiento del hábito hasta ahora? */
 export async function getBestMonthCheck(habitId: string, today: string): Promise<BestMonthCheck> {
-  const [habit] = await db.select().from(habits).where(eq(habits.id, habitId)).limit(1);
+  const userId = await getCurrentUserId();
+  const [habit] = await db
+    .select()
+    .from(habits)
+    .where(and(eq(habits.id, habitId), eq(habits.userId, userId)))
+    .limit(1);
   if (!habit) return null;
 
   const currentMonthStart = startOfMonth(today);

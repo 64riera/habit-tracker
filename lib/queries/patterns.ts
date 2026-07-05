@@ -5,6 +5,7 @@ import { db } from "@/lib/db/client";
 import { habitLogs, habits } from "@/lib/db/schema";
 import { addDays, dateRange, isoWeekday } from "@/lib/date";
 import { isDateApplicable } from "@/lib/habits/frequency";
+import { getCurrentUserId } from "@/lib/auth/session";
 
 const MIN_SAMPLES_PER_WEEKDAY = 3;
 
@@ -12,7 +13,11 @@ export type WorstWeekday = { weekday: number; missRate: number } | null;
 
 /** Día ISO (1=lunes..7=domingo) con mayor proporción de hábitos marcados "missed". */
 export async function getWorstWeekday(today: string, days = 90): Promise<WorstWeekday> {
-  const activeHabits = await db.select().from(habits).where(eq(habits.status, "active"));
+  const userId = await getCurrentUserId();
+  const activeHabits = await db
+    .select()
+    .from(habits)
+    .where(and(eq(habits.userId, userId), eq(habits.status, "active")));
   const ids = activeHabits.map((h) => h.id);
   const from = addDays(today, -(days - 1));
   const logs = ids.length
@@ -62,11 +67,12 @@ export type MoodCorrelation = {
 
 /** Agregación simple: ¿los registros con ánimo bajo (1-2) fallan más que los de ánimo alto (4-5)? */
 export async function getMoodCorrelation(today: string, days = 90): Promise<MoodCorrelation> {
+  const userId = await getCurrentUserId();
   const from = addDays(today, -(days - 1));
   const logs = await db
     .select({ status: habitLogs.status, mood: habitLogs.mood })
     .from(habitLogs)
-    .where(and(gte(habitLogs.date, from)));
+    .where(and(eq(habitLogs.userId, userId), gte(habitLogs.date, from)));
 
   const withMood = logs.filter((l) => l.mood !== null) as { status: string; mood: number }[];
   const low = withMood.filter((l) => l.mood <= 2);

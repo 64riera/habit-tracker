@@ -5,6 +5,7 @@ import { habitLogs, habits, categories, habitStreaks } from "@/lib/db/schema";
 import { addDays, dateRange } from "@/lib/date";
 import { isDateApplicable } from "@/lib/habits/frequency";
 import { overLimitSkipDates, keepsStreakOn } from "@/lib/habits/status";
+import { getCurrentUserId } from "@/lib/auth/session";
 import type { HabitRow } from "@/lib/queries/habits";
 
 async function logsSince(habitIds: string[], from: string) {
@@ -41,7 +42,11 @@ export type HabitStatCard = {
 };
 
 export async function getHabitStatCards(today: string): Promise<HabitStatCard[]> {
-  const activeHabits = await db.select().from(habits).where(eq(habits.status, "active"));
+  const userId = await getCurrentUserId();
+  const activeHabits = await db
+    .select()
+    .from(habits)
+    .where(and(eq(habits.userId, userId), eq(habits.status, "active")));
   const ids = activeHabits.map((h) => h.id);
   const from90 = addDays(today, -89);
   const [logs, streaks] = await Promise.all([
@@ -72,7 +77,11 @@ export async function getHabitStatCards(today: string): Promise<HabitStatCard[]>
 }
 
 export async function getOverallStats(today: string) {
-  const activeHabits = await db.select().from(habits).where(eq(habits.status, "active"));
+  const userId = await getCurrentUserId();
+  const activeHabits = await db
+    .select()
+    .from(habits)
+    .where(and(eq(habits.userId, userId), eq(habits.status, "active")));
   const ids = activeHabits.map((h) => h.id);
   const from90 = addDays(today, -89);
   const logs = await logsSince(ids, from90);
@@ -100,7 +109,11 @@ export async function getOverallStats(today: string) {
 export type TrendPoint = { date: string; pct: number };
 
 export async function getTrend(today: string, days: number): Promise<TrendPoint[]> {
-  const activeHabits = await db.select().from(habits).where(eq(habits.status, "active"));
+  const userId = await getCurrentUserId();
+  const activeHabits = await db
+    .select()
+    .from(habits)
+    .where(and(eq(habits.userId, userId), eq(habits.status, "active")));
   const ids = activeHabits.map((h) => h.id);
   const from = addDays(today, -(days - 1));
   const logs = await logsSince(ids, from);
@@ -139,8 +152,16 @@ export type CategoryStat = {
 };
 
 export async function getCategoryStats(today: string, days = 30): Promise<CategoryStat[]> {
-  const cats = await db.select().from(categories).orderBy(categories.sortOrder);
-  const activeHabits = await db.select().from(habits).where(eq(habits.status, "active"));
+  const userId = await getCurrentUserId();
+  const cats = await db
+    .select()
+    .from(categories)
+    .where(eq(categories.userId, userId))
+    .orderBy(categories.sortOrder);
+  const activeHabits = await db
+    .select()
+    .from(habits)
+    .where(and(eq(habits.userId, userId), eq(habits.status, "active")));
   const ids = activeHabits.map((h) => h.id);
   const from = addDays(today, -(days - 1));
   const logs = await logsSince(ids, from);
