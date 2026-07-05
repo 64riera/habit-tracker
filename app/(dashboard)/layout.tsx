@@ -10,7 +10,7 @@ export default async function DashboardLayout({
   const streakMax = await getStreakMax();
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
+    <div className="flex min-h-dvh flex-col md:flex-row">
       <Sidebar streakMax={streakMax} />
       <main className="mx-auto w-full min-w-0 max-w-3xl flex-1 px-5 pt-7 pb-24 md:px-10 md:py-9 md:pb-9">
         {children}
