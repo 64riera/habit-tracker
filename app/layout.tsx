@@ -8,6 +8,7 @@ import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { OfflineIndicator } from "@/components/pwa/offline-indicator";
 import { getCurrentLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import { getThemePreference } from "@/lib/queries/user";
 import "./globals.css";
 
 const newsreader = Newsreader({
@@ -46,6 +47,7 @@ export default async function RootLayout({
 }>) {
   const locale = await getCurrentLocale();
   const dict = getDictionary(locale);
+  const themePreference = await getThemePreference();
 
   return (
     <html
@@ -54,7 +56,7 @@ export default async function RootLayout({
       className={`${newsreader.variable} ${publicSans.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme={themePreference} enableSystem>
           <I18nProvider locale={locale} dict={dict}>
             <ToastProvider>
               <OfflineProvider>

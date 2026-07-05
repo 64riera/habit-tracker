@@ -55,4 +55,18 @@ export async function getCurrentUserId(): Promise<string> {
   return payload.sub;
 }
 
+/** Como getCurrentUserId(), pero para lugares como el layout raiz que tambien
+ * renderizan /login y /signup, donde puede no haber sesion. */
+export async function getCurrentUserIdOrNull(): Promise<string | null> {
+  const store = await cookies();
+  const token = store.get(SESSION_COOKIE)?.value;
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify(token, secretKey());
+    return typeof payload.sub === "string" ? payload.sub : null;
+  } catch {
+    return null;
+  }
+}
+
 export { SESSION_COOKIE };
