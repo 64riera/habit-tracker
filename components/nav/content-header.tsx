@@ -37,13 +37,12 @@ export function ContentHeader({
     <>
       <div ref={sentinelRef} aria-hidden />
       {/*
-        La transición de padding/font-size solo es segura porque <main>
-        tiene overflow-anchor:none (ver layout.tsx) — sin eso, el
-        "scroll anchoring" del navegador pelea con el cambio de tamaño en
-        cada frame de scroll lento y se ve como un glitch. Con esa pelea
-        ya resuelta, animar estas propiedades acá (un cambio de estado
-        infrecuente, no continuo) es seguro y se ve más ágil que un salto
-        instantáneo.
+        El tamaño del título se anima con transform:scale (GPU, no
+        dispara layout) en vez de font-size: animar font-size fuerza a
+        recalcular el texto en cada frame, que es justo lo que se sentía
+        "trabado". padding sigue transicionando (una sola propiedad de
+        layout, cambio de estado infrecuente, seguro gracias a
+        overflow-anchor:none en <main> — ver layout.tsx).
       */}
       <div
         className={cn(
@@ -54,27 +53,13 @@ export function ContentHeader({
         <div>
           <div
             className={cn(
-              "font-serif-italic leading-tight transition-[font-size] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
-              isStuck ? "text-[17px]" : "text-[26px]"
+              "font-serif-italic text-[26px] leading-tight origin-top-left transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
+              isStuck ? "scale-[0.654]" : "scale-100"
             )}
           >
             {t(titleKey)}
           </div>
-          {/*
-            grid-template-rows 1fr->0fr es la forma estándar de animar un
-            colapso de alto sin conocerla de antemano (equivalente a
-            transicionar a height:auto, que no se puede animar directo).
-          */}
-          <div
-            className={cn(
-              "grid transition-[grid-template-rows] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
-              isStuck ? "grid-rows-[0fr]" : "grid-rows-[1fr]"
-            )}
-          >
-            <div className="overflow-hidden">
-              <div className="mt-1 text-[12.5px] text-muted">{t(subtitleKey)}</div>
-            </div>
-          </div>
+          {!isStuck && <div className="mt-1 text-[12.5px] text-muted">{t(subtitleKey)}</div>}
         </div>
         {showControls && (
           <div
