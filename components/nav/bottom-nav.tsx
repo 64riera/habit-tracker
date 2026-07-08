@@ -11,7 +11,10 @@ export function BottomNav() {
   const { t } = useI18n();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 flex border-t border-border bg-bg px-1 md:hidden">
+    // Sibling normal del shell (no position:fixed): al vivir fuera del
+    // <main> que scrollea, ya queda pegado abajo por el propio layout de
+    // flexbox, sin depender de fixed/sticky sobre el scroll del documento.
+    <nav className="flex shrink-0 border-t border-border bg-bg px-1 md:hidden">
       {NAV_ITEMS.map((item) => {
         const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
         const Icon = item.icon;

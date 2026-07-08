@@ -11,7 +11,10 @@ export function Sidebar({ streakMax }: { streakMax?: number | null }) {
   const { t, dict } = useI18n();
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-[220px] shrink-0 flex-col gap-8 overflow-y-auto border-r border-border px-6 py-8 md:flex">
+    // El shell padre (h-dvh) ya fija la altura disponible; overflow-y-auto
+    // es solo la red de seguridad si el contenido del propio sidebar no
+    // cabe en pantallas muy bajas.
+    <aside className="hidden w-[220px] shrink-0 flex-col gap-8 overflow-y-auto border-r border-border px-6 py-8 md:flex">
       <div className="font-serif-italic text-xl font-semibold">{dict.app.name}</div>
       <nav className="flex flex-col gap-0.5">
         {NAV_ITEMS.map((item) => {
