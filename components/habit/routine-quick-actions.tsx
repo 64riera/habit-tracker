@@ -11,7 +11,7 @@ export function RoutineQuickActions({ routines, date }: { routines: RoutineToday
   const { t } = useI18n();
   const router = useRouter();
   const { runOrQueue } = useOffline();
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [optimisticDone, setOptimisticDone] = useState<Set<string>>(new Set());
 
   if (routines.length === 0) return null;
@@ -33,7 +33,7 @@ export function RoutineQuickActions({ routines, date }: { routines: RoutineToday
             </div>
             <button
               type="button"
-              disabled={isPending || complete}
+              disabled={complete}
               onClick={() => {
                 setOptimisticDone((prev) => new Set(prev).add(r.id));
                 startTransition(async () => {

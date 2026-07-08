@@ -24,7 +24,7 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
   const { t, dict, locale } = useI18n();
   const router = useRouter();
   const { runOrQueue } = useOffline();
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [status, setStatus] = useState<LogStatus | null>(
     (habit.todayLog?.status as LogStatus) ?? null
   );
@@ -109,7 +109,7 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
   }
 
   return (
-    <div className={cn((isPending || isPendingSync) && "opacity-70")}>
+    <div className={cn(isPendingSync && "opacity-70")}>
       <div className="flex items-center gap-4 border-b border-border py-3.5">
         <Link
           href={`/habitos/${habit.id}`}
@@ -162,7 +162,6 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
           type="button"
           aria-label={isDone ? t("checkin.unmark") : t("checkin.markDone")}
           onClick={handleClick}
-          disabled={isPending}
           className="-m-2 flex shrink-0 items-center justify-center p-2"
         >
           <span

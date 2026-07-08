@@ -28,7 +28,7 @@ export function LogEditor({
   const { push } = useToast();
   const { runOrQueue } = useOffline();
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [status, setStatus] = useState<LogStatus>((habit.todayLog?.status as LogStatus) ?? "done");
   const [value, setValue] = useState(habit.todayLog?.value ?? habit.goalTarget ?? 0);
   const [note, setNote] = useState(habit.todayLog?.note ?? "");
@@ -108,8 +108,7 @@ export function LogEditor({
           <button
             type="button"
             onClick={handleUseFreeze}
-            disabled={isPending}
-            className="shrink-0 rounded-full px-3 py-1 text-[10.5px] font-semibold disabled:opacity-60"
+            className="shrink-0 rounded-full px-3 py-1 text-[10.5px] font-semibold"
             style={{ background: "var(--color-accent)", color: "var(--color-accent-contrast)" }}
           >
             {t("checkin.useFreeze")}
@@ -174,8 +173,7 @@ export function LogEditor({
         <button
           type="button"
           onClick={handleSave}
-          disabled={isPending}
-          className="rounded-lg bg-text px-4 py-1.5 text-[11.5px] font-semibold text-surface disabled:opacity-60"
+          className="rounded-lg bg-text px-4 py-1.5 text-[11.5px] font-semibold text-surface"
         >
           {t("common.save")}
         </button>
@@ -186,8 +184,7 @@ export function LogEditor({
           <button
             type="button"
             onClick={handleClear}
-            disabled={isPending}
-            className="ml-auto flex items-center gap-1.5 text-[11.5px] text-muted disabled:opacity-60"
+            className="ml-auto flex items-center gap-1.5 text-[11.5px] text-muted"
           >
             <RotateCcw size={12} strokeWidth={2.2} aria-hidden />
             {t("checkin.clearToday")}

@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
@@ -45,15 +46,19 @@ export async function hasValidSession(): Promise<boolean> {
   }
 }
 
-/** Id del usuario autenticado actual. Solo debe llamarse detras del proxy (rutas ya protegidas). */
-export async function getCurrentUserId(): Promise<string> {
+/**
+ * Id del usuario autenticado actual. Solo debe llamarse detras del proxy (rutas ya protegidas).
+ * Memoizado por request con `cache()`: se invoca varias veces por página/acción
+ * y no vale la pena releer y re-verificar la cookie cada vez.
+ */
+export const getCurrentUserId = cache(async (): Promise<string> => {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) throw new Error("No hay sesión activa");
   const { payload } = await jwtVerify(token, secretKey());
   if (typeof payload.sub !== "string") throw new Error("Sesión inválida");
   return payload.sub;
-}
+});
 
 /** Como getCurrentUserId(), pero para lugares como el layout raiz que tambien
  * renderizan /login y /signup, donde puede no haber sesion. */

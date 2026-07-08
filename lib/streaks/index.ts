@@ -2,15 +2,19 @@ import "server-only";
 import { and, eq, gte } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { habitLogs, habitStreaks, habits } from "@/lib/db/schema";
-import { dateRange, getTodayDateString, monthKey } from "@/lib/date";
-import { isDateApplicable } from "@/lib/habits/frequency";
-import { overLimitSkipDates, keepsStreakOn, FREEZE_MONTHLY_ALLOWANCE } from "@/lib/habits/status";
+import { getTodayDateString } from "@/lib/date";
 import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
 import { getCurrentUserId } from "@/lib/auth/session";
+import { computeStreak } from "./compute";
 
 export type StreakResult = { current: number; longest: number };
 
-/** Recalcula racha actual y máxima de un hábito a partir de habit_logs, y cachea el resultado. */
+/**
+ * Recalcula racha actual y máxima de un hábito a partir de habit_logs, y cachea
+ * el resultado. Utilidad de recómputo standalone (varios round-trips propios);
+ * el camino de escritura de check-ins (`lib/actions/logs.ts`) usa `computeStreak`
+ * directamente sobre datos ya cargados en batch, para no pagar esos round-trips.
+ */
 export async function recalcStreakForHabit(habitId: string): Promise<StreakResult> {
   const userId = await getCurrentUserId();
   const [habit] = await db
@@ -22,67 +26,24 @@ export async function recalcStreakForHabit(habitId: string): Promise<StreakResul
 
   const cutoffHour = await getDayCutoffHour();
   const today = getTodayDateString(cutoffHour);
-  if (habit.startDate > today) return { current: 0, longest: 0 };
 
   const logs = await db
     .select({ date: habitLogs.date, status: habitLogs.status })
     .from(habitLogs)
     .where(and(eq(habitLogs.habitId, habitId), gte(habitLogs.date, habit.startDate)));
 
-  const statusByDate = new Map(logs.map((l) => [l.date, l.status]));
-  const applicableDates = dateRange(habit.startDate, today).filter((d) =>
-    isDateApplicable(habit, d)
-  );
-  const overLimit = overLimitSkipDates(habit, applicableDates, statusByDate);
-
-  let longest = 0;
-  let running = 0;
-  let current = 0;
-
-  for (const date of applicableDates) {
-    const status = statusByDate.get(date);
-    const isToday = date === today;
-
-    if (keepsStreakOn(status, date, overLimit)) {
-      running += 1;
-      longest = Math.max(longest, running);
-    } else if (!status && isToday) {
-      // Hoy aún no se registra: no rompe la racha, pero tampoco suma todavía.
-    } else {
-      running = 0;
-    }
-  }
-  current = running;
-
-  const currentMonth = monthKey(today);
-  const freezesUsedThisMonth = applicableDates.filter(
-    (date) => monthKey(date) === currentMonth && statusByDate.get(date) === "frozen"
-  ).length;
-  const freezesAvailable = Math.max(0, FREEZE_MONTHLY_ALLOWANCE - freezesUsedThisMonth);
+  const result = computeStreak(habit, logs, today);
+  if (!result) return { current: 0, longest: 0 };
 
   await db
     .insert(habitStreaks)
-    .values({
-      habitId,
-      userId,
-      currentStreak: current,
-      longestStreak: longest,
-      freezesAvailable,
-      freezesUsedThisMonth,
-      lastComputedDate: today,
-    })
+    .values({ habitId, userId, lastComputedDate: today, ...result })
     .onConflictDoUpdate({
       target: habitStreaks.habitId,
-      set: {
-        currentStreak: current,
-        longestStreak: longest,
-        freezesAvailable,
-        freezesUsedThisMonth,
-        lastComputedDate: today,
-      },
+      set: { lastComputedDate: today, ...result },
     });
 
-  return { current, longest };
+  return { current: result.currentStreak, longest: result.longestStreak };
 }
 
 export async function getStreakMax(): Promise<number | null> {
