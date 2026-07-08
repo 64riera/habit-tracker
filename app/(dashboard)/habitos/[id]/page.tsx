@@ -31,6 +31,7 @@ export default async function HabitoDetallePage({
       <ContentHeader
         titleKey="screens.habitoDetalle.title"
         subtitleKey="screens.habitoDetalle.subtitle"
+        backHref="/habitos"
       />
 
       <div className="mb-5 flex flex-col gap-3">

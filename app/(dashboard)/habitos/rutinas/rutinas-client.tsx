@@ -56,7 +56,7 @@ export function RutinasClient({
 
   return (
     <div>
-      <ContentHeader titleKey="routines.title" subtitleKey="routines.subtitle" />
+      <ContentHeader titleKey="routines.title" subtitleKey="routines.subtitle" backHref="/habitos" />
       <div className="mb-3 flex justify-end">
         <a
           href="#crear-rutina"

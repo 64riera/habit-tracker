@@ -7,7 +7,11 @@ export default async function NuevoHabitoPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <ContentHeader titleKey="habit.newHabit" subtitleKey="habit.newHabitSubtitle" />
+      <ContentHeader
+        titleKey="habit.newHabit"
+        subtitleKey="habit.newHabitSubtitle"
+        backHref="/habitos"
+      />
       <HabitForm categories={categories} />
     </div>
   );

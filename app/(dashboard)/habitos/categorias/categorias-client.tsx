@@ -50,7 +50,7 @@ export function CategoriasClient({ categories }: { categories: CategoryRow[] }) 
 
   return (
     <div>
-      <ContentHeader titleKey="categories.manage" subtitleKey="categories.subtitle" />
+      <ContentHeader titleKey="categories.manage" subtitleKey="categories.subtitle" backHref="/habitos" />
       <div className="mb-3 flex justify-end">
         <a
           href="#crear-categoria"

@@ -17,7 +17,11 @@ export default async function RutinaDetallePage({
 
   return (
     <div>
-      <ContentHeader titleKey="routines.title" subtitleKey="screens.habitos.subtitle" />
+      <ContentHeader
+        titleKey="routines.title"
+        subtitleKey="screens.habitos.subtitle"
+        backHref="/habitos/rutinas"
+      />
       <RoutineForm habits={habits} routine={routine} />
       <div className="mt-3">
         <DeleteRoutineButton routineId={id} />

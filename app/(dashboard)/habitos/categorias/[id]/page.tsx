@@ -16,7 +16,11 @@ export default async function CategoriaDetallePage({
 
   return (
     <div>
-      <ContentHeader titleKey="categories.manage" subtitleKey="screens.habitos.subtitle" />
+      <ContentHeader
+        titleKey="categories.manage"
+        subtitleKey="screens.habitos.subtitle"
+        backHref="/habitos/categorias"
+      />
       <CategoryForm category={category} />
       <div className="mt-3">
         <DeleteCategoryButton categoryId={id} />
