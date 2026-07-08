@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { HabitCheckRow } from "@/components/habit/habit-check-row";
 import { RoutineQuickActions } from "@/components/habit/routine-quick-actions";
+import { DaySwitcher } from "@/components/habit/day-switcher";
 import { useI18n } from "@/lib/i18n/client";
 import { useOffline } from "@/lib/offline/client";
 import {
@@ -23,15 +24,18 @@ export function HoyClient({
   habits,
   routines,
   date,
+  today,
   categories,
 }: {
   habits: HabitWithExtras[];
   routines: RoutineToday[];
   date: string;
+  today: string;
   categories: CategoryRow[];
 }) {
   const { t } = useI18n();
   const { pendingMutations } = useOffline();
+  const isToday = date === today;
 
   const pendingNewHabits = pendingHabitCreates(pendingMutations);
   const pendingEdits = pendingHabitUpdates(pendingMutations);
@@ -63,9 +67,13 @@ export function HoyClient({
     <div>
       <ContentHeader titleKey="screens.hoy.title" subtitleKey="screens.hoy.subtitle" />
 
+      <DaySwitcher date={date} today={today} />
+
       {total === 0 ? (
         <div className="flex flex-col items-start gap-3">
-          <p className="text-sm text-muted">{t("checkin.noHabitsToday")}</p>
+          <p className="text-sm text-muted">
+            {isToday ? t("checkin.noHabitsToday") : t("checkin.noHabitsThisDay")}
+          </p>
           <Link
             href="/habitos/nuevo"
             className="flex items-center gap-1.5 rounded-full border border-dashed border-border px-4 py-2 text-xs text-muted"

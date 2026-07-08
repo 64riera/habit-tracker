@@ -13,6 +13,7 @@ import { createHabit, updateHabit, archiveHabit, restoreHabit } from "@/lib/acti
 import { habitFormSchema, extractHabitFields } from "@/lib/validation/habit";
 import { useOfflineFormAction, useOfflineIdAction } from "@/lib/offline/form";
 import { toISODate } from "@/lib/date";
+import { Select } from "@/components/ui/select";
 
 type Props = {
   categories: CategoryRow[];
@@ -42,60 +43,66 @@ export function HabitForm({ categories, habit }: Props) {
   const [isPinned, setIsPinned] = useState(habit?.isPinned ?? false);
 
   return (
-    <form action={formAction} className="flex flex-1 flex-col gap-5 min-w-0">
+    <form action={formAction} className="flex flex-1 flex-col min-w-0">
       <input type="hidden" name="id" value={id} />
 
       {state.error && (
         <div
           role="alert"
-          className="rounded-lg border border-cat-fitness/40 px-3.5 py-2.5 text-[12px] text-cat-fitness"
+          className="mb-5 rounded-lg border border-cat-fitness/40 px-3.5 py-2.5 text-[12px] text-cat-fitness"
         >
           {t("habit.formError")}
         </div>
       )}
 
       {state.queued && (
-        <div role="status" className="rounded-lg border border-border px-3.5 py-2.5 text-[12px] text-muted">
+        <div role="status" className="mb-5 rounded-lg border border-border px-3.5 py-2.5 text-[12px] text-muted">
           {t("offline.savedOffline")}
         </div>
       )}
 
-      <Field label={t("habit.fieldName")}>
-        <input
-          name="name"
-          defaultValue={habit?.name ?? ""}
-          required
-          maxLength={80}
-          className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm outline-none focus:border-text"
-        />
-      </Field>
+      {/* Grid de 2 columnas en desktop: los campos cortos (frecuencia +
+          recordatorio, fecha de inicio + destacar, etc.) comparten fila en
+          vez de apilarse uno debajo del otro, así que el formulario
+          aprovecha el ancho disponible y cabe sin scroll en la mayoría de
+          pantallas. Los campos que necesitan todo el ancho (nombre,
+          categoría, frecuencia con sus subcontroles) usan md:col-span-2. */}
+      <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
+        <Field label={t("habit.fieldName")} className="md:col-span-2">
+          <input
+            name="name"
+            defaultValue={habit?.name ?? ""}
+            required
+            maxLength={80}
+            className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm outline-none focus:border-text"
+          />
+        </Field>
 
-      <Field label={t("habit.fieldCategory")}>
-        <div className="flex flex-wrap gap-1.5">
-          {categories.map((c) => {
-            const active = categoryId === c.id;
-            return (
-              <button
-                type="button"
-                key={c.id}
-                onClick={() => setCategoryId(c.id)}
-                className="rounded-full border px-3 py-1.5 text-[11px] font-medium"
-                style={{
-                  background: active ? "var(--color-text)" : "transparent",
-                  color: active ? "var(--color-surface)" : "var(--color-muted)",
-                  borderColor: active ? "var(--color-text)" : "var(--color-border)",
-                }}
-              >
-                {categoryDisplayName(c, locale)}
-              </button>
-            );
-          })}
-        </div>
-        <input type="hidden" name="categoryId" value={categoryId} />
-      </Field>
+        <Field label={t("habit.fieldCategory")} className="md:col-span-2">
+          <div className="flex flex-wrap gap-1.5">
+            {categories.map((c) => {
+              const active = categoryId === c.id;
+              return (
+                <button
+                  type="button"
+                  key={c.id}
+                  onClick={() => setCategoryId(c.id)}
+                  className="rounded-full border px-3 py-1.5 text-[11px] font-medium"
+                  style={{
+                    background: active ? "var(--color-text)" : "transparent",
+                    color: active ? "var(--color-surface)" : "var(--color-muted)",
+                    borderColor: active ? "var(--color-text)" : "var(--color-border)",
+                  }}
+                >
+                  {categoryDisplayName(c, locale)}
+                </button>
+              );
+            })}
+          </div>
+          <input type="hidden" name="categoryId" value={categoryId} />
+        </Field>
 
-      <div className="flex gap-5">
-        <Field label={t("habit.fieldGoalType")} className="flex-1">
+        <Field label={t("habit.fieldGoalType")} className={goalType === "binary" ? "md:col-span-2" : undefined}>
           <div className="flex overflow-hidden rounded-lg border border-border">
             {GOAL_TYPES.map((g) => (
               <button
@@ -112,12 +119,11 @@ export function HabitForm({ categories, habit }: Props) {
               </button>
             ))}
           </div>
-          <input type="hidden" name="goalType" value={goalType} />
           <p className="text-[11px] text-muted">{t(`habit.goalTypeHelp.${goalType}`)}</p>
         </Field>
 
         {goalType !== "binary" && (
-          <Field label={t("habit.fieldGoal")} className="flex-1">
+          <Field label={t("habit.fieldGoal")}>
             <div className="flex gap-2">
               <input
                 name="goalTarget"
@@ -136,125 +142,121 @@ export function HabitForm({ categories, habit }: Props) {
             </div>
           </Field>
         )}
+
+        <Field label={t("habit.fieldFrequency")} className="md:col-span-2">
+          <Select
+            variant="field"
+            className="md:w-64"
+            value={frequencyType}
+            onValueChange={(v) => setFrequencyType(v as typeof frequencyType)}
+            options={FREQ_TYPES.map((f) => ({ value: f, label: t(`habit.frequency.${f}`) }))}
+          />
+          <input type="hidden" name="frequencyType" value={frequencyType} />
+
+          {frequencyType === "weekdays" && (
+            <div className="mt-2 flex gap-1.5">
+              {[1, 2, 3, 4, 5, 6, 7].map((d) => {
+                const on = weekdays.includes(d);
+                return (
+                  <button
+                    type="button"
+                    key={d}
+                    onClick={() =>
+                      setWeekdays((prev) =>
+                        on ? prev.filter((x) => x !== d) : [...prev, d].sort()
+                      )
+                    }
+                    className="flex h-8 w-8 items-center justify-center rounded-full border text-[11px] font-semibold"
+                    style={{
+                      background: on ? "var(--color-text)" : "transparent",
+                      color: on ? "var(--color-surface)" : "var(--color-muted)",
+                      borderColor: on ? "var(--color-text)" : "var(--color-border)",
+                    }}
+                  >
+                    {t(`habit.weekdayShort.${d}`)}
+                  </button>
+                );
+              })}
+              {weekdays.map((d) => (
+                <input key={d} type="hidden" name="weekdays" value={d} />
+              ))}
+            </div>
+          )}
+
+          {(frequencyType === "x_per_week" || frequencyType === "x_per_month") && (
+            <input
+              name="timesPerPeriod"
+              type="number"
+              min={1}
+              max={30}
+              defaultValue={cfg.timesPerPeriod ?? 3}
+              className="mt-2 w-24 rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-text"
+            />
+          )}
+
+          {frequencyType === "custom_interval" && (
+            <input
+              name="intervalDays"
+              type="number"
+              min={1}
+              max={60}
+              defaultValue={cfg.intervalDays ?? 2}
+              className="mt-2 w-24 rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-text"
+            />
+          )}
+        </Field>
+
+        <Field label={t("habit.fieldReminder")}>
+          <input
+            name="reminderTime"
+            type="time"
+            defaultValue={
+              habit?.reminders ? (JSON.parse(habit.reminders) as string[])[0] : ""
+            }
+            className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm outline-none focus:border-text md:w-fit"
+          />
+        </Field>
+
+        <Field label={t("habit.fieldSkipDays")}>
+          <input
+            name="skipDaysAllowed"
+            type="number"
+            min={0}
+            max={10}
+            defaultValue={habit?.skipDaysAllowed ?? 0}
+            className="w-24 rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-text"
+          />
+          <p className="text-[11px] text-muted">{t("habit.fieldSkipDaysHelp")}</p>
+        </Field>
+
+        <Field label={t("habit.fieldStartDate")}>
+          <input
+            name="startDate"
+            type="date"
+            defaultValue={habit?.startDate ?? toISODate(new Date())}
+            required
+            className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm outline-none focus:border-text md:w-fit"
+          />
+        </Field>
+
+        <label className="flex items-center gap-2 text-[11.5px] md:self-end md:pb-2.5">
+          <input
+            type="checkbox"
+            checked={isPinned}
+            onChange={(e) => setIsPinned(e.target.checked)}
+            className="accent-text"
+          />
+          {t("habit.pin")}
+          <input type="hidden" name="isPinned" value={isPinned ? "on" : ""} />
+        </label>
       </div>
-
-      <Field label={t("habit.fieldFrequency")}>
-        <select
-          name="frequencyType"
-          value={frequencyType}
-          onChange={(e) => setFrequencyType(e.target.value as typeof frequencyType)}
-          className="w-full rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-text"
-        >
-          {FREQ_TYPES.map((f) => (
-            <option key={f} value={f}>
-              {t(`habit.frequency.${f}`)}
-            </option>
-          ))}
-        </select>
-
-        {frequencyType === "weekdays" && (
-          <div className="mt-2 flex gap-1.5">
-            {[1, 2, 3, 4, 5, 6, 7].map((d) => {
-              const on = weekdays.includes(d);
-              return (
-                <button
-                  type="button"
-                  key={d}
-                  onClick={() =>
-                    setWeekdays((prev) =>
-                      on ? prev.filter((x) => x !== d) : [...prev, d].sort()
-                    )
-                  }
-                  className="flex h-8 w-8 items-center justify-center rounded-full border text-[11px] font-semibold"
-                  style={{
-                    background: on ? "var(--color-text)" : "transparent",
-                    color: on ? "var(--color-surface)" : "var(--color-muted)",
-                    borderColor: on ? "var(--color-text)" : "var(--color-border)",
-                  }}
-                >
-                  {t(`habit.weekdayShort.${d}`)}
-                </button>
-              );
-            })}
-            {weekdays.map((d) => (
-              <input key={d} type="hidden" name="weekdays" value={d} />
-            ))}
-          </div>
-        )}
-
-        {(frequencyType === "x_per_week" || frequencyType === "x_per_month") && (
-          <input
-            name="timesPerPeriod"
-            type="number"
-            min={1}
-            max={30}
-            defaultValue={cfg.timesPerPeriod ?? 3}
-            className="mt-2 w-24 rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-text"
-          />
-        )}
-
-        {frequencyType === "custom_interval" && (
-          <input
-            name="intervalDays"
-            type="number"
-            min={1}
-            max={60}
-            defaultValue={cfg.intervalDays ?? 2}
-            className="mt-2 w-24 rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-text"
-          />
-        )}
-      </Field>
-
-      <Field label={t("habit.fieldReminder")}>
-        <input
-          name="reminderTime"
-          type="time"
-          defaultValue={
-            habit?.reminders ? (JSON.parse(habit.reminders) as string[])[0] : ""
-          }
-          className="w-fit rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-text"
-        />
-      </Field>
 
       {/* hardMode se preserva sin exponer control: hoy no cambia ningún cálculo
           (racha, comodines, días libres), así que un interruptor sin efecto
           real solo genera confusión — ver discusión con el usuario. */}
       <input type="hidden" name="hardMode" value={habit?.hardMode ? "on" : ""} />
 
-      <Field label={t("habit.fieldSkipDays")}>
-        <input
-          name="skipDaysAllowed"
-          type="number"
-          min={0}
-          max={10}
-          defaultValue={habit?.skipDaysAllowed ?? 0}
-          className="w-24 rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-text"
-        />
-        <p className="text-[11px] text-muted">{t("habit.fieldSkipDaysHelp")}</p>
-      </Field>
-
-      <Field label={t("habit.fieldStartDate")}>
-        <input
-          name="startDate"
-          type="date"
-          defaultValue={habit?.startDate ?? toISODate(new Date())}
-          required
-          className="w-fit rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-text"
-        />
-      </Field>
-
-      <label className="flex items-center gap-2 text-[11.5px]">
-        <input
-          type="checkbox"
-          checked={isPinned}
-          onChange={(e) => setIsPinned(e.target.checked)}
-          className="accent-text"
-        />
-        {t("habit.pin")}
-        <input type="hidden" name="isPinned" value={isPinned ? "on" : ""} />
-      </label>
-
-      <div className="mt-auto flex items-center gap-2.5 pt-3">
+      <div className="mt-auto flex items-center gap-2.5 pt-6">
         <SaveButton label={t("common.save")} loadingLabel={t("common.loading")} />
       </div>
     </form>

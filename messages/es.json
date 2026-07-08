@@ -128,7 +128,12 @@
     "freezeQuotaExhausted": "Ya no quedan comodines este mes; el congelamiento en cola no se aplicó.",
     "freezesLeft": "{count} comodines disponibles este mes",
     "noHabitsToday": "No tienes hábitos programados para hoy.",
-    "bestStreak": "Racha más larga: {days} días — {habit}"
+    "noHabitsThisDay": "No tenías hábitos programados este día.",
+    "bestStreak": "Racha más larga: {days} días — {habit}",
+    "today": "Hoy",
+    "previousDay": "Día anterior",
+    "nextDay": "Día siguiente",
+    "backToToday": "Volver a hoy"
   },
   "streak": {
     "current": "Racha actual",
@@ -147,7 +152,8 @@
     "empty": "Sin registros en este rango.",
     "exportCsv": "Exportar CSV",
     "exportJson": "Exportar JSON",
-    "cellLevel": "{date} — nivel {level} de 4"
+    "cellLevel": "{date} — nivel {level} de 4",
+    "editDay": "Registrar hábitos del {date}"
   },
   "stats": {
     "last7": "7 días",

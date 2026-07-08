@@ -6,9 +6,15 @@ import { LogOut } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { ThemeToggle } from "@/components/nav/theme-toggle";
 import { LangToggle } from "@/components/nav/lang-toggle";
+import { Select } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n/client";
 import { logout } from "@/lib/actions/auth";
 import { setDayCutoffHour } from "@/lib/actions/preferences";
+
+const CUTOFF_HOURS = Array.from({ length: 24 }, (_, h) => ({
+  value: String(h),
+  label: `${String(h).padStart(2, "0")}:00`,
+}));
 
 export function AjustesClient({ cutoffHour }: { cutoffHour: number }) {
   const { t } = useI18n();
@@ -33,18 +39,14 @@ export function AjustesClient({ cutoffHour }: { cutoffHour: number }) {
       label: t("settings.dayCutoff"),
       sub: t("settings.dayCutoffSub"),
       control: (
-        <select
-          defaultValue={cutoffHour}
-          disabled={isPending}
-          onChange={(e) => onCutoffChange(Number(e.target.value))}
-          className="rounded-md border border-border bg-transparent px-2 py-1 text-[12.5px] font-medium text-muted"
-        >
-          {Array.from({ length: 24 }, (_, h) => (
-            <option key={h} value={h}>
-              {String(h).padStart(2, "0")}:00
-            </option>
-          ))}
-        </select>
+        <Select
+          variant="pill"
+          value={String(cutoffHour)}
+          onValueChange={(v) => onCutoffChange(Number(v))}
+          options={CUTOFF_HOURS}
+          ariaLabel={t("settings.dayCutoff")}
+          className={isPending ? "pointer-events-none opacity-60" : undefined}
+        />
       ),
     },
   ];

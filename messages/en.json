@@ -128,7 +128,12 @@
     "freezeQuotaExhausted": "No freezes left this month; the queued freeze wasn't applied.",
     "freezesLeft": "{count} freezes left this month",
     "noHabitsToday": "No habits scheduled for today.",
-    "bestStreak": "Longest streak: {days} days — {habit}"
+    "noHabitsThisDay": "No habits were scheduled for this day.",
+    "bestStreak": "Longest streak: {days} days — {habit}",
+    "today": "Today",
+    "previousDay": "Previous day",
+    "nextDay": "Next day",
+    "backToToday": "Back to today"
   },
   "streak": {
     "current": "Current streak",
@@ -147,7 +152,8 @@
     "empty": "No records in this range.",
     "exportCsv": "Export CSV",
     "exportJson": "Export JSON",
-    "cellLevel": "{date} — level {level} of 4"
+    "cellLevel": "{date} — level {level} of 4",
+    "editDay": "Log habits for {date}"
   },
   "stats": {
     "last7": "7 days",
