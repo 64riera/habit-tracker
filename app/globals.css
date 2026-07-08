@@ -9,6 +9,13 @@
   --color-accent: var(--color-text);
   --color-accent-contrast: var(--color-surface);
 
+  /* Separación de la barra fija translúcida: hairline apenas perceptible +
+     sombra difusa. En claro, la sombra hace casi todo el trabajo (se ve
+     bien contra fondos claros); en oscuro las sombras casi no se notan, así
+     que el hairline lleva más peso. Ver HeaderMaterial en content-header.tsx. */
+  --header-hairline: rgba(33, 29, 24, 0.06);
+  --header-shadow: rgba(33, 29, 24, 0.1);
+
   --cat-creatividad: oklch(0.62 0.12 75);
   --cat-fitness: oklch(0.58 0.15 30);
   --cat-aprendizaje: oklch(0.58 0.09 230);
@@ -24,6 +31,9 @@
   --color-border: #39332b;
   --color-accent: var(--color-text);
   --color-accent-contrast: var(--color-surface);
+
+  --header-hairline: rgba(255, 255, 255, 0.08);
+  --header-shadow: rgba(0, 0, 0, 0.45);
 }
 
 @theme inline {

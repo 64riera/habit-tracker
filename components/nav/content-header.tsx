@@ -18,15 +18,32 @@ function HeaderControls({ showControls }: { showControls: boolean }) {
   );
 }
 
-/** Fondo de la barra fija: opaco (se mezcla con la página) hasta que hay
- * contenido corriendo debajo; ahí pasa a translúcido + blur, al estilo de
- * una barra de navegación de iOS, con un hairline que aparece con el
- * blur para separarla del contenido. Solo transiciona color/borde (barato,
- * sin layout) — nunca el propio `backdrop-filter`, que sería costoso. */
-function barBackgroundClass(isScrolled: boolean) {
+/** Vidrio esmerilado de la barra fija, al estilo iOS: opaca y a ras de la
+ * página hasta que hay contenido real corriendo debajo, ahí se vuelve
+ * translúcida + blur. El blur/saturación quedan siempre aplicados (inocuos
+ * con el fondo opaco de reposo) — nunca se anima el propio `backdrop-filter`,
+ * que sería costoso; solo transicionan `background-color` y `box-shadow`,
+ * ambos baratos y sin layout.
+ *
+ * Debe seguir siendo opaca en reposo (no transparente): mientras el usuario
+ * scrollea, el "hero" de TopLevelHeader pasa por detrás de esta barra antes
+ * de que isScrolled se active (recién se activa cuando el hero quedó
+ * totalmente tapado) — si la barra fuera transparente en ese tramo, el
+ * título grande se vería asomando sin difuminar, sin ninguna capa que lo
+ * oculte.
+ *
+ * La separación con el contenido es sombra difusa + un hairline casi
+ * invisible (tokens `--header-hairline`/`--header-shadow`, ver
+ * globals.css) en vez de un borde sólido — en claro la sombra hace el
+ * trabajo, en oscuro pesa más el hairline, porque las sombras casi no se
+ * notan sobre fondos oscuros. */
+function barMaterialClass(isScrolled: boolean) {
   return cn(
-    "backdrop-blur-xl backdrop-saturate-150 transition-colors duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
-    isScrolled ? "border-b border-border/70 bg-bg/75" : "border-b border-transparent bg-bg"
+    "backdrop-blur-xl backdrop-saturate-[1.2]",
+    "transition-[background-color,box-shadow] duration-[320ms] ease-[cubic-bezier(0.23,1,0.32,1)]",
+    isScrolled
+      ? "bg-bg/80 shadow-[0_1px_0_0_var(--header-hairline),0_18px_28px_-22px_var(--header-shadow)]"
+      : "bg-bg shadow-[0_1px_0_0_transparent,0_18px_28px_-22px_transparent]"
   );
 }
 
@@ -59,7 +76,7 @@ function TopLevelHeader({
         ref={barRef}
         className={cn(
           "sticky top-0 z-10 flex items-center justify-between gap-4 py-2.5",
-          barBackgroundClass(isScrolled)
+          barMaterialClass(isScrolled)
         )}
       >
         <div
@@ -106,7 +123,7 @@ function SubViewHeader({
         ref={barRef}
         className={cn(
           "sticky top-0 z-10 flex items-center justify-between gap-4 py-2.5",
-          barBackgroundClass(isScrolled)
+          barMaterialClass(isScrolled)
         )}
       >
         <div className="flex min-w-0 items-center gap-1.5">
