@@ -37,29 +37,44 @@ export function ContentHeader({
     <>
       <div ref={sentinelRef} aria-hidden />
       {/*
-        padding y font-size cambian sin transición a propósito: son
-        propiedades de layout, y animarlas mientras el sticky se
-        reposiciona en cada frame de scroll (sobre todo con scroll lento
-        en móvil, que genera muchos más frames dentro de la ventana de
-        transición) hace que compitan por el mismo reflow y se ve como un
-        glitch. El cambio instantáneo evita ese choque.
+        La transición de padding/font-size solo es segura porque <main>
+        tiene overflow-anchor:none (ver layout.tsx) — sin eso, el
+        "scroll anchoring" del navegador pelea con el cambio de tamaño en
+        cada frame de scroll lento y se ve como un glitch. Con esa pelea
+        ya resuelta, animar estas propiedades acá (un cambio de estado
+        infrecuente, no continuo) es seguro y se ve más ágil que un salto
+        instantáneo.
       */}
       <div
         className={cn(
-          "sticky top-0 z-10 flex items-start justify-between gap-4 bg-bg",
+          "sticky top-0 z-10 flex items-start justify-between gap-4 bg-bg transition-[padding] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
           isStuck ? "py-2.5" : "pt-7 pb-5 md:pt-9 md:pb-[22px]"
         )}
       >
         <div>
           <div
             className={cn(
-              "font-serif-italic leading-tight",
+              "font-serif-italic leading-tight transition-[font-size] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
               isStuck ? "text-[17px]" : "text-[26px]"
             )}
           >
             {t(titleKey)}
           </div>
-          {!isStuck && <div className="mt-1 text-[12.5px] text-muted">{t(subtitleKey)}</div>}
+          {/*
+            grid-template-rows 1fr->0fr es la forma estándar de animar un
+            colapso de alto sin conocerla de antemano (equivalente a
+            transicionar a height:auto, que no se puede animar directo).
+          */}
+          <div
+            className={cn(
+              "grid transition-[grid-template-rows] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
+              isStuck ? "grid-rows-[0fr]" : "grid-rows-[1fr]"
+            )}
+          >
+            <div className="overflow-hidden">
+              <div className="mt-1 text-[12.5px] text-muted">{t(subtitleKey)}</div>
+            </div>
+          </div>
         </div>
         {showControls && (
           <div
