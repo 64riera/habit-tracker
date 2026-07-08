@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { startTransition, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { HabitCheckRow } from "@/components/habit/habit-check-row";
 import { RoutineQuickActions } from "@/components/habit/routine-quick-actions";
+import { useHoySummary } from "@/components/habit/hoy-summary-context";
 import { useI18n } from "@/lib/i18n/client";
 import { useOffline } from "@/lib/offline/client";
 import {
@@ -33,6 +34,7 @@ export function HoyClient({
 }) {
   const { t } = useI18n();
   const { pendingMutations } = useOffline();
+  const { setSummary } = useHoySummary();
   const isToday = date === today;
 
   const pendingNewHabits = pendingHabitCreates(pendingMutations);
@@ -52,14 +54,41 @@ export function HoyClient({
   }, [habits, pendingEdits, pendingArchiveIds, pendingNewHabits, categories, date]);
 
   const total = displayHabits.length;
-  const done = displayHabits.filter((h) => h.todayLog?.status === "done").length;
-  const inProgress = displayHabits.filter((h) => h.todayLog?.status === "partial").length;
-  const pct = total === 0 ? 0 : Math.round((done / total) * 100);
 
-  const best = displayHabits.reduce<HabitWithExtras | null>((acc, h) => {
-    if (!acc || h.streak.longest > acc.streak.longest) return h;
-    return acc;
-  }, null);
+  // El resumen (%, racha) se calcula acá porque depende de displayHabits
+  // (mezcla server + cola offline), pero se muestra en HoySummaryDisplay,
+  // que vive fuera del <Suspense key={date}> de page.tsx y por eso
+  // sobrevive al cambiar de día — reportarlo por contexto en vez de
+  // renderizarlo acá es lo que le permite animar la transición en vez de
+  // desaparecer dentro del skeleton de carga.
+  //
+  // startTransition acá es obligatorio, no cosmético: este componente
+  // termina de montarse como parte de la navegación (el <Suspense
+  // key={date}> resolviendo), que Next.js ya maneja como una transición
+  // pendiente. Sin marcar este setState como parte de la misma transición,
+  // React lo trata como una actualización urgente que compite con esa
+  // transición en curso — en la práctica, el router nunca llegaba a
+  // confirmar la navegación (la URL no cambiaba) porque quedaba
+  // compitiendo con esta actualización de un componente fuera del límite
+  // de Suspense.
+  useEffect(() => {
+    const done = displayHabits.filter((h) => h.todayLog?.status === "done").length;
+    const inProgress = displayHabits.filter((h) => h.todayLog?.status === "partial").length;
+    const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+    const best = displayHabits.reduce<HabitWithExtras | null>((acc, h) => {
+      if (!acc || h.streak.longest > acc.streak.longest) return h;
+      return acc;
+    }, null);
+    startTransition(() => {
+      setSummary({
+        total,
+        done,
+        inProgress,
+        pct,
+        bestStreak: best && best.streak.longest > 0 ? { habitName: best.name, days: best.streak.longest } : null,
+      });
+    });
+  }, [displayHabits, total, setSummary]);
 
   return (
     <>
@@ -78,31 +107,6 @@ export function HoyClient({
         </div>
       ) : (
         <div className="flex flex-col gap-4 md:gap-[22px]">
-          <div>
-            <div className="flex items-baseline gap-3.5">
-              <div className="font-serif-italic text-[34px] font-semibold md:text-[38px]">
-                {pct}%
-              </div>
-              <div className="text-xs text-muted md:text-[13px]">
-                {inProgress > 0
-                  ? t("checkin.summaryWithProgress", { done, total, inProgress })
-                  : t("checkin.summary", { done, total })}
-              </div>
-            </div>
-            <div className="mt-2.5 h-0.5 rounded-full bg-border md:mt-3">
-              <div
-                className="h-0.5 rounded-full bg-accent transition-all"
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-          </div>
-
-          {best && best.streak.longest > 0 && (
-            <div className="text-right font-serif-italic text-xs text-muted md:text-left">
-              {t("checkin.bestStreak", { days: best.streak.longest, habit: best.name })}
-            </div>
-          )}
-
           {/* Sin necesidad de key={date} aquí: HoyClient entero se remonta al
               cambiar de fecha porque vive bajo el <Suspense key={date}> de
               page.tsx, así que HabitCheckRow/RoutineQuickActions ya parten

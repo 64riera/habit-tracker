@@ -66,11 +66,12 @@ export function SkeletonHabitCheckRow() {
 }
 
 /** Espejo del contenido de Hoy que depende de datos (resumen % + filas de
- * hábito) — sin el header ni el DaySwitcher, que se muestran de inmediato y
- * no dependen de esta carga. Único origen de este skeleton: lo usan tanto
- * app/(dashboard)/loading.tsx (navegación completa a Hoy) como el límite de
- * Suspense por fecha en app/(dashboard)/page.tsx (cambio de día dentro de
- * Hoy), para no mantener dos copias del mismo marcado. */
+ * hábito) — usado solo por app/(dashboard)/loading.tsx, el fallback de
+ * arranque en frío de toda la página (nada renderizó todavía, ni siquiera
+ * el header). Para el cambio de día dentro de Hoy ya no aplica: el resumen
+ * vive fuera del <Suspense> por fecha (ver HoySummaryDisplay) para poder
+ * animar la transición en vez de mostrarse en skeleton — ver
+ * SkeletonHoyRows para ese caso. */
 export function SkeletonHoyList() {
   return (
     <div className="flex flex-col gap-4 md:gap-[22px]">
@@ -78,11 +79,22 @@ export function SkeletonHoyList() {
         <Skeleton className="h-9 w-20" />
         <Skeleton className="mt-2.5 h-0.5 w-full md:mt-3" />
       </div>
-      <div className="flex flex-col">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <SkeletonHabitCheckRow key={i} />
-        ))}
-      </div>
+      <SkeletonHoyRows />
+    </div>
+  );
+}
+
+/** Solo las filas de hábito, sin el bloque de % — es el fallback del
+ * <Suspense key={date}> en app/(dashboard)/page.tsx para el cambio de día:
+ * en ese momento el header, el DaySwitcher y el resumen ya están visibles
+ * (el resumen viejo se queda animando su transición), así que el único
+ * hueco real que cubrir es la lista de hábitos en sí. */
+export function SkeletonHoyRows() {
+  return (
+    <div className="flex flex-col">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <SkeletonHabitCheckRow key={i} />
+      ))}
     </div>
   );
 }

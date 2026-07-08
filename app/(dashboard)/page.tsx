@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { DaySwitcher } from "@/components/habit/day-switcher";
-import { SkeletonHoyList } from "@/components/ui/skeleton";
+import { HoySummaryProvider } from "@/components/habit/hoy-summary-context";
+import { HoySummaryDisplay } from "@/components/habit/hoy-summary";
+import { SkeletonHoyRows } from "@/components/ui/skeleton";
 import { getTodayDateString } from "@/lib/date";
 import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
 import { HoyHabits } from "./hoy-habits";
@@ -27,17 +29,22 @@ export default async function HoyPage({
   const date = resolveViewedDate(fecha, today);
 
   return (
-    <div>
-      <ContentHeader titleKey="screens.hoy.title" subtitleKey="screens.hoy.subtitle" />
-      <DaySwitcher date={date} today={today} />
-      {/* key={date}: fuerza un límite de Suspense nuevo por cada fecha para
-          que el cambio de día muestre el skeleton mientras carga en vez de
-          dejar el contenido del día anterior congelado en pantalla — el
-          header y el switcher de arriba no dependen de esta consulta, así
-          que siguen visibles y disponibles durante la carga. */}
-      <Suspense key={date} fallback={<SkeletonHoyList />}>
-        <HoyHabits date={date} today={today} />
-      </Suspense>
-    </div>
+    <HoySummaryProvider>
+      <div>
+        <ContentHeader titleKey="screens.hoy.title" subtitleKey="screens.hoy.subtitle" />
+        <DaySwitcher date={date} today={today} />
+        {/* HoySummaryDisplay vive fuera del <Suspense>: al cambiar de día no
+            se remonta, así que el % y la racha no cargan de nuevo — se
+            quedan mostrando el valor del día anterior y transicionan al
+            nuevo con scramble de texto una vez que HoyHabits los reporta. */}
+        <HoySummaryDisplay />
+        {/* key={date}: fuerza un límite de Suspense nuevo por cada fecha para
+            que la lista de hábitos muestre el skeleton mientras carga en vez
+            de dejar el contenido del día anterior congelado en pantalla. */}
+        <Suspense key={date} fallback={<SkeletonHoyRows />}>
+          <HoyHabits date={date} today={today} />
+        </Suspense>
+      </div>
+    </HoySummaryProvider>
   );
 }
