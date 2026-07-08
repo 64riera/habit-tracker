@@ -3,10 +3,8 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { ContentHeader } from "@/components/nav/content-header";
 import { HabitCheckRow } from "@/components/habit/habit-check-row";
 import { RoutineQuickActions } from "@/components/habit/routine-quick-actions";
-import { DaySwitcher } from "@/components/habit/day-switcher";
 import { useI18n } from "@/lib/i18n/client";
 import { useOffline } from "@/lib/offline/client";
 import {
@@ -64,11 +62,7 @@ export function HoyClient({
   }, null);
 
   return (
-    <div>
-      <ContentHeader titleKey="screens.hoy.title" subtitleKey="screens.hoy.subtitle" />
-
-      <DaySwitcher date={date} today={today} />
-
+    <>
       {total === 0 ? (
         <div className="flex flex-col items-start gap-3">
           <p className="text-sm text-muted">
@@ -109,20 +103,17 @@ export function HoyClient({
             </div>
           )}
 
-          {/* key={date} en ambos: su estado local (status/value/editorOpen en
-              HabitCheckRow, el Set optimista en RoutineQuickActions) se
-              inicializa una sola vez desde los props en el montaje. Los
-              hábitos/rutinas mantienen el mismo id al cambiar de fecha
-              (misma lista, otro log), así que sin esto React reutiliza la
-              instancia entre fechas y el check-in de un día viejo se queda
-              pegado visualmente aunque el % de arriba (que no guarda
-              estado local) sí se recalcule bien. */}
-          <RoutineQuickActions key={date} routines={routines} date={date} />
+          {/* Sin necesidad de key={date} aquí: HoyClient entero se remonta al
+              cambiar de fecha porque vive bajo el <Suspense key={date}> de
+              page.tsx, así que HabitCheckRow/RoutineQuickActions ya parten
+              de estado fresco (status/value/editorOpen, el Set optimista)
+              sin repetir ese mecanismo a este nivel. */}
+          <RoutineQuickActions routines={routines} date={date} />
 
           <div className="flex flex-col">
             {displayHabits.map((habit) => (
               <HabitCheckRow
-                key={`${habit.id}:${date}`}
+                key={habit.id}
                 habit={habit}
                 date={date}
                 isPendingSync={pendingIds.has(habit.id)}
@@ -131,6 +122,6 @@ export function HoyClient({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

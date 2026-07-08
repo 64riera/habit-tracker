@@ -65,6 +65,28 @@ export function SkeletonHabitCheckRow() {
   );
 }
 
+/** Espejo del contenido de Hoy que depende de datos (resumen % + filas de
+ * hábito) — sin el header ni el DaySwitcher, que se muestran de inmediato y
+ * no dependen de esta carga. Único origen de este skeleton: lo usan tanto
+ * app/(dashboard)/loading.tsx (navegación completa a Hoy) como el límite de
+ * Suspense por fecha en app/(dashboard)/page.tsx (cambio de día dentro de
+ * Hoy), para no mantener dos copias del mismo marcado. */
+export function SkeletonHoyList() {
+  return (
+    <div className="flex flex-col gap-4 md:gap-[22px]">
+      <div>
+        <Skeleton className="h-9 w-20" />
+        <Skeleton className="mt-2.5 h-0.5 w-full md:mt-3" />
+      </div>
+      <div className="flex flex-col">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <SkeletonHabitCheckRow key={i} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /** Espejo de la fila inline de HabitosClient (app/(dashboard)/habitos/habitos-client.tsx):
  * asa de arrastre, avatar más chico que el de Hoy, nombre/subtítulo y estado
  * a la derecha — mismo gap-2.5/py-3, deliberadamente distinta de
