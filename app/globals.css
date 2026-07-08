@@ -106,3 +106,20 @@ body {
 .animate-toast-in {
   animation: toast-in 0.25s ease-out;
 }
+
+/* Tamaño de celda del mapa de calor (components/heatmap/heatmap.tsx): fluido
+   en mobile para ocupar todo el ancho disponible (columnas = semanas, dato
+   que solo se conoce en runtime, por eso vive en variables en vez de una
+   clase de Tailwind — un valor arbitrario con una variable interpolada no
+   se puede generar en build time), celda de tamaño fijo desde md. */
+.heatmap-grid {
+  --heatmap-col: minmax(0, 1fr);
+  --heatmap-row: 12px;
+}
+
+@media (min-width: 768px) {
+  .heatmap-grid {
+    --heatmap-col: 14px;
+    --heatmap-row: 14px;
+  }
+}

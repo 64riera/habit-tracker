@@ -4,8 +4,6 @@ import { useI18n } from "@/lib/i18n/client";
 import type { DayCell } from "@/lib/queries/history";
 
 export const LEVEL_ALPHA = [0, 18, 38, 62, 90];
-const CELL_SIZE = 14;
-const GAP = 4;
 
 export function Heatmap({ cells }: { cells: DayCell[] }) {
   const { t } = useI18n();
@@ -13,15 +11,21 @@ export function Heatmap({ cells }: { cells: DayCell[] }) {
 
   return (
     <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-      <div className="overflow-x-auto">
+      {/* .heatmap-grid (globals.css) fija el tamaño de celda: fluido en
+          mobile para ocupar todo el ancho disponible en vez de quedar
+          apretado a la izquierda, fijo desde md con scroll horizontal si el
+          rango no cabe (365 días). El número de columnas (una por semana)
+          solo se conoce en runtime, así que va en `style`, no en una clase
+          de Tailwind — un valor arbitrario con una variable interpolada no
+          se puede generar en build time. Sin ancho/alto fijo por celda: el
+          grid item se estira solo al tamaño de su track. */}
+      <div className="w-full overflow-x-auto md:w-auto">
         <div
-          className="grid"
+          className="heatmap-grid grid w-full gap-1 md:w-max md:gap-1"
           style={{
-            gridTemplateColumns: `repeat(${weeks}, ${CELL_SIZE}px)`,
-            gridTemplateRows: `repeat(7, ${CELL_SIZE}px)`,
             gridAutoFlow: "column",
-            gap: `${GAP}px`,
-            width: "max-content",
+            gridTemplateColumns: `repeat(${weeks}, var(--heatmap-col))`,
+            gridTemplateRows: "repeat(7, var(--heatmap-row))",
           }}
         >
           {cells.map((cell) => {
@@ -35,8 +39,6 @@ export function Heatmap({ cells }: { cells: DayCell[] }) {
                 aria-label={t("history.cellLevel", { date: cell.date, level: cell.level })}
                 className="rounded-[4px] box-border"
                 style={{
-                  width: CELL_SIZE,
-                  height: CELL_SIZE,
                   background: cell.level === 0 ? "var(--color-border)" : hollow ? "transparent" : shade,
                   border: hollow ? `1.5px solid ${shade}` : "none",
                 }}

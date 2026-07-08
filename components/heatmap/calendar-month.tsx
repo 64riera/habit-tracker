@@ -28,10 +28,11 @@ export function CalendarMonth({
     <div>
       <div className="mb-2 text-[10px] tracking-wide text-muted uppercase">{monthLabel}</div>
       <div className="overflow-x-auto">
-        <div
-          className="grid w-fit gap-[5px]"
-          style={{ gridTemplateColumns: "repeat(7, 32px)" }}
-        >
+        {/* Columnas fluidas en mobile para ocupar todo el ancho disponible
+            (los días ya son cuadrados vía aspect-square, así que solo hace
+            falta que la columna deje de ser fija); desde md vuelve a la
+            grilla de tamaño fijo de siempre. */}
+        <div className="grid w-full gap-[5px] [grid-template-columns:repeat(7,minmax(0,1fr))] md:w-fit md:[grid-template-columns:repeat(7,32px)]">
           {WEEKDAY_KEYS.map((d) => (
             <div key={d} className="text-center text-[9px] font-semibold text-muted">
               {t(`habit.weekdayShort.${d}`)}
