@@ -44,9 +44,6 @@ export function HabitForm({ categories, habit }: Props) {
   return (
     <form action={formAction} className="flex flex-1 flex-col gap-5 min-w-0">
       <input type="hidden" name="id" value={id} />
-      <div className="text-sm font-semibold">
-        {habit ? t("habit.editHabit") : t("habit.newHabit")}
-      </div>
 
       {state.error && (
         <div

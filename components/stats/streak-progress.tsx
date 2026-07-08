@@ -16,7 +16,10 @@ export function StreakProgress({ current, longest }: { current: number; longest:
       <div className="flex items-baseline justify-between">
         <div className="text-[13px] font-semibold">{t("streak.current")}</div>
         <div className="font-serif-italic text-[22px] font-semibold">
-          {current} <span className="font-sans text-[11px] not-italic font-normal text-muted">{t("common.days")}</span>
+          {current}{" "}
+          <span className="font-sans text-[11px] not-italic font-normal text-muted">
+            {current === 1 ? t("common.day") : t("common.days")}
+          </span>
         </div>
       </div>
       <div className="h-1 rounded-full bg-border">

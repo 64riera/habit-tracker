@@ -24,21 +24,31 @@ export function SignupForm({ next }: { next: string }) {
       </div>
       <input type="hidden" name="next" value={next} />
       <div className="flex w-full flex-col gap-2.5">
-        <input
-          name="username"
-          type="text"
-          autoComplete="username"
-          autoFocus
-          placeholder={t("auth.usernameLabel")}
-          className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm outline-none focus:border-text"
-        />
-        <input
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          placeholder={t("auth.passwordLabel")}
-          className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm outline-none focus:border-text"
-        />
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="signup-username" className="text-[10px] tracking-wide text-muted uppercase">
+            {t("auth.usernameLabel")}
+          </label>
+          <input
+            id="signup-username"
+            name="username"
+            type="text"
+            autoComplete="username"
+            autoFocus
+            className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm outline-none focus:border-text"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="signup-password" className="text-[10px] tracking-wide text-muted uppercase">
+            {t("auth.passwordLabel")}
+          </label>
+          <input
+            id="signup-password"
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm outline-none focus:border-text"
+          />
+        </div>
       </div>
       {state.error && (
         <div role="alert" className="text-xs text-cat-fitness">

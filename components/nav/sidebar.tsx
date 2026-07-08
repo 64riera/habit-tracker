@@ -11,7 +11,7 @@ export function Sidebar({ streakMax }: { streakMax?: number | null }) {
   const { t, dict } = useI18n();
 
   return (
-    <aside className="hidden w-[220px] shrink-0 flex-col gap-8 border-r border-border px-6 py-8 md:flex">
+    <aside className="sticky top-0 hidden h-screen w-[220px] shrink-0 flex-col gap-8 overflow-y-auto border-r border-border px-6 py-8 md:flex">
       <div className="font-serif-italic text-xl font-semibold">{dict.app.name}</div>
       <nav className="flex flex-col gap-0.5">
         {NAV_ITEMS.map((item) => {
@@ -41,7 +41,7 @@ export function Sidebar({ streakMax }: { streakMax?: number | null }) {
           <div className="font-serif-italic text-[26px] font-semibold">
             {streakMax}{" "}
             <span className="font-sans text-[13px] not-italic font-normal text-muted">
-              {t("common.days")}
+              {streakMax === 1 ? t("common.day") : t("common.days")}
             </span>
           </div>
         </div>

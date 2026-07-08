@@ -189,6 +189,7 @@
     "subtitle": "Agrupa hábitos para marcarlos juntos",
     "newRoutine": "Nueva rutina",
     "fieldName": "Nombre de la rutina",
+    "fieldHabits": "Hábitos incluidos",
     "formError": "Revisa los campos: falta el nombre o no hay hábitos seleccionados.",
     "markAllDone": "Marcar toda la rutina",
     "confirmDelete": "¿Eliminar esta rutina? Los hábitos no se ven afectados.",

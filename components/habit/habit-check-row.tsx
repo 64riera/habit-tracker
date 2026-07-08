@@ -144,7 +144,9 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
         {!compact && (
           <div className="shrink-0 text-right">
             <div className="font-serif text-base font-semibold">{habit.streak.current}</div>
-            <div className="text-[9px] tracking-wide text-muted uppercase">{t("common.days")}</div>
+            <div className="text-[9px] tracking-wide text-muted uppercase">
+              {habit.streak.current === 1 ? t("common.day") : t("common.days")}
+            </div>
           </div>
         )}
         {!compact && (

@@ -1,5 +1,6 @@
 "use client";
 
+import { Trophy } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { useI18n } from "@/lib/i18n/client";
 import type { HabitAchievements } from "@/lib/queries/achievements";
@@ -34,7 +35,11 @@ export function LogrosClient({ habits }: { habits: HabitAchievements[] }) {
                   return (
                     <div
                       key={badge.type}
-                      className="flex flex-col items-center gap-1 rounded-xl border px-3 py-2.5 text-center"
+                      className={
+                        unlocked
+                          ? "flex flex-col items-center gap-1 rounded-xl border px-3 py-2.5 text-center"
+                          : "flex flex-col items-center gap-1 rounded-xl border border-dashed px-3 py-2.5 text-center opacity-50"
+                      }
                       style={{
                         borderColor: unlocked ? "var(--color-accent)" : "var(--color-border)",
                         background: unlocked
@@ -43,6 +48,14 @@ export function LogrosClient({ habits }: { habits: HabitAchievements[] }) {
                         minWidth: 100,
                       }}
                     >
+                      {unlocked && (
+                        <Trophy
+                          size={14}
+                          strokeWidth={2}
+                          color="var(--color-accent)"
+                          aria-hidden
+                        />
+                      )}
                       <span
                         className="text-[11.5px] font-semibold"
                         style={{ color: unlocked ? "var(--color-accent)" : "var(--color-muted)" }}

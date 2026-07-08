@@ -48,7 +48,8 @@ export function PeriodSummaryCard({
         <div className="text-[11.5px] text-muted">
           {t("stats.bestStreakLabel")}:{" "}
           <span className="font-serif-italic text-text">
-            {current.bestStreak.streak} {t("common.days")} — {current.bestStreak.name}
+            {current.bestStreak.streak}{" "}
+            {current.bestStreak.streak === 1 ? t("common.day") : t("common.days")} — {current.bestStreak.name}
           </span>
         </div>
       )}

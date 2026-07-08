@@ -189,6 +189,7 @@
     "subtitle": "Group habits to check them together",
     "newRoutine": "New routine",
     "fieldName": "Routine name",
+    "fieldHabits": "Included habits",
     "formError": "Check the fields: the name is missing or no habits are selected.",
     "markAllDone": "Mark whole routine",
     "confirmDelete": "Delete this routine? Habits themselves are not affected.",

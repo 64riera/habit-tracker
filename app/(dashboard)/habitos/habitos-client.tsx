@@ -233,7 +233,7 @@ export function HabitosClient({
       <div className="mt-3.5 grid grid-cols-2 gap-2.5">
         <Link
           href="/habitos/nuevo"
-          className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-center text-xs text-muted"
+          className="flex items-center justify-center gap-1.5 rounded-xl bg-text py-2.5 text-center text-xs font-semibold text-surface"
         >
           <Plus size={14} strokeWidth={2} aria-hidden />
           {t("habit.newHabitShort")}

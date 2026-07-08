@@ -65,7 +65,7 @@ export function RoutineForm({
       </div>
       <div className="flex flex-col gap-1.5">
         <div className="text-[10px] tracking-wide text-muted uppercase">
-          {t("habit.fieldName")}
+          {t("routines.fieldHabits")}
         </div>
         <div className="flex flex-col gap-1.5">
           {habits.map((h) => (
