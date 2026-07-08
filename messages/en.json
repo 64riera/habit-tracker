@@ -110,7 +110,6 @@
     "markDone": "Mark done",
     "unmark": "Undo mark done",
     "moreOptions": "More options",
-    "clearToday": "Clear today's entry",
     "logStatus": {
       "done": "Done",
       "partial": "Partial",

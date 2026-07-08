@@ -110,7 +110,6 @@
     "markDone": "Marcar hecho",
     "unmark": "Quitar marca de hecho",
     "moreOptions": "Más opciones",
-    "clearToday": "Quitar registro de hoy",
     "logStatus": {
       "done": "Hecho",
       "partial": "Parcial",

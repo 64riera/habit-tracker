@@ -160,12 +160,10 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
         <LogEditor
           habit={habit}
           date={date}
-          onSaved={(newStatus, newValue) => {
+          onChange={(newStatus, newValue) => {
             setStatus(newStatus);
             setValue(newValue ?? 0);
-            setEditorOpen(false);
           }}
-          onClose={() => setEditorOpen(false)}
         />
       )}
     </div>

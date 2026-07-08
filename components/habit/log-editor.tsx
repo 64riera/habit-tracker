@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { RotateCcw } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { useToast } from "@/lib/toast/client";
 import { useOffline } from "@/lib/offline/client";
@@ -13,23 +12,29 @@ const STATUSES = ["done", "partial", "justified", "skipped", "missed"] as const 
 const MOODS = [1, 2, 3, 4, 5] as const;
 const MOOD_EMOJI: Record<number, string> = { 1: "😞", 2: "🙁", 3: "😐", 4: "🙂", 5: "😄" };
 
+/**
+ * Sin botones de guardar/cancelar/quitar: cada interacción persiste de
+ * inmediato (igual que el botón de check de la fila y RoutineQuickActions),
+ * así que no hay un estado "sin guardar" que confirmar o descartar. Volver
+ * a tocar la razón ya activa quita el registro — reemplaza al botón
+ * "Quitar registro de hoy" con el mismo gesto de alternar que ya usa el
+ * botón de check principal para "done".
+ */
 export function LogEditor({
   habit,
   date,
-  onSaved,
-  onClose,
+  onChange,
 }: {
   habit: HabitWithExtras;
   date: string;
-  onSaved: (status: LogStatus | null, value?: number) => void;
-  onClose: () => void;
+  onChange: (status: LogStatus | null, value?: number) => void;
 }) {
   const { t } = useI18n();
   const { push } = useToast();
   const { runOrQueue } = useOffline();
   const router = useRouter();
   const [, startTransition] = useTransition();
-  const [status, setStatus] = useState<LogStatus>((habit.todayLog?.status as LogStatus) ?? "done");
+  const [status, setStatus] = useState<LogStatus | null>((habit.todayLog?.status as LogStatus) ?? null);
   const [value, setValue] = useState(habit.todayLog?.value ?? habit.goalTarget ?? 0);
   const [note, setNote] = useState(habit.todayLog?.note ?? "");
   const [mood, setMood] = useState<number | null>(habit.todayLog?.mood ?? null);
@@ -38,41 +43,62 @@ export function LogEditor({
   const showNote = status === "partial" || status === "justified" || status === "missed";
   const freezesAvailable = habit.streak.freezesAvailable;
 
-  function handleSave() {
-    // Optimista: refleja el guardado y cierra el editor de inmediato; la
-    // mutacion real (y el refresh de datos derivados como racha) sigue en
-    // segundo plano.
-    onSaved(status, isBinary ? undefined : value);
+  function persist(next: { status: LogStatus; value: number; note: string; mood: number | null }) {
+    onChange(next.status, isBinary ? undefined : next.value);
     startTransition(async () => {
       await runOrQueue({
         type: "log",
         input: {
           habitId: habit.id,
           date,
-          status,
-          value: isBinary ? undefined : value,
-          note: note || undefined,
-          mood: mood ?? undefined,
+          status: next.status,
+          value: isBinary ? undefined : next.value,
+          note: next.note || undefined,
+          mood: next.mood ?? undefined,
         },
       });
       router.refresh();
     });
   }
 
-  /** Deshace el registro de hoy por completo — pensado para cuando se marcó por accidente. */
-  function handleClear() {
-    onSaved(null);
+  function clear() {
+    setStatus(null);
+    onChange(null);
     startTransition(async () => {
       await runOrQueue({ type: "delete", habitId: habit.id, date });
       router.refresh();
     });
   }
 
+  function handleStatusClick(s: LogStatus) {
+    if (status === s) {
+      clear();
+      return;
+    }
+    setStatus(s);
+    persist({ status: s, value, note, mood });
+  }
+
+  function handleMoodClick(m: number) {
+    const next = mood === m ? null : m;
+    setMood(next);
+    if (status) persist({ status, value, note, mood: next });
+  }
+
+  function handleValueBlur() {
+    if (status) persist({ status, value, note, mood });
+  }
+
+  function handleNoteBlur() {
+    if (status) persist({ status, value, note, mood });
+  }
+
   function handleUseFreeze() {
-    // Optimista, igual que handleSave: si el cupo ya se agotó al sincronizar
+    // Optimista, igual que persist: si el cupo ya se agotó al sincronizar
     // (otro congelado se aplicó primero), el aviso llega vía el toast
     // centralizado de la cola offline, no aquí.
-    onSaved("frozen");
+    setStatus("frozen");
+    onChange("frozen");
     push(t("checkin.freezeUsed"));
     startTransition(async () => {
       await runOrQueue({ type: "freeze", habitId: habit.id, date });
@@ -87,7 +113,7 @@ export function LogEditor({
           <button
             key={s}
             type="button"
-            onClick={() => setStatus(s)}
+            onClick={() => handleStatusClick(s)}
             className="rounded-full border px-2.5 py-1 text-[10.5px] font-medium"
             style={{
               background: status === s ? "var(--color-text)" : "transparent",
@@ -127,6 +153,7 @@ export function LogEditor({
             step="any"
             value={value}
             onChange={(e) => setValue(Number(e.target.value))}
+            onBlur={handleValueBlur}
             className="w-20 rounded-md border border-border bg-transparent px-2 py-1 text-xs outline-none focus:border-text"
           />
           {habit.goalUnit && <span className="text-xs text-muted">{habit.goalUnit}</span>}
@@ -141,6 +168,7 @@ export function LogEditor({
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
+            onBlur={handleNoteBlur}
             placeholder={t("checkin.notePlaceholder")}
             rows={2}
             className="rounded-md border border-border bg-transparent px-2.5 py-2 text-xs outline-none focus:border-text"
@@ -157,7 +185,7 @@ export function LogEditor({
             <button
               key={m}
               type="button"
-              onClick={() => setMood(mood === m ? null : m)}
+              onClick={() => handleMoodClick(m)}
               className="flex h-6 w-6 items-center justify-center rounded-full text-sm"
               style={{
                 background: mood === m ? "color-mix(in srgb, var(--color-text) 14%, transparent)" : "transparent",
@@ -167,29 +195,6 @@ export function LogEditor({
             </button>
           ))}
         </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={handleSave}
-          className="rounded-lg bg-text px-4 py-1.5 text-[11.5px] font-semibold text-surface"
-        >
-          {t("common.save")}
-        </button>
-        <button type="button" onClick={onClose} className="px-3 py-1.5 text-[11.5px] text-muted">
-          {t("common.cancel")}
-        </button>
-        {habit.todayLog && (
-          <button
-            type="button"
-            onClick={handleClear}
-            className="ml-auto flex items-center gap-1.5 text-[11.5px] text-muted"
-          >
-            <RotateCcw size={12} strokeWidth={2.2} aria-hidden />
-            {t("checkin.clearToday")}
-          </button>
-        )}
       </div>
     </div>
   );
