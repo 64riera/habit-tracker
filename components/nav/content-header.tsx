@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n/client";
+import { cn } from "@/lib/utils";
 import { LangToggle } from "./lang-toggle";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -12,19 +14,52 @@ export function ContentHeader({
   subtitleKey: string;
 }) {
   const { t } = useI18n();
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const [isStuck, setIsStuck] = useState(false);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    // Un centinela de 1px justo antes del header: cuando sale del viewport
+    // por scroll, el header (sticky, inmediatamente después) acaba de
+    // "engancharse" arriba. Evita escuchar el scroll a mano.
+    const observer = new IntersectionObserver(([entry]) => setIsStuck(!entry.isIntersecting), {
+      threshold: 0,
+    });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <div className="mb-5 flex items-start justify-between gap-4 md:mb-[22px]">
-      <div>
-        <div className="font-serif-italic text-[26px] leading-tight md:text-[26px]">
-          {t(titleKey)}
+    <>
+      <div ref={sentinelRef} aria-hidden />
+      <div
+        className={cn(
+          "sticky top-0 z-10 flex items-start justify-between gap-4 bg-bg transition-[padding] duration-200 ease-out",
+          isStuck ? "py-2.5" : "pt-7 pb-5 md:pt-9 md:pb-[22px]"
+        )}
+      >
+        <div>
+          <div
+            className={cn(
+              "font-serif-italic leading-tight transition-[font-size] duration-200 ease-out",
+              isStuck ? "text-[17px]" : "text-[26px]"
+            )}
+          >
+            {t(titleKey)}
+          </div>
+          {!isStuck && <div className="mt-1 text-[12.5px] text-muted">{t(subtitleKey)}</div>}
         </div>
-        <div className="mt-1 text-[12.5px] text-muted">{t(subtitleKey)}</div>
+        <div
+          className={cn(
+            "flex shrink-0 items-center gap-2 md:flex-row md:gap-3.5",
+            isStuck ? "flex-row" : "flex-col items-end md:items-center"
+          )}
+        >
+          <ThemeToggle />
+          <LangToggle />
+        </div>
       </div>
-      <div className="flex shrink-0 flex-col items-end gap-2 md:flex-row md:items-center md:gap-3.5">
-        <ThemeToggle />
-        <LangToggle />
-      </div>
-    </div>
+    </>
   );
 }
