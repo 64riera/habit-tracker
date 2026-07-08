@@ -51,7 +51,13 @@ export function DaySwitcher({ date, today }: { date: string; today: string }) {
       }).format(parseISODate(shownDate));
 
   return (
-    <div className="mb-4 flex items-center gap-1 md:mb-5">
+    // h-7: alto fijo independiente de qué hijos haya — la píldora "Volver a
+    // hoy" (con borde + padding) es más alta que el label de solo texto y
+    // que el área de layout de las flechas (que usan -m-2/p-2 para ampliar
+    // el hit target sin sumar alto), así que sin un alto reservado la fila
+    // crece al aparecer la píldora y empuja hacia abajo el % y la racha de
+    // HoySummaryDisplay, que van justo debajo.
+    <div className="mb-4 flex h-7 items-center gap-1 md:mb-5">
       <Link
         href={`/?fecha=${prev}`}
         onClick={() => setShownDate(prev)}
