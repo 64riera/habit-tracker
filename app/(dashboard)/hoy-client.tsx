@@ -109,12 +109,20 @@ export function HoyClient({
             </div>
           )}
 
-          <RoutineQuickActions routines={routines} date={date} />
+          {/* key={date} en ambos: su estado local (status/value/editorOpen en
+              HabitCheckRow, el Set optimista en RoutineQuickActions) se
+              inicializa una sola vez desde los props en el montaje. Los
+              hábitos/rutinas mantienen el mismo id al cambiar de fecha
+              (misma lista, otro log), así que sin esto React reutiliza la
+              instancia entre fechas y el check-in de un día viejo se queda
+              pegado visualmente aunque el % de arriba (que no guarda
+              estado local) sí se recalcule bien. */}
+          <RoutineQuickActions key={date} routines={routines} date={date} />
 
           <div className="flex flex-col">
             {displayHabits.map((habit) => (
               <HabitCheckRow
-                key={habit.id}
+                key={`${habit.id}:${date}`}
                 habit={habit}
                 date={date}
                 isPendingSync={pendingIds.has(habit.id)}
