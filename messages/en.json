@@ -153,7 +153,12 @@
     "exportCsv": "Export CSV",
     "exportJson": "Export JSON",
     "cellLevel": "{date} — level {level} of 4",
-    "editDay": "Log habits for {date}"
+    "editDay": "Log habits for {date}",
+    "legendLess": "Less",
+    "legendMore": "More",
+    "activeDays": "{active} of {total} active days",
+    "yesterday": "Yesterday",
+    "logDay": "Edit"
   },
   "stats": {
     "last7": "7 days",

@@ -11,6 +11,7 @@ import Link from "next/link";
 import { LogEditor } from "./log-editor";
 import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
 import type { LogStatus } from "@/lib/habits/status";
+import { getStatusVisual } from "@/lib/habits/status-visual";
 
 type Props = {
   habit: HabitWithExtras;
@@ -39,30 +40,7 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
   const isDone = status === "done";
   const progressPct = isBinary ? (isDone ? 100 : 0) : Math.min(100, Math.round((value / target) * 100));
 
-  function statusVisual() {
-    switch (status) {
-      case "done":
-        return { border: "var(--color-accent)", background: "var(--color-accent)", icon: "✓", iconColor: "var(--color-accent-contrast)" };
-      case "partial":
-        return {
-          border: "var(--color-accent)",
-          background: `linear-gradient(90deg, var(--color-accent) ${progressPct}%, transparent ${progressPct}%)`,
-          icon: null,
-          iconColor: "",
-        };
-      case "justified":
-        return { border: "var(--color-muted)", background: "transparent", icon: "J", iconColor: "var(--color-muted)" };
-      case "skipped":
-        return { border: "var(--color-border)", background: "color-mix(in srgb, var(--color-text) 8%, transparent)", icon: "–", iconColor: "var(--color-muted)" };
-      case "frozen":
-        return { border: "var(--color-accent)", background: "transparent", icon: "❄", iconColor: "var(--color-accent)" };
-      case "missed":
-        return { border: "var(--color-border)", background: "color-mix(in srgb, var(--color-text) 14%, transparent)", icon: "×", iconColor: "var(--color-muted)" };
-      default:
-        return { border: "var(--color-border)", background: "transparent", icon: null, iconColor: "" };
-    }
-  }
-  const visual = statusVisual();
+  const visual = getStatusVisual(status, progressPct);
 
   function handleClick() {
     if (isBinary) {

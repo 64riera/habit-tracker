@@ -1,17 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download } from "lucide-react";
+import Link from "next/link";
+import { Download, Pencil } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { Heatmap } from "@/components/heatmap/heatmap";
 import { CalendarMonth } from "@/components/heatmap/calendar-month";
 import { Select } from "@/components/ui/select";
+import { StatusGlyph } from "@/components/habit/status-glyph";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName } from "@/lib/habits/describe";
-import { parseISODate } from "@/lib/date";
+import { addDays, parseISODate } from "@/lib/date";
 import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
 import type { CalendarCell, DayCell, LogEntry } from "@/lib/queries/history";
+
+const MOOD_EMOJI = ["😞", "🙁", "😐", "🙂", "😄"];
+
+/** Agrupa el registro (ya viene ordenado por fecha desc desde la query) en
+ * bloques por día consecutivos, para mostrar la fecha una sola vez por día
+ * en vez de repetida en cada fila — lee como un diario, no como una tabla. */
+function groupByDate(entries: LogEntry[]): { date: string; items: LogEntry[] }[] {
+  const groups: { date: string; items: LogEntry[] }[] = [];
+  for (const entry of entries) {
+    const last = groups[groups.length - 1];
+    if (last && last.date === entry.date) last.items.push(entry);
+    else groups.push({ date: entry.date, items: [entry] });
+  }
+  return groups;
+}
 
 export function HistorialClient({
   habits,
@@ -39,6 +56,26 @@ export function HistorialClient({
   const [entries, setEntries] = useState(log);
   const [loadingMore, setLoadingMore] = useState(false);
   const [exhausted, setExhausted] = useState(log.length < 20);
+
+  const groups = useMemo(() => groupByDate(entries), [entries]);
+  const categoryColorByHabit = useMemo(
+    () => new Map(habits.map((h) => [h.id, h.category?.color])),
+    [habits]
+  );
+  const activeDays = heatmap.filter((d) => d.level > 0).length;
+  const yesterday = addDays(today, -1);
+
+  const dayHeaderFormatter = new Intl.DateTimeFormat(locale === "es" ? "es-ES" : "en-US", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+
+  function formatDayHeader(date: string) {
+    if (date === today) return t("checkin.today");
+    if (date === yesterday) return t("history.yesterday");
+    return dayHeaderFormatter.format(parseISODate(date));
+  }
 
   const monthLabel = new Intl.DateTimeFormat(locale === "es" ? "es-ES" : "en-US", {
     month: "long",
@@ -124,9 +161,12 @@ export function HistorialClient({
         </div>
       </div>
 
-      <div className="mb-6">
-        <div className="mb-2 text-[10px] tracking-wide text-muted uppercase">
-          {t("history.heatmap")}
+      <div className="mb-8">
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <div className="text-[10px] tracking-wide text-muted uppercase">{t("history.heatmap")}</div>
+          <div className="text-[11px] text-muted">
+            {t("history.activeDays", { active: activeDays, total: heatmap.length })}
+          </div>
         </div>
         <Heatmap cells={heatmap} />
       </div>
@@ -142,38 +182,57 @@ export function HistorialClient({
           <div className="mb-2 text-[10px] tracking-wide text-muted uppercase">
             {t("history.log")}
           </div>
-          {entries.length === 0 ? (
+          {groups.length === 0 ? (
             <p className="text-sm text-muted">{t("history.empty")}</p>
           ) : (
             <>
-              <div className="flex flex-col">
-                {entries.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-border py-2.5"
-                  >
-                    <div className="w-16 shrink-0 text-[11px] text-muted">
-                      {entry.date.slice(5)}
-                    </div>
-                    <div className="min-w-[120px] shrink-0 text-[12.5px] font-semibold">
-                      {entry.habitName}
-                    </div>
-                    <div
-                      className="shrink-0 rounded-full px-2 py-0.5 text-[10.5px] font-medium text-muted"
-                      style={{ background: "color-mix(in srgb, var(--color-text) 6%, transparent)" }}
-                    >
-                      {t(`checkin.logStatus.${entry.status}`)}
-                    </div>
-                    {entry.mood && (
-                      <div className="shrink-0 text-[11px]">
-                        {["😞", "🙁", "😐", "🙂", "😄"][entry.mood - 1]}
+              {/* Un encabezado por día en vez de repetir la fecha en cada
+                  fila: la unidad natural de un registro diario es el día,
+                  no la entrada individual — así se lee como un diario, no
+                  como una tabla plana. Cada día es a la vez el punto de
+                  entrada para corregirlo (mismo mecanismo de check-in por
+                  fecha que Hoy y el calendario). */}
+              <div className="flex flex-col gap-6">
+                {groups.map((group) => (
+                  <div key={group.date}>
+                    <div className="mb-1.5 flex items-baseline justify-between gap-3">
+                      <div className="font-serif-italic text-[15px] leading-tight">
+                        {formatDayHeader(group.date)}
                       </div>
-                    )}
-                    {entry.note && (
-                      <div className="min-w-0 font-serif-italic text-xs text-muted">
-                        {entry.note}
-                      </div>
-                    )}
+                      <Link
+                        href={`/?fecha=${group.date}`}
+                        className="flex shrink-0 items-center gap-1 text-[10.5px] font-medium text-muted"
+                      >
+                        <Pencil size={10} strokeWidth={2.2} aria-hidden />
+                        {t("history.logDay")}
+                      </Link>
+                    </div>
+                    <div className="flex flex-col">
+                      {group.items.map((entry) => {
+                        const color = categoryColorByHabit.get(entry.habitId) ?? "var(--color-muted)";
+                        return (
+                          <div
+                            key={entry.id}
+                            className="flex flex-wrap items-center gap-x-2.5 gap-y-1 border-b border-border py-2"
+                          >
+                            <StatusGlyph status={entry.status} />
+                            <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: color }} aria-hidden />
+                            <span className="shrink-0 text-[12.5px] font-medium">{entry.habitName}</span>
+                            <span className="shrink-0 text-[11px] text-muted">
+                              {t(`checkin.logStatus.${entry.status}`)}
+                            </span>
+                            {entry.mood && (
+                              <span className="shrink-0 text-[11px]">{MOOD_EMOJI[entry.mood - 1]}</span>
+                            )}
+                            {entry.note && (
+                              <span className="min-w-0 truncate font-serif-italic text-xs text-muted">
+                                {entry.note}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -182,7 +241,7 @@ export function HistorialClient({
                   type="button"
                   onClick={loadMore}
                   disabled={loadingMore}
-                  className="mt-3 w-full rounded-lg border border-border py-2 text-xs text-muted disabled:opacity-60"
+                  className="mt-4 w-full rounded-lg border border-border py-2 text-xs text-muted disabled:opacity-60"
                 >
                   {loadingMore ? t("common.loading") : "···"}
                 </button>
