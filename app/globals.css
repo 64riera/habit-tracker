@@ -45,13 +45,15 @@
   --font-sans: var(--font-public-sans);
 }
 
-html,
-body {
+html {
   height: 100%;
   /* Nada dentro de la app debe poder abrir scroll horizontal de pagina;
      los pocos elementos que legitimamente son mas anchos que la pantalla
      (heatmap, calendario, grafica de tendencia) manejan su propio scroll
-     interno con overflow-x-auto. */
+     interno con overflow-x-auto. Solo va en html, no en body: si ambos
+     quedan con height:100%, body se vuelve su propio contenedor de scroll
+     (anidado dentro del de html) y position:fixed/sticky se vuelve poco
+     confiable en navegadores moviles reales. */
   overflow-x: hidden;
 }
 
