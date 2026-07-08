@@ -9,9 +9,12 @@ import { ThemeToggle } from "./theme-toggle";
 export function ContentHeader({
   titleKey,
   subtitleKey,
+  showControls = true,
 }: {
   titleKey: string;
   subtitleKey: string;
+  /** Ajustes ya muestra tema/idioma como filas propias; evita mostrarlos dos veces. */
+  showControls?: boolean;
 }) {
   const { t } = useI18n();
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -50,15 +53,17 @@ export function ContentHeader({
           </div>
           {!isStuck && <div className="mt-1 text-[12.5px] text-muted">{t(subtitleKey)}</div>}
         </div>
-        <div
-          className={cn(
-            "flex shrink-0 items-center gap-2 md:flex-row md:gap-3.5",
-            isStuck ? "flex-row" : "flex-col items-end md:items-center"
-          )}
-        >
-          <ThemeToggle />
-          <LangToggle />
-        </div>
+        {showControls && (
+          <div
+            className={cn(
+              "flex shrink-0 items-center gap-2 md:flex-row md:gap-3.5",
+              isStuck ? "flex-row" : "flex-col items-end md:items-center"
+            )}
+          >
+            <ThemeToggle />
+            <LangToggle />
+          </div>
+        )}
       </div>
     </>
   );

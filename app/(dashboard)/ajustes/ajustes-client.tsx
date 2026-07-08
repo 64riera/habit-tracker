@@ -51,7 +51,11 @@ export function AjustesClient({ cutoffHour }: { cutoffHour: number }) {
 
   return (
     <div>
-      <ContentHeader titleKey="screens.ajustes.title" subtitleKey="screens.ajustes.subtitle" />
+      <ContentHeader
+        titleKey="screens.ajustes.title"
+        subtitleKey="screens.ajustes.subtitle"
+        showControls={false}
+      />
 
       <div className="flex flex-col">
         {rows.map((row) => (
