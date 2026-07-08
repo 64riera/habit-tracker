@@ -8,7 +8,7 @@ export default async function NuevoHabitoPage() {
   return (
     <div className="flex flex-1 flex-col">
       <ContentHeader
-        titleKey="habit.newHabit"
+        titleKey="habit.newHabitShort"
         subtitleKey="habit.newHabitSubtitle"
         backHref="/habitos"
       />

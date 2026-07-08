@@ -8,18 +8,27 @@ import { cn } from "@/lib/utils";
 import { LangToggle } from "./lang-toggle";
 import { ThemeToggle } from "./theme-toggle";
 
-export function ContentHeader({
+function HeaderControls({ showControls }: { showControls: boolean }) {
+  if (!showControls) return null;
+  return (
+    <div className="flex shrink-0 items-center gap-2 md:gap-3.5">
+      <ThemeToggle />
+      <LangToggle />
+    </div>
+  );
+}
+
+/** Pantallas de nivel superior (Hoy, Historial, etc.): título grande que se
+ * va con el scroll nativo, y una versión compacta que cruza por opacidad
+ * en la barra fija una vez que el título grande queda tapado. */
+function TopLevelHeader({
   titleKey,
   subtitleKey,
-  showControls = true,
-  backHref,
+  showControls,
 }: {
   titleKey: string;
   subtitleKey: string;
-  /** Ajustes ya muestra tema/idioma como filas propias; evita mostrarlos dos veces. */
-  showControls?: boolean;
-  /** Pantallas anidadas (no en la nav principal) muestran una flecha para volver al listado padre. */
-  backHref?: string;
+  showControls: boolean;
 }) {
   const { t } = useI18n();
   const barRef = useRef<HTMLDivElement>(null);
@@ -57,43 +66,83 @@ export function ContentHeader({
         ref={barRef}
         className="sticky top-0 z-10 flex items-center justify-between gap-4 bg-bg py-2.5"
       >
-        <div className="flex min-w-0 items-center gap-1.5">
-          {backHref && (
-            <Link
-              href={backHref}
-              aria-label={t("common.back")}
-              className="-m-2 shrink-0 rounded-full p-2 text-muted"
-            >
-              <ArrowLeft size={17} strokeWidth={2} aria-hidden />
-            </Link>
+        <div
+          className={cn(
+            "truncate font-serif-italic text-[17px] leading-tight transition-opacity duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
+            isStuck ? "opacity-100" : "opacity-0"
           )}
-          <div
-            className={cn(
-              "truncate font-serif-italic text-[17px] leading-tight transition-opacity duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
-              isStuck ? "opacity-100" : "opacity-0"
-            )}
-            aria-hidden={!isStuck}
-          >
-            {t(titleKey)}
-          </div>
+          aria-hidden={!isStuck}
+        >
+          {t(titleKey)}
         </div>
-        {showControls && (
-          <div className="flex shrink-0 items-center gap-2 md:gap-3.5">
-            <ThemeToggle />
-            <LangToggle />
-          </div>
-        )}
+        <HeaderControls showControls={showControls} />
       </div>
 
       <div ref={heroRef} className="pb-5 md:pb-[22px]">
-        <div className="flex items-center gap-1.5">
-          {backHref && <div className="h-[17px] w-[17px] shrink-0" aria-hidden />}
-          <div className="font-serif-italic text-[26px] leading-tight">{t(titleKey)}</div>
-        </div>
-        <div className={cn("mt-1 text-[12.5px] text-muted", backHref && "pl-[26px]")}>
-          {t(subtitleKey)}
-        </div>
+        <div className="font-serif-italic text-[26px] leading-tight">{t(titleKey)}</div>
+        <div className="mt-1 text-[12.5px] text-muted">{t(subtitleKey)}</div>
       </div>
     </>
+  );
+}
+
+/** Subvistas (fuera de la nav principal, con flecha para volver): el título
+ * vive únicamente en la barra fija, siempre visible, sin animación — no
+ * necesitan el momento de título grande de las pantallas de nivel
+ * superior. */
+function SubViewHeader({
+  titleKey,
+  subtitleKey,
+  showControls,
+  backHref,
+}: {
+  titleKey: string;
+  subtitleKey: string;
+  showControls: boolean;
+  backHref: string;
+}) {
+  const { t } = useI18n();
+  return (
+    <>
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 bg-bg py-2.5">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <Link
+            href={backHref}
+            aria-label={t("common.back")}
+            className="-m-2 shrink-0 rounded-full p-2 text-muted"
+          >
+            <ArrowLeft size={17} strokeWidth={2} aria-hidden />
+          </Link>
+          <div className="truncate font-serif-italic text-[17px] leading-tight">{t(titleKey)}</div>
+        </div>
+        <HeaderControls showControls={showControls} />
+      </div>
+      <div className="pb-5 text-[12.5px] text-muted md:pb-[22px]">{t(subtitleKey)}</div>
+    </>
+  );
+}
+
+export function ContentHeader({
+  titleKey,
+  subtitleKey,
+  showControls = true,
+  backHref,
+}: {
+  titleKey: string;
+  subtitleKey: string;
+  /** Ajustes ya muestra tema/idioma como filas propias; evita mostrarlos dos veces. */
+  showControls?: boolean;
+  /** Pantallas anidadas (no en la nav principal) muestran una flecha para volver al listado padre. */
+  backHref?: string;
+}) {
+  return backHref ? (
+    <SubViewHeader
+      titleKey={titleKey}
+      subtitleKey={subtitleKey}
+      showControls={showControls}
+      backHref={backHref}
+    />
+  ) : (
+    <TopLevelHeader titleKey={titleKey} subtitleKey={subtitleKey} showControls={showControls} />
   );
 }
