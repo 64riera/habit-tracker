@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
+import { useScrolledPastBar } from "@/lib/hooks/use-scrolled-past-bar";
 import { LangToggle } from "./lang-toggle";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -15,6 +15,18 @@ function HeaderControls({ showControls }: { showControls: boolean }) {
       <ThemeToggle />
       <LangToggle />
     </div>
+  );
+}
+
+/** Fondo de la barra fija: opaco (se mezcla con la página) hasta que hay
+ * contenido corriendo debajo; ahí pasa a translúcido + blur, al estilo de
+ * una barra de navegación de iOS, con un hairline que aparece con el
+ * blur para separarla del contenido. Solo transiciona color/borde (barato,
+ * sin layout) — nunca el propio `backdrop-filter`, que sería costoso. */
+function barBackgroundClass(isScrolled: boolean) {
+  return cn(
+    "backdrop-blur-xl backdrop-saturate-150 transition-colors duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
+    isScrolled ? "border-b border-border/70 bg-bg/75" : "border-b border-transparent bg-bg"
   );
 }
 
@@ -31,26 +43,7 @@ function TopLevelHeader({
   showControls: boolean;
 }) {
   const { t } = useI18n();
-  const barRef = useRef<HTMLDivElement>(null);
-  const heroRef = useRef<HTMLDivElement>(null);
-  const [isStuck, setIsStuck] = useState(false);
-
-  useEffect(() => {
-    const bar = barRef.current;
-    const hero = heroRef.current;
-    if (!bar || !hero) return;
-    // La barra compacta tiene alto fijo y tapa visualmente el título grande
-    // apenas su borde inferior llega a la altura de la barra, no recién
-    // cuando sale por completo del viewport — rootMargin corre ese límite
-    // a la altura real de la barra en vez del techo de la pantalla.
-    const barHeight = bar.getBoundingClientRect().height;
-    const observer = new IntersectionObserver(([entry]) => setIsStuck(!entry.isIntersecting), {
-      threshold: 0,
-      rootMargin: `-${barHeight}px 0px 0px 0px`,
-    });
-    observer.observe(hero);
-    return () => observer.disconnect();
-  }, []);
+  const { barRef, sentinelRef: heroRef, isScrolled } = useScrolledPastBar<HTMLDivElement>();
 
   return (
     <>
@@ -64,14 +57,17 @@ function TopLevelHeader({
       */}
       <div
         ref={barRef}
-        className="sticky top-0 z-10 flex items-center justify-between gap-4 bg-bg py-2.5"
+        className={cn(
+          "sticky top-0 z-10 flex items-center justify-between gap-4 py-2.5",
+          barBackgroundClass(isScrolled)
+        )}
       >
         <div
           className={cn(
             "truncate font-serif-italic text-[17px] leading-tight transition-opacity duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
-            isStuck ? "opacity-100" : "opacity-0"
+            isScrolled ? "opacity-100" : "opacity-0"
           )}
-          aria-hidden={!isStuck}
+          aria-hidden={!isScrolled}
         >
           {t(titleKey)}
         </div>
@@ -102,9 +98,17 @@ function SubViewHeader({
   backHref: string;
 }) {
   const { t } = useI18n();
+  const { barRef, sentinelRef, isScrolled } = useScrolledPastBar<HTMLDivElement>();
+
   return (
     <>
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 bg-bg py-2.5">
+      <div
+        ref={barRef}
+        className={cn(
+          "sticky top-0 z-10 flex items-center justify-between gap-4 py-2.5",
+          barBackgroundClass(isScrolled)
+        )}
+      >
         <div className="flex min-w-0 items-center gap-1.5">
           <Link
             href={backHref}
@@ -117,6 +121,12 @@ function SubViewHeader({
         </div>
         <HeaderControls showControls={showControls} />
       </div>
+      {/* Centinela de 1px: no hay "hero" en las subvistas, así que este
+          punto marca dónde empieza el contenido real que puede quedar
+          tapado bajo la barra. Alto 0 sería ambiguo para el observer al
+          caer justo en el borde de su rootMargin; 1px lo resuelve sin
+          agregar espacio perceptible. */}
+      <div ref={sentinelRef} aria-hidden className="h-px" />
       <div className="pb-5 text-[12.5px] text-muted md:pb-[22px]">{t(subtitleKey)}</div>
     </>
   );
