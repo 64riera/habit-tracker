@@ -36,16 +36,24 @@ export function ContentHeader({
   return (
     <>
       <div ref={sentinelRef} aria-hidden />
+      {/*
+        padding y font-size cambian sin transición a propósito: son
+        propiedades de layout, y animarlas mientras el sticky se
+        reposiciona en cada frame de scroll (sobre todo con scroll lento
+        en móvil, que genera muchos más frames dentro de la ventana de
+        transición) hace que compitan por el mismo reflow y se ve como un
+        glitch. El cambio instantáneo evita ese choque.
+      */}
       <div
         className={cn(
-          "sticky top-0 z-10 flex items-start justify-between gap-4 bg-bg transition-[padding] duration-200 ease-out",
+          "sticky top-0 z-10 flex items-start justify-between gap-4 bg-bg",
           isStuck ? "py-2.5" : "pt-7 pb-5 md:pt-9 md:pb-[22px]"
         )}
       >
         <div>
           <div
             className={cn(
-              "font-serif-italic leading-tight transition-[font-size] duration-200 ease-out",
+              "font-serif-italic leading-tight",
               isStuck ? "text-[17px]" : "text-[26px]"
             )}
           >
