@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { Play } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
@@ -147,21 +148,27 @@ export function FocusStartForm({ settings, habitOptions, defaultHabitId }: Props
         )}
       </div>
 
-      <div className="mt-auto flex items-center gap-2.5 pt-6">
+      <div className="mt-auto pt-8">
         <StartButton label={t("focus.start")} loadingLabel={t("common.loading")} />
       </div>
     </form>
   );
 }
 
+// Único CTA de la pantalla — el que arranca el timer — así que rompe la
+// escala de botones secundarios (Guardar, Pausar/Terminar) a propósito:
+// full-width, más alto, texto más grande y radio un escalón mayor. El
+// acento sigue siendo monocromo (bg-text/text-surface, sin color nuevo);
+// la jerarquía se logra con tamaño, peso y espacio.
 function StartButton({ label, loadingLabel }: { label: string; loadingLabel: string }) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
       disabled={pending}
-      className="rounded-lg bg-text px-5 py-2.5 text-[12.5px] font-semibold text-surface disabled:opacity-60"
+      className="flex w-full items-center justify-center gap-2 rounded-xl bg-text py-4 text-[15px] font-semibold text-surface transition-transform active:scale-[0.98] disabled:opacity-60"
     >
+      {!pending && <Play size={17} strokeWidth={2.25} fill="currentColor" aria-hidden />}
       {pending ? loadingLabel : label}
     </button>
   );

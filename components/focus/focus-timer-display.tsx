@@ -61,7 +61,8 @@ export function FocusTimerDisplay({
   const isPaused = session.status === "paused";
   const bigValueSeconds = session.mode === "countdown" ? state.remainingSeconds ?? 0 : state.activeSeconds;
   const pct = state.capSeconds > 0 ? Math.min(100, Math.round((state.activeSeconds / state.capSeconds) * 100)) : 0;
-  const canCancel = state.activeSeconds < CANCEL_VISIBLE_ACTIVE_SECONDS;
+  const cancelSecondsLeft = CANCEL_VISIBLE_ACTIVE_SECONDS - state.activeSeconds;
+  const canCancel = cancelSecondsLeft > 0;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -92,7 +93,7 @@ export function FocusTimerDisplay({
                 if (!confirm(t("focus.cancelConfirm"))) e.preventDefault();
               }}
             >
-              <TextButton label={t("focus.controls.cancel")} />
+              <TextButton label={t("focus.controls.cancel", { seconds: cancelSecondsLeft })} />
             </form>
           )}
         </div>
@@ -122,7 +123,7 @@ export function FocusTimerDisplay({
                 if (!confirm(t("focus.cancelConfirm"))) e.preventDefault();
               }}
             >
-              <TextButton label={t("focus.controls.cancel")} />
+              <TextButton label={t("focus.controls.cancel", { seconds: cancelSecondsLeft })} />
             </form>
           )}
         </div>

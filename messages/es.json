@@ -18,7 +18,7 @@
     "habitos": { "title": "Hábitos", "subtitle": "Gestiona y personaliza" },
     "habitoDetalle": { "title": "Editar hábito", "subtitle": "Ajusta los detalles de tu hábito" },
     "ajustes": { "title": "Ajustes", "subtitle": "Apariencia, idioma y datos" },
-    "enfoque": { "title": "Enfoque", "subtitle": "Sesiones de concentración con seguimiento" }
+    "enfoque": { "title": "Enfoque", "subtitle": "Sesiones de concentración" }
   },
   "common": {
     "save": "Guardar cambios",
@@ -287,7 +287,7 @@
       "pause": "Pausar",
       "resume": "Reanudar",
       "finish": "Terminar",
-      "cancel": "Cancelar sesión",
+      "cancel": "Cancelar sesión ({seconds}s)",
       "endBreak": "Terminar pausa"
     },
     "break": {
