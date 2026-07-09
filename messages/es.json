@@ -16,7 +16,8 @@
     "estadisticas": { "title": "Estadísticas", "subtitle": "Progreso a lo largo del tiempo" },
     "habitos": { "title": "Hábitos", "subtitle": "Gestiona y personaliza" },
     "habitoDetalle": { "title": "Editar hábito", "subtitle": "Ajusta los detalles de tu hábito" },
-    "ajustes": { "title": "Ajustes", "subtitle": "Apariencia, idioma y datos" }
+    "ajustes": { "title": "Ajustes", "subtitle": "Apariencia, idioma y datos" },
+    "enfoque": { "title": "Enfoque", "subtitle": "Sesiones de concentración con seguimiento" }
   },
   "common": {
     "save": "Guardar cambios",
@@ -248,5 +249,91 @@
     "installTitle": "Instalar Hábito.",
     "installBody": "Agrégala a tu pantalla de inicio para un acceso instantáneo.",
     "installIos": "Toca compartir y luego \"Agregar a inicio\"."
+  },
+  "focus": {
+    "cta": "Iniciar sesión de enfoque",
+    "ctaSubtitle": "Cronómetro o temporizador con seguimiento",
+    "formError": "Revisa los campos: algún valor no es válido.",
+    "start": "Empezar",
+    "mode": {
+      "label": "Modalidad",
+      "countdown": "Cuenta regresiva",
+      "stopwatch": "Cronómetro"
+    },
+    "duration": {
+      "label": "Duración",
+      "minutes": "min",
+      "help": "Hasta {max} minutos"
+    },
+    "stopwatchHelp": "Cuenta hacia arriba, con un tope de 2 horas.",
+    "breaks": {
+      "toggle": "Pausas activas",
+      "help": "Pausar el enfoque cada cierto tiempo para moverte",
+      "interval": "Cada",
+      "duration": "Duración de la pausa"
+    },
+    "habit": {
+      "label": "Vincular a un hábito",
+      "none": "Sin vincular"
+    },
+    "status": {
+      "running": "Enfocado",
+      "on_break": "Pausa activa",
+      "paused": "En pausa",
+      "completed": "Completado",
+      "cancelled": "Cancelado"
+    },
+    "controls": {
+      "pause": "Pausar",
+      "resume": "Reanudar",
+      "finish": "Terminar",
+      "cancel": "Cancelar sesión",
+      "endBreak": "Terminar pausa"
+    },
+    "break": {
+      "title": "Hora de moverte un poco",
+      "subtitle": "El enfoque sigue pausado hasta que termine la pausa"
+    },
+    "cancelConfirm": "¿Seguro que quieres cancelar esta sesión? No contará para tu objetivo del día.",
+    "startForHabit": "Enfocarme en este hábito",
+    "alerts": {
+      "soundLabel": "Sonido al terminar",
+      "breakTitle": "⏸ Pausa activa — Hábito.",
+      "completeTitle": "✅ Sesión completada — Hábito."
+    },
+    "goal": {
+      "label": "Objetivo diario"
+    },
+    "progress": {
+      "summary": "{done} de {goal} min de hoy"
+    },
+    "history": {
+      "title": "Historial de enfoque",
+      "viewLink": "Ver historial",
+      "empty": "Aún no tienes sesiones registradas."
+    },
+    "rewards": {
+      "title": "Tu bosque",
+      "subtitle": "Crece con cada sesión de enfoque",
+      "viewLink": "Ver bosque",
+      "toastTitle": "¡Nueva recompensa desbloqueada!",
+      "totalHours": "horas de enfoque",
+      "totalSessions": "sesiones completadas",
+      "treeTitle": "Por horas acumuladas",
+      "forestTitle": "Por sesiones completadas",
+      "hoursRequirement": "{hours}h",
+      "sessionsRequirement": "{sessions} sesiones",
+      "types": {
+        "seed": "Semilla",
+        "sprout": "Brote",
+        "sapling": "Retoño",
+        "young_tree": "Árbol joven",
+        "mature_tree": "Árbol maduro",
+        "grove_3": "Arboleda",
+        "grove_10": "Bosquecillo",
+        "forest_25": "Bosque",
+        "forest_50": "Gran bosque"
+      }
+    }
   }
 }

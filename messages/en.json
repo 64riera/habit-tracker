@@ -16,7 +16,8 @@
     "estadisticas": { "title": "Stats", "subtitle": "Progress over time" },
     "habitos": { "title": "Habits", "subtitle": "Manage and personalize" },
     "habitoDetalle": { "title": "Edit habit", "subtitle": "Adjust your habit's details" },
-    "ajustes": { "title": "Settings", "subtitle": "Appearance, language and data" }
+    "ajustes": { "title": "Settings", "subtitle": "Appearance, language and data" },
+    "enfoque": { "title": "Focus", "subtitle": "Concentration sessions with tracking" }
   },
   "common": {
     "save": "Save changes",
@@ -248,5 +249,91 @@
     "installTitle": "Install Habit.",
     "installBody": "Add it to your home screen for instant access.",
     "installIos": "Tap share, then \"Add to Home Screen\"."
+  },
+  "focus": {
+    "cta": "Start a focus session",
+    "ctaSubtitle": "Timer or stopwatch, fully tracked",
+    "formError": "Check the fields: a value isn't valid.",
+    "start": "Start",
+    "mode": {
+      "label": "Mode",
+      "countdown": "Countdown",
+      "stopwatch": "Stopwatch"
+    },
+    "duration": {
+      "label": "Duration",
+      "minutes": "min",
+      "help": "Up to {max} minutes"
+    },
+    "stopwatchHelp": "Counts up, capped at 2 hours.",
+    "breaks": {
+      "toggle": "Active breaks",
+      "help": "Pause the session every so often to move around",
+      "interval": "Every",
+      "duration": "Break duration"
+    },
+    "habit": {
+      "label": "Link to a habit",
+      "none": "Not linked"
+    },
+    "status": {
+      "running": "Focusing",
+      "on_break": "On a break",
+      "paused": "Paused",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "controls": {
+      "pause": "Pause",
+      "resume": "Resume",
+      "finish": "Finish",
+      "cancel": "Cancel session",
+      "endBreak": "End break"
+    },
+    "break": {
+      "title": "Time to move a little",
+      "subtitle": "Focus stays paused until the break ends"
+    },
+    "cancelConfirm": "Cancel this session? It won't count toward today's goal.",
+    "startForHabit": "Focus on this habit",
+    "alerts": {
+      "soundLabel": "Sound when finished",
+      "breakTitle": "⏸ Active break — Habit.",
+      "completeTitle": "✅ Session complete — Habit."
+    },
+    "goal": {
+      "label": "Daily goal"
+    },
+    "progress": {
+      "summary": "{done} of {goal} min today"
+    },
+    "history": {
+      "title": "Focus history",
+      "viewLink": "View history",
+      "empty": "No sessions recorded yet."
+    },
+    "rewards": {
+      "title": "Your forest",
+      "subtitle": "Grows with every focus session",
+      "viewLink": "View forest",
+      "toastTitle": "New reward unlocked!",
+      "totalHours": "hours focused",
+      "totalSessions": "sessions completed",
+      "treeTitle": "By hours accumulated",
+      "forestTitle": "By sessions completed",
+      "hoursRequirement": "{hours}h",
+      "sessionsRequirement": "{sessions} sessions",
+      "types": {
+        "seed": "Seed",
+        "sprout": "Sprout",
+        "sapling": "Sapling",
+        "young_tree": "Young tree",
+        "mature_tree": "Mature tree",
+        "grove_3": "Grove",
+        "grove_10": "Small grove",
+        "forest_25": "Forest",
+        "forest_50": "Great forest"
+      }
+    }
   }
 }

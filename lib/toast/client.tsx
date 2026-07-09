@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n/client";
 import type { AchievementType } from "@/lib/achievements";
+import type { FocusRewardTier } from "@/lib/focus/rewards";
 
 type Toast = { id: string; title: string; body?: string };
 
@@ -58,6 +59,20 @@ export function useAchievementToast() {
     (unlocked: AchievementType[]) => {
       for (const type of unlocked) {
         push(t("achievements.toastTitle"), t(`achievements.types.${type}`));
+      }
+    },
+    [push, t]
+  );
+}
+
+/** Notifica tiers de recompensa de enfoque recién desbloqueados (árbol/bosque). */
+export function useFocusRewardToast() {
+  const { push } = useToast();
+  const { t } = useI18n();
+  return useCallback(
+    (unlocked: FocusRewardTier[]) => {
+      for (const tier of unlocked) {
+        push(t("focus.rewards.toastTitle"), t(`focus.rewards.types.${tier}`));
       }
     },
     [push, t]

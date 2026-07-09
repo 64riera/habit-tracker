@@ -3,6 +3,7 @@ import { ContentHeader } from "@/components/nav/content-header";
 import { DaySwitcher } from "@/components/habit/day-switcher";
 import { HoySummaryProvider } from "@/components/habit/hoy-summary-context";
 import { HoySummaryDisplay } from "@/components/habit/hoy-summary";
+import { FocusCtaCard } from "@/components/focus/focus-cta-card";
 import { SkeletonHoyRows } from "@/components/ui/skeleton";
 import { getTodayDateString } from "@/lib/date";
 import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
@@ -38,6 +39,9 @@ export default async function HoyPage({
             quedan mostrando el valor del día anterior y transicionan al
             nuevo con scramble de texto una vez que HoyHabits los reporta. */}
         <HoySummaryDisplay />
+        <div className="mb-4 md:mb-[22px]">
+          <FocusCtaCard />
+        </div>
         {/* key={date}: fuerza un límite de Suspense nuevo por cada fecha para
             que la lista de hábitos muestre el skeleton mientras carga en vez
             de dejar el contenido del día anterior congelado en pantalla. */}

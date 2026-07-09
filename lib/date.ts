@@ -57,3 +57,14 @@ export function startOfMonth(value: string): string {
 export function monthKey(value: string): string {
   return value.slice(0, 7); // YYYY-MM
 }
+
+/** Agrupa una lista ya ordenada por fecha desc en bloques por día consecutivos. */
+export function groupByDate<T extends { date: string }>(entries: T[]): { date: string; items: T[] }[] {
+  const groups: { date: string; items: T[] }[] = [];
+  for (const entry of entries) {
+    const last = groups[groups.length - 1];
+    if (last && last.date === entry.date) last.items.push(entry);
+    else groups.push({ date: entry.date, items: [entry] });
+  }
+  return groups;
+}

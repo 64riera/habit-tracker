@@ -8,6 +8,7 @@ import { PeriodSummaryCard } from "@/components/stats/period-summary-card";
 import { StreakProgress } from "@/components/stats/streak-progress";
 import { BestMonthBanner } from "@/components/stats/best-month-banner";
 import { ContentHeader } from "@/components/nav/content-header";
+import { FocusOnHabitLink } from "@/components/focus/focus-on-habit-link";
 
 export default async function HabitoDetallePage({
   params,
@@ -47,8 +48,9 @@ export default async function HabitoDetallePage({
       </div>
 
       <HabitForm categories={categories} habit={habit} />
-      <div className="mt-2">
+      <div className="mt-2 flex items-center justify-between">
         <ArchiveHabitButton habitId={id} status={habit.status} />
+        <FocusOnHabitLink habitId={id} />
       </div>
     </div>
   );

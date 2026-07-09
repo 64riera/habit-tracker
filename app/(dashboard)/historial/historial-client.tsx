@@ -11,24 +11,11 @@ import { Select } from "@/components/ui/select";
 import { StatusGlyph } from "@/components/habit/status-glyph";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName } from "@/lib/habits/describe";
-import { addDays, parseISODate } from "@/lib/date";
+import { addDays, groupByDate, parseISODate } from "@/lib/date";
 import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
 import type { CalendarCell, DayCell, LogEntry } from "@/lib/queries/history";
 
 const MOOD_EMOJI = ["😞", "🙁", "😐", "🙂", "😄"];
-
-/** Agrupa el registro (ya viene ordenado por fecha desc desde la query) en
- * bloques por día consecutivos, para mostrar la fecha una sola vez por día
- * en vez de repetida en cada fila — lee como un diario, no como una tabla. */
-function groupByDate(entries: LogEntry[]): { date: string; items: LogEntry[] }[] {
-  const groups: { date: string; items: LogEntry[] }[] = [];
-  for (const entry of entries) {
-    const last = groups[groups.length - 1];
-    if (last && last.date === entry.date) last.items.push(entry);
-    else groups.push({ date: entry.date, items: [entry] });
-  }
-  return groups;
-}
 
 export function HistorialClient({
   habits,

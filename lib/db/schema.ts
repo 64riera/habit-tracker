@@ -128,6 +128,66 @@ export const settings = sqliteTable("settings", {
   value: text("value"),
 });
 
+export const focusSessions = sqliteTable(
+  "focus_sessions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    habitId: text("habit_id").references(() => habits.id, { onDelete: "set null" }),
+    mode: text("mode", { enum: ["countdown", "stopwatch"] }).notNull(),
+    plannedDurationSeconds: integer("planned_duration_seconds"), // solo countdown
+    status: text("status", {
+      enum: ["running", "on_break", "paused", "completed", "cancelled"],
+    })
+      .notNull()
+      .default("running"),
+    startedAt: text("started_at").notNull(),
+    lastResumedAt: text("last_resumed_at").notNull(),
+    accumulatedActiveSeconds: integer("accumulated_active_seconds").notNull().default(0),
+    breaksEnabled: integer("breaks_enabled", { mode: "boolean" }).notNull().default(false),
+    breakIntervalMinutes: integer("break_interval_minutes"),
+    breakDurationMinutes: integer("break_duration_minutes"),
+    breaksTakenCount: integer("breaks_taken_count").notNull().default(0),
+    breakStartedAt: text("break_started_at"),
+    pausedAt: text("paused_at"),
+    completedAt: text("completed_at"),
+    autoCompleted: integer("auto_completed", { mode: "boolean" }).notNull().default(false),
+    date: text("date").notNull(), // YYYY-MM-DD, día en que empezó (según el cutoff de día)
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    index("focus_sessions_user_idx").on(t.userId),
+    index("focus_sessions_user_status_idx").on(t.userId, t.status),
+    index("focus_sessions_date_idx").on(t.date),
+    index("focus_sessions_habit_idx").on(t.habitId),
+  ]
+);
+
+export const focusSettings = sqliteTable("focus_settings", {
+  userId: text("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
+  dailyGoalMinutes: integer("daily_goal_minutes").notNull().default(60),
+  defaultMode: text("default_mode", { enum: ["countdown", "stopwatch"] }).notNull().default("countdown"),
+  defaultDurationMinutes: integer("default_duration_minutes").notNull().default(25),
+  breaksEnabled: integer("breaks_enabled", { mode: "boolean" }).notNull().default(false),
+  breakIntervalMinutes: integer("break_interval_minutes").notNull().default(25),
+  breakDurationMinutes: integer("break_duration_minutes").notNull().default(5),
+  soundEnabled: integer("sound_enabled", { mode: "boolean" }).notNull().default(true),
+});
+
+export const focusRewardTiers = sqliteTable(
+  "focus_reward_tiers",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    tier: text("tier").notNull(),
+    unlockedAt: text("unlocked_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    uniqueIndex("focus_reward_tiers_user_tier_idx").on(t.userId, t.tier),
+    index("focus_reward_tiers_user_idx").on(t.userId),
+  ]
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   categories: many(categories),
   habits: many(habits),

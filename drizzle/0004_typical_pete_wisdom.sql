@@ -1,0 +1,1 @@
+ALTER TABLE `focus_settings` ADD `sound_enabled` integer DEFAULT true NOT NULL;

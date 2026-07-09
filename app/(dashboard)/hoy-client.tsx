@@ -37,9 +37,16 @@ export function HoyClient({
   const { setSummary } = useHoySummary();
   const isToday = date === today;
 
-  const pendingNewHabits = pendingHabitCreates(pendingMutations);
-  const pendingEdits = pendingHabitUpdates(pendingMutations);
-  const pendingArchiveIds = pendingHabitArchiveIds(pendingMutations);
+  // Memoizados sobre `pendingMutations`: pendingHabit*() arman un array/Map/Set
+  // nuevo en cada llamada, y sin memoizar acá esa identidad nueva se propagaba
+  // a displayHabits en cada render (ver deps más abajo), lo que reabría el
+  // useEffect que reporta el resumen a HoySummaryContext, cuyo setState volvía
+  // a renderizar este componente (consumidor del mismo contexto) — un loop de
+  // renders infinito ("Maximum update depth exceeded"), visible sobre todo con
+  // pendingMutations vacío en cuentas nuevas sin hábitos.
+  const pendingNewHabits = useMemo(() => pendingHabitCreates(pendingMutations), [pendingMutations]);
+  const pendingEdits = useMemo(() => pendingHabitUpdates(pendingMutations), [pendingMutations]);
+  const pendingArchiveIds = useMemo(() => pendingHabitArchiveIds(pendingMutations), [pendingMutations]);
   const pendingIds = useMemo(
     () => new Set([...pendingNewHabits.map((m) => m.id), ...pendingEdits.keys()]),
     [pendingNewHabits, pendingEdits]
