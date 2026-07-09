@@ -13,8 +13,8 @@ import { LIVE_STATUSES, type FocusSessionRow } from "@/lib/focus/compute";
 
 /**
  * Pastilla flotante visible en cualquier ruta del dashboard salvo /enfoque
- * (ahí ya se ve la sesión completa) y "/" (Hoy tiene su propio chip inline,
- * `FocusHoyChip`, que además es quien dispara ahí las alertas de
+ * (ahí ya se ve la sesión completa) y "/" (Hoy tiene su propio chip en el
+ * header, `FocusHeaderChip`, que además es quien dispara ahí las alertas de
  * sonido/título — evita que ambos estén montados a la vez y las dupliquen).
  * Solo monta el hook de ticking si hay una sesión activa de entrada — si no,
  * no hay `setInterval` corriendo para siempre en cada página de la app sin

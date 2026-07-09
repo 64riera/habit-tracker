@@ -3,7 +3,7 @@ import { ContentHeader } from "@/components/nav/content-header";
 import { DaySwitcher } from "@/components/habit/day-switcher";
 import { HoySummaryProvider } from "@/components/habit/hoy-summary-context";
 import { HoySummaryDisplay } from "@/components/habit/hoy-summary";
-import { FocusHoyChip } from "@/components/focus/focus-hoy-chip";
+import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
 import { SkeletonHoyRows } from "@/components/ui/skeleton";
 import { getTodayDateString } from "@/lib/date";
 import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
@@ -34,16 +34,17 @@ export default async function HoyPage({
   return (
     <HoySummaryProvider>
       <div>
-        <ContentHeader titleKey="screens.hoy.title" subtitleKey="screens.hoy.subtitle" />
+        <ContentHeader
+          titleKey="screens.hoy.title"
+          subtitleKey="screens.hoy.subtitle"
+          headerAccessory={<FocusHeaderChip session={focusSession} soundEnabled={focusSettings.soundEnabled} />}
+        />
         <DaySwitcher date={date} today={today} />
         {/* HoySummaryDisplay vive fuera del <Suspense>: al cambiar de día no
             se remonta, así que el % y la racha no cargan de nuevo — se
             quedan mostrando el valor del día anterior y transicionan al
             nuevo con scramble de texto una vez que HoyHabits los reporta. */}
         <HoySummaryDisplay />
-        <div className="mb-4 md:mb-[22px]">
-          <FocusHoyChip session={focusSession} soundEnabled={focusSettings.soundEnabled} />
-        </div>
         {/* key={date}: fuerza un límite de Suspense nuevo por cada fecha para
             que la lista de hábitos muestre el skeleton mientras carga en vez
             de dejar el contenido del día anterior congelado en pantalla. */}

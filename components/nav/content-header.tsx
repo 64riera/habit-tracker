@@ -49,15 +49,24 @@ function barMaterialClass(isScrolled: boolean) {
 
 /** Pantallas de nivel superior (Hoy, Historial, etc.): título grande que se
  * va con el scroll nativo, y una versión compacta que cruza por opacidad
- * en la barra fija una vez que el título grande queda tapado. */
+ * en la barra fija una vez que el título grande queda tapado.
+ *
+ * `headerAccessory` (opcional, p. ej. el chip de sesión de enfoque en vivo)
+ * ocupa el mismo espacio que el título compacto mientras este todavía no
+ * se muestra: mientras no hay scroll el hero grande de abajo hace de
+ * título, así que ese hueco a la izquierda de la barra está libre. En
+ * cuanto `isScrolled` activa el título compacto, el accesorio cruza a
+ * `opacity-0` en el mismo crossfade — nunca compiten por el espacio. */
 function TopLevelHeader({
   titleKey,
   subtitleKey,
   showControls,
+  headerAccessory,
 }: {
   titleKey: string;
   subtitleKey: string;
   showControls: boolean;
+  headerAccessory?: React.ReactNode;
 }) {
   const { t } = useI18n();
   const { barRef, sentinelRef: heroRef, isScrolled } = useScrolledPastBar<HTMLDivElement>();
@@ -68,9 +77,10 @@ function TopLevelHeader({
         Alto constante siempre: nada acá cambia de tamaño con el scroll, así
         que <main> nunca ve fluctuar su scrollHeight por culpa del header —
         eso era lo que forzaba saltos de scroll en páginas con poco
-        contenido. Solo la opacidad del título compacto cruza (GPU, no
-        dispara layout); el título grande de abajo se va con el scroll
-        nativo del documento, sin ninguna animación de tamaño.
+        contenido. Solo la opacidad del título compacto (y del accesorio,
+        si hay) cruza (GPU, no dispara layout); el título grande de abajo se
+        va con el scroll nativo del documento, sin ninguna animación de
+        tamaño.
       */}
       <div
         ref={barRef}
@@ -79,14 +89,30 @@ function TopLevelHeader({
           barMaterialClass(isScrolled)
         )}
       >
-        <div
-          className={cn(
-            "truncate font-serif-italic text-[17px] leading-tight transition-opacity duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
-            isScrolled ? "opacity-100" : "opacity-0"
+        {/* grid (no absolute): título y accesorio se apilan en la misma
+            celda, así el contenedor mide por el más alto de los dos en vez
+            de necesitar una altura fija a mano. */}
+        <div className="grid min-w-0 flex-1 items-center">
+          <div
+            className={cn(
+              "col-start-1 row-start-1 truncate font-serif-italic text-[17px] leading-tight transition-opacity duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
+              isScrolled ? "opacity-100" : "opacity-0"
+            )}
+            aria-hidden={!isScrolled}
+          >
+            {t(titleKey)}
+          </div>
+          {headerAccessory && (
+            <div
+              className={cn(
+                "col-start-1 row-start-1 transition-opacity duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
+                isScrolled ? "pointer-events-none opacity-0" : "opacity-100"
+              )}
+              aria-hidden={isScrolled}
+            >
+              {headerAccessory}
+            </div>
           )}
-          aria-hidden={!isScrolled}
-        >
-          {t(titleKey)}
         </div>
         <HeaderControls showControls={showControls} />
       </div>
@@ -154,6 +180,7 @@ export function ContentHeader({
   subtitleKey,
   showControls = true,
   backHref,
+  headerAccessory,
 }: {
   titleKey: string;
   subtitleKey: string;
@@ -161,6 +188,10 @@ export function ContentHeader({
   showControls?: boolean;
   /** Pantallas anidadas (no en la nav principal) muestran una flecha para volver al listado padre. */
   backHref?: string;
+  /** Solo aplica a pantallas de nivel superior (sin `backHref`): en las
+   * anidadas el título y la flecha de volver siempre están visibles, así
+   * que nunca hay espacio libre en la barra donde mostrarlo. */
+  headerAccessory?: React.ReactNode;
 }) {
   return backHref ? (
     <SubViewHeader
@@ -170,6 +201,11 @@ export function ContentHeader({
       backHref={backHref}
     />
   ) : (
-    <TopLevelHeader titleKey={titleKey} subtitleKey={subtitleKey} showControls={showControls} />
+    <TopLevelHeader
+      titleKey={titleKey}
+      subtitleKey={subtitleKey}
+      showControls={showControls}
+      headerAccessory={headerAccessory}
+    />
   );
 }
