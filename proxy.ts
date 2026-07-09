@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
 const SESSION_COOKIE = "habito_session";
-const PUBLIC_PATHS = ["/login", "/signup", "/manifest.webmanifest"];
+const PUBLIC_PATHS = ["/login", "/signup", "/manifest.webmanifest", "/api/auth/google"];
 
 function secretKey() {
   return new TextEncoder().encode(process.env.APP_JWT_SECRET ?? "");

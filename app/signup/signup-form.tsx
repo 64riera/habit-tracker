@@ -5,12 +5,22 @@ import { useActionState } from "react";
 import { signup, type AuthState } from "@/lib/actions/auth";
 import { useI18n } from "@/lib/i18n/client";
 import { LangToggle } from "@/components/nav/lang-toggle";
+import { GoogleButton } from "@/components/auth/google-button";
 
 const initialState: AuthState = {};
 
-export function SignupForm({ next }: { next: string }) {
+export function SignupForm({
+  next,
+  error,
+  googleEnabled,
+}: {
+  next: string;
+  error?: string;
+  googleEnabled: boolean;
+}) {
   const { t } = useI18n();
   const [state, formAction, pending] = useActionState(signup, initialState);
+  const displayedError = state.error ?? error;
 
   return (
     <form
@@ -23,6 +33,16 @@ export function SignupForm({ next }: { next: string }) {
         <div className="mt-1 text-[12.5px] text-muted">{t("auth.signupSubtitle")}</div>
       </div>
       <input type="hidden" name="next" value={next} />
+      {googleEnabled && (
+        <>
+          <GoogleButton next={next} />
+          <div className="flex w-full items-center gap-3 text-[10px] tracking-wide text-muted uppercase">
+            <div className="h-px flex-1 bg-border" />
+            {t("auth.orDivider")}
+            <div className="h-px flex-1 bg-border" />
+          </div>
+        </>
+      )}
       <div className="flex w-full flex-col gap-2.5">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="signup-username" className="text-[10px] tracking-wide text-muted uppercase">
@@ -50,9 +70,9 @@ export function SignupForm({ next }: { next: string }) {
           />
         </div>
       </div>
-      {state.error && (
+      {displayedError && (
         <div role="alert" className="text-xs text-cat-fitness">
-          {t(`auth.errors.${state.error}`)}
+          {t(`auth.errors.${displayedError}`)}
         </div>
       )}
       <button
