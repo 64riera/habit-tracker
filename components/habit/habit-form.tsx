@@ -119,6 +119,7 @@ export function HabitForm({ categories, habit }: Props) {
               </button>
             ))}
           </div>
+          <input type="hidden" name="goalType" value={goalType} />
           <p className="text-[11px] text-muted">{t(`habit.goalTypeHelp.${goalType}`)}</p>
         </Field>
 
