@@ -3,10 +3,11 @@ import { ContentHeader } from "@/components/nav/content-header";
 import { DaySwitcher } from "@/components/habit/day-switcher";
 import { HoySummaryProvider } from "@/components/habit/hoy-summary-context";
 import { HoySummaryDisplay } from "@/components/habit/hoy-summary";
-import { FocusCtaCard } from "@/components/focus/focus-cta-card";
+import { FocusHoyChip } from "@/components/focus/focus-hoy-chip";
 import { SkeletonHoyRows } from "@/components/ui/skeleton";
 import { getTodayDateString } from "@/lib/date";
 import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { getActiveFocusSession, getFocusSettings } from "@/lib/queries/focus";
 import { HoyHabits } from "./hoy-habits";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -28,6 +29,7 @@ export default async function HoyPage({
   const cutoffHour = await getDayCutoffHour();
   const today = getTodayDateString(cutoffHour);
   const date = resolveViewedDate(fecha, today);
+  const [focusSession, focusSettings] = await Promise.all([getActiveFocusSession(), getFocusSettings()]);
 
   return (
     <HoySummaryProvider>
@@ -40,7 +42,7 @@ export default async function HoyPage({
             nuevo con scramble de texto una vez que HoyHabits los reporta. */}
         <HoySummaryDisplay />
         <div className="mb-4 md:mb-[22px]">
-          <FocusCtaCard />
+          <FocusHoyChip session={focusSession} soundEnabled={focusSettings.soundEnabled} />
         </div>
         {/* key={date}: fuerza un límite de Suspense nuevo por cada fecha para
             que la lista de hábitos muestre el skeleton mientras carga en vez

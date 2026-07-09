@@ -7,6 +7,7 @@
     "hoy": "Today",
     "historial": "History",
     "estadisticas": "Stats",
+    "enfoque": "Focus",
     "habitos": "Habits",
     "ajustes": "Settings"
   },
@@ -252,7 +253,6 @@
   },
   "focus": {
     "cta": "Start a focus session",
-    "ctaSubtitle": "Timer or stopwatch, fully tracked",
     "formError": "Check the fields: a value isn't valid.",
     "start": "Start",
     "mode": {

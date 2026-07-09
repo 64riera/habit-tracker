@@ -7,6 +7,7 @@
     "hoy": "Hoy",
     "historial": "Historial",
     "estadisticas": "Estadísticas",
+    "enfoque": "Enfoque",
     "habitos": "Hábitos",
     "ajustes": "Ajustes"
   },
@@ -252,7 +253,6 @@
   },
   "focus": {
     "cta": "Iniciar sesión de enfoque",
-    "ctaSubtitle": "Cronómetro o temporizador con seguimiento",
     "formError": "Revisa los campos: algún valor no es válido.",
     "start": "Empezar",
     "mode": {

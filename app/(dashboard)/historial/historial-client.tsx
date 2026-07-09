@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Download, Pencil } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
+import { HistorialTabs } from "@/components/nav/historial-tabs";
 import { Heatmap } from "@/components/heatmap/heatmap";
 import { CalendarMonth } from "@/components/heatmap/calendar-month";
 import { Select } from "@/components/ui/select";
@@ -100,6 +101,7 @@ export function HistorialClient({
   return (
     <div>
       <ContentHeader titleKey="screens.historial.title" subtitleKey="screens.historial.subtitle" />
+      <HistorialTabs />
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-2.5">
         <div className="flex flex-wrap gap-2">

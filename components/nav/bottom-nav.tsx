@@ -16,7 +16,7 @@ export function BottomNav() {
     // flexbox, sin depender de fixed/sticky sobre el scroll del documento.
     <nav className="flex shrink-0 border-t border-border bg-bg px-1 md:hidden">
       {NAV_ITEMS.map((item) => {
-        const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+        const active = item.activeWhen(pathname);
         const Icon = item.icon;
         return (
           <Link

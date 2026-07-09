@@ -18,7 +18,7 @@ export function Sidebar({ streakMax }: { streakMax?: number | null }) {
       <div className="font-serif-italic text-xl font-semibold">{dict.app.name}</div>
       <nav className="flex flex-col gap-0.5">
         {NAV_ITEMS.map((item) => {
-          const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+          const active = item.activeWhen(pathname);
           const Icon = item.icon;
           return (
             <Link

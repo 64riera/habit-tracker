@@ -1,6 +1,7 @@
 "use client";
 
 import { ContentHeader } from "@/components/nav/content-header";
+import { HistorialTabs } from "@/components/nav/historial-tabs";
 import { TrendBars } from "@/components/charts/trend-bars";
 import { CategoryBars } from "@/components/charts/category-bars";
 import { PeriodSummaryCard } from "@/components/stats/period-summary-card";
@@ -40,6 +41,7 @@ export function EstadisticasClient({
   return (
     <div>
       <ContentHeader titleKey="screens.estadisticas.title" subtitleKey="screens.estadisticas.subtitle" />
+      <HistorialTabs />
 
       <div className="flex flex-col gap-6">
         <div className="flex">
