@@ -312,6 +312,25 @@
       "viewLink": "View history",
       "empty": "No sessions recorded yet."
     },
+    "stats": {
+      "title": "Focus stats",
+      "totalTime": "Total time",
+      "byHabit": "By habit",
+      "byTimeOfDay": "By time of day",
+      "timeOfDay": {
+        "morning": "Morning",
+        "afternoon": "Afternoon",
+        "evening": "Evening",
+        "night": "Night"
+      },
+      "currentStreak": "Current streak",
+      "longestStreak": "Best streak",
+      "avgSession": "Average session",
+      "longestSession": "Longest session",
+      "sessions": "Sessions",
+      "completionRate": "Completion",
+      "empty": "Not enough data yet to show stats."
+    },
     "rewards": {
       "title": "Your forest",
       "subtitle": "Grows with every focus session",

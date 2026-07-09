@@ -312,6 +312,25 @@
       "viewLink": "Ver historial",
       "empty": "Aún no tienes sesiones registradas."
     },
+    "stats": {
+      "title": "Estadísticas de enfoque",
+      "totalTime": "Tiempo total",
+      "byHabit": "Por hábito",
+      "byTimeOfDay": "Por franja horaria",
+      "timeOfDay": {
+        "morning": "Mañana",
+        "afternoon": "Tarde",
+        "evening": "Noche",
+        "night": "Madrugada"
+      },
+      "currentStreak": "Racha actual",
+      "longestStreak": "Mejor racha",
+      "avgSession": "Promedio por sesión",
+      "longestSession": "Sesión más larga",
+      "sessions": "Sesiones",
+      "completionRate": "Finalización",
+      "empty": "Aún no hay datos suficientes para mostrar estadísticas."
+    },
     "rewards": {
       "title": "Tu bosque",
       "subtitle": "Crece con cada sesión de enfoque",

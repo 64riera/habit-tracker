@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Download, Pencil } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
-import { HistorialTabs } from "@/components/nav/historial-tabs";
+import { SegmentedRouteTabs } from "@/components/nav/segmented-route-tabs";
 import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
 import { Heatmap } from "@/components/heatmap/heatmap";
 import { CalendarMonth } from "@/components/heatmap/calendar-month";
@@ -109,7 +109,12 @@ export function HistorialClient({
         subtitleKey="screens.historial.subtitle"
         headerAccessory={<FocusHeaderChip session={focusHeader.session} soundEnabled={focusHeader.soundEnabled} />}
       />
-      <HistorialTabs />
+      <SegmentedRouteTabs
+        tabs={[
+          { key: "historial", href: "/historial", dictKey: "nav.historial" },
+          { key: "estadisticas", href: "/estadisticas", dictKey: "nav.estadisticas" },
+        ]}
+      />
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-2.5">
         <div className="flex flex-wrap gap-2">

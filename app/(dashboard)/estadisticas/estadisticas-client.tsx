@@ -1,7 +1,7 @@
 "use client";
 
 import { ContentHeader } from "@/components/nav/content-header";
-import { HistorialTabs } from "@/components/nav/historial-tabs";
+import { SegmentedRouteTabs } from "@/components/nav/segmented-route-tabs";
 import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
 import { TrendBars } from "@/components/charts/trend-bars";
 import { CategoryBars } from "@/components/charts/category-bars";
@@ -34,7 +34,7 @@ export function EstadisticasClient({
   moodCorrelation: MoodCorrelation;
   focusHeader: FocusHeaderData;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const summaryCards = [
     { value: overall.pct7, label: t("stats.last7") },
@@ -49,7 +49,12 @@ export function EstadisticasClient({
         subtitleKey="screens.estadisticas.subtitle"
         headerAccessory={<FocusHeaderChip session={focusHeader.session} soundEnabled={focusHeader.soundEnabled} />}
       />
-      <HistorialTabs />
+      <SegmentedRouteTabs
+        tabs={[
+          { key: "historial", href: "/historial", dictKey: "nav.historial" },
+          { key: "estadisticas", href: "/estadisticas", dictKey: "nav.estadisticas" },
+        ]}
+      />
 
       <div className="flex flex-col gap-6">
         <div className="flex">
@@ -83,7 +88,11 @@ export function EstadisticasClient({
             <div className="mb-2.5 text-[10px] tracking-wide text-muted uppercase">
               {t("stats.trend")}
             </div>
-            <TrendBars points={trend} />
+            <TrendBars
+              points={trend.map((p) => ({ date: p.date, value: p.pct }))}
+              maxValue={100}
+              formatLabel={(p) => t("stats.trendBarLabel", { date: p.date, pct: p.value })}
+            />
           </div>
         )}
 
@@ -92,7 +101,16 @@ export function EstadisticasClient({
             <div className="mb-2.5 text-[10px] tracking-wide text-muted uppercase">
               {t("stats.byCategory")}
             </div>
-            <CategoryBars categories={categories} />
+            <CategoryBars
+              items={categories.map((c) => ({
+                key: c.categoryId,
+                label: locale === "es" ? c.nameEs : c.nameEn,
+                value: c.pct,
+                color: c.color,
+              }))}
+              maxValue={100}
+              formatValue={(v) => `${v}%`}
+            />
           </div>
         )}
 

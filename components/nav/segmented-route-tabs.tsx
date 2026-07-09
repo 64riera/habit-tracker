@@ -5,23 +5,20 @@ import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
-const TABS = [
-  { key: "historial", href: "/historial", dictKey: "nav.historial" },
-  { key: "estadisticas", href: "/estadisticas", dictKey: "nav.estadisticas" },
-] as const;
+export type SegmentedRouteTab = { key: string; href: string; dictKey: string };
 
-/** Historial y Estadísticas viven en rutas y páginas separadas (cada una con
- * su propio data-fetching), pero comparten un solo ítem en la nav principal
- * (ver nav-items.ts) y se presentan como una misma sección mediante este
+/** Pares de pantallas que viven en rutas separadas (cada una con su propio
+ * data-fetching) pero se presentan como una misma sección mediante un
  * segmented control, al mismo estilo del selector de modo en
- * focus-start-form.tsx. */
-export function HistorialTabs() {
+ * focus-start-form.tsx. Genérico: lo usan tanto Historial/Estadísticas de
+ * hábitos como Historial/Estadísticas de enfoque. */
+export function SegmentedRouteTabs({ tabs }: { tabs: readonly SegmentedRouteTab[] }) {
   const pathname = usePathname();
   const { t } = useI18n();
 
   return (
     <div className="mb-5 flex overflow-hidden rounded-lg border border-border md:w-72">
-      {TABS.map((tab) => {
+      {tabs.map((tab) => {
         const active = pathname.startsWith(tab.href);
         return (
           <Link

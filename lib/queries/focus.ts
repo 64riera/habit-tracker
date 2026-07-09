@@ -130,14 +130,22 @@ export async function getFocusSettings(): Promise<FocusSettingsRow> {
   return row ?? { userId, ...DEFAULT_FOCUS_SETTINGS };
 }
 
-export async function getFocusHistory(limit = 30): Promise<FocusSessionRow[]> {
+export async function getFocusHistory(params: {
+  habitId?: string;
+  limit?: number;
+  offset?: number;
+} = {}): Promise<FocusSessionRow[]> {
+  const { habitId, limit = 30, offset = 0 } = params;
   const userId = await getCurrentUserId();
+  const conditions = [eq(focusSessions.userId, userId), inArray(focusSessions.status, ["completed", "cancelled"])];
+  if (habitId) conditions.push(eq(focusSessions.habitId, habitId));
   return db
     .select()
     .from(focusSessions)
-    .where(and(eq(focusSessions.userId, userId), inArray(focusSessions.status, ["completed", "cancelled"])))
+    .where(and(...conditions))
     .orderBy(desc(focusSessions.startedAt))
-    .limit(limit);
+    .limit(limit)
+    .offset(offset);
 }
 
 /**

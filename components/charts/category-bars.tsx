@@ -1,25 +1,36 @@
 "use client";
 
-import { useI18n } from "@/lib/i18n/client";
-import type { CategoryStat } from "@/lib/queries/stats";
+export type BarItem = { key: string; label: string; value: number; color: string };
 
-export function CategoryBars({ categories }: { categories: CategoryStat[] }) {
-  const { locale } = useI18n();
+/**
+ * Barras horizontales genéricas — {label, value, color} ya resueltos por el
+ * caller (sin asumir un `nameEs`/`nameEn` de categoría ni que `value` venga
+ * en 0–100), para poder reutilizarlas también en el desglose de enfoque por
+ * hábito y por franja horaria.
+ */
+export function CategoryBars({
+  items,
+  maxValue,
+  formatValue,
+}: {
+  items: BarItem[];
+  maxValue?: number;
+  formatValue: (value: number) => string;
+}) {
+  const max = maxValue ?? Math.max(1, ...items.map((i) => i.value));
 
   return (
     <div className="flex flex-col gap-2.5">
-      {categories.map((c) => (
-        <div key={c.categoryId} className="flex items-center gap-3">
-          <div className="w-[88px] shrink-0 truncate text-xs">
-            {locale === "es" ? c.nameEs : c.nameEn}
-          </div>
+      {items.map((item) => (
+        <div key={item.key} className="flex items-center gap-3">
+          <div className="w-[88px] shrink-0 truncate text-xs">{item.label}</div>
           <div className="h-1.5 flex-1 rounded-full bg-border">
             <div
               className="h-1.5 rounded-full"
-              style={{ width: `${c.pct}%`, background: c.color }}
+              style={{ width: `${Math.min(100, (item.value / max) * 100)}%`, background: item.color }}
             />
           </div>
-          <div className="w-8 shrink-0 text-right text-[11px] text-muted">{c.pct}%</div>
+          <div className="w-8 shrink-0 text-right text-[11px] text-muted">{formatValue(item.value)}</div>
         </div>
       ))}
     </div>
