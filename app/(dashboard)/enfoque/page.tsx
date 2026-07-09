@@ -34,7 +34,11 @@ export default async function EnfoquePage({
 
       <FocusProgressWidget completedSeconds={progress.completedSeconds} goalMinutes={progress.goalMinutes} />
       <div className="mb-6 flex flex-col gap-3">
-        <FocusGoalControl goalMinutes={settings.dailyGoalMinutes} />
+        {/* Cambiar el objetivo a mitad de una sesión movería la meta del día
+            mientras se está corriendo hacia ella — se oculta mientras hay
+            una sesión en curso, no solo se deshabilita, para no sugerir que
+            es una opción disponible en ese momento. */}
+        {!isLive && <FocusGoalControl goalMinutes={settings.dailyGoalMinutes} />}
         <FocusSoundToggle enabled={settings.soundEnabled} />
       </div>
 

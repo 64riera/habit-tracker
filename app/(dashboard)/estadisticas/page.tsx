@@ -3,13 +3,14 @@ import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
 import { getCategoryStats, getHabitStatCards, getOverallStats, getTrend } from "@/lib/queries/stats";
 import { getMoodCorrelation, getWorstWeekday } from "@/lib/queries/patterns";
 import { getMonthSummary, getWeekSummary } from "@/lib/queries/summary";
+import { getFocusHeaderData } from "@/lib/queries/focus";
 import { EstadisticasClient } from "./estadisticas-client";
 
 export default async function EstadisticasPage() {
   const cutoffHour = await getDayCutoffHour();
   const today = getTodayDateString(cutoffHour);
 
-  const [overall, trend, categories, cards, weekSummary, monthSummary, worstWeekday, moodCorrelation] =
+  const [overall, trend, categories, cards, weekSummary, monthSummary, worstWeekday, moodCorrelation, focusHeader] =
     await Promise.all([
       getOverallStats(today),
       getTrend(today, 14),
@@ -19,6 +20,7 @@ export default async function EstadisticasPage() {
       getMonthSummary(today),
       getWorstWeekday(today),
       getMoodCorrelation(today),
+      getFocusHeaderData(),
     ]);
 
   return (
@@ -31,6 +33,7 @@ export default async function EstadisticasPage() {
       monthSummary={monthSummary}
       worstWeekday={worstWeekday}
       moodCorrelation={moodCorrelation}
+      focusHeader={focusHeader}
     />
   );
 }

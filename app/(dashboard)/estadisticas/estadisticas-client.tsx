@@ -2,6 +2,7 @@
 
 import { ContentHeader } from "@/components/nav/content-header";
 import { HistorialTabs } from "@/components/nav/historial-tabs";
+import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
 import { TrendBars } from "@/components/charts/trend-bars";
 import { CategoryBars } from "@/components/charts/category-bars";
 import { PeriodSummaryCard } from "@/components/stats/period-summary-card";
@@ -10,6 +11,7 @@ import { useI18n } from "@/lib/i18n/client";
 import type { CategoryStat, HabitStatCard, TrendPoint } from "@/lib/queries/stats";
 import type { MoodCorrelation, WorstWeekday } from "@/lib/queries/patterns";
 import type { PeriodComparison } from "@/lib/queries/summary";
+import type { FocusHeaderData } from "@/lib/queries/focus";
 
 export function EstadisticasClient({
   overall,
@@ -20,6 +22,7 @@ export function EstadisticasClient({
   monthSummary,
   worstWeekday,
   moodCorrelation,
+  focusHeader,
 }: {
   overall: { pct7: number; pct30: number; pct90: number };
   trend: TrendPoint[];
@@ -29,6 +32,7 @@ export function EstadisticasClient({
   monthSummary: PeriodComparison;
   worstWeekday: WorstWeekday;
   moodCorrelation: MoodCorrelation;
+  focusHeader: FocusHeaderData;
 }) {
   const { t } = useI18n();
 
@@ -40,7 +44,11 @@ export function EstadisticasClient({
 
   return (
     <div>
-      <ContentHeader titleKey="screens.estadisticas.title" subtitleKey="screens.estadisticas.subtitle" />
+      <ContentHeader
+        titleKey="screens.estadisticas.title"
+        subtitleKey="screens.estadisticas.subtitle"
+        headerAccessory={<FocusHeaderChip session={focusHeader.session} soundEnabled={focusHeader.soundEnabled} />}
+      />
       <HistorialTabs />
 
       <div className="flex flex-col gap-6">

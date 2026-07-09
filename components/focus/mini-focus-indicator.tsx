@@ -10,15 +10,17 @@ import { useFocusStatusAlerts } from "@/lib/focus/use-focus-status-alerts";
 import { getActiveFocusSessionAction } from "@/lib/actions/focus";
 import { formatClock } from "@/lib/focus/format";
 import { LIVE_STATUSES, type FocusSessionRow } from "@/lib/focus/compute";
+import { hasFocusHeaderSlot } from "@/lib/focus/header-slot";
 
 /**
  * Pastilla flotante visible en cualquier ruta del dashboard salvo /enfoque
- * (ahí ya se ve la sesión completa) y "/" (Hoy tiene su propio chip en el
- * header, `FocusHeaderChip`, que además es quien dispara ahí las alertas de
- * sonido/título — evita que ambos estén montados a la vez y las dupliquen).
- * Solo monta el hook de ticking si hay una sesión activa de entrada — si no,
- * no hay `setInterval` corriendo para siempre en cada página de la app sin
- * nada que mostrar.
+ * (ahí ya se ve la sesión completa) y las de `hasFocusHeaderSlot` (esas
+ * pantallas muestran el mismo estado como `FocusHeaderChip` en su propio
+ * header, que además es quien dispara ahí las alertas de sonido/título —
+ * evita que ambos estén montados a la vez y las dupliquen). Solo monta el
+ * hook de ticking si hay una sesión activa de entrada — si no, no hay
+ * `setInterval` corriendo para siempre en cada página de la app sin nada
+ * que mostrar.
  */
 export function MiniFocusIndicator({
   session,
@@ -45,7 +47,7 @@ function MiniFocusIndicatorActive({
   useFocusStatusAlerts(session, soundEnabled);
 
   if (!session || !state || !LIVE_STATUSES.includes(session.status)) return null;
-  if (pathname.startsWith("/enfoque") || pathname === "/") return null;
+  if (pathname.startsWith("/enfoque") || hasFocusHeaderSlot(pathname)) return null;
 
   const bigValueSeconds = session.mode === "countdown" ? state.remainingSeconds ?? 0 : state.activeSeconds;
 

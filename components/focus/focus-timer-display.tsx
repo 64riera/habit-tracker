@@ -3,6 +3,8 @@
 import { useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
+import { Check, Pause, Play } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { useFocusRewardToast } from "@/lib/toast/client";
 import { useLiveFocusState } from "@/lib/focus/use-live-focus-state";
@@ -18,6 +20,12 @@ import {
   resumeFocusSession,
 } from "@/lib/actions/focus";
 import { BreakBanner } from "./break-banner";
+
+/** "Cancelar sesión" solo tiene sentido como salida rápida para una sesión
+ * arrancada por error — pasado este umbral de tiempo activo real, se deja
+ * de mostrar para no invitar a abandonar una sesión ya en curso (el usuario
+ * sigue pudiendo "Terminar" en cualquier momento). */
+const CANCEL_VISIBLE_ACTIVE_SECONDS = 10;
 
 export function FocusTimerDisplay({
   session: initialSession,
@@ -53,6 +61,7 @@ export function FocusTimerDisplay({
   const isPaused = session.status === "paused";
   const bigValueSeconds = session.mode === "countdown" ? state.remainingSeconds ?? 0 : state.activeSeconds;
   const pct = state.capSeconds > 0 ? Math.min(100, Math.round((state.activeSeconds / state.capSeconds) * 100)) : 0;
+  const canCancel = state.activeSeconds < CANCEL_VISIBLE_ACTIVE_SECONDS;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -76,40 +85,46 @@ export function FocusTimerDisplay({
       {isOnBreak ? (
         <div className="mt-auto flex flex-col items-center gap-3 pt-6">
           <BreakBanner remainingSeconds={state.breakRemainingSeconds ?? 0} />
-          <form
-            action={cancelFocusSession}
-            onSubmit={(e) => {
-              if (!confirm(t("focus.cancelConfirm"))) e.preventDefault();
-            }}
-          >
-            <TextButton label={t("focus.controls.cancel")} />
-          </form>
-        </div>
-      ) : (
-        <div className="mt-auto flex items-center justify-center gap-3 pt-6">
-          {isPaused ? (
-            <form action={resumeFocusSession}>
-              <PrimaryButton label={t("focus.controls.resume")} />
-            </form>
-          ) : (
-            <form action={pauseFocusSession}>
-              <PrimaryButton label={t("focus.controls.pause")} />
+          {canCancel && (
+            <form
+              action={cancelFocusSession}
+              onSubmit={(e) => {
+                if (!confirm(t("focus.cancelConfirm"))) e.preventDefault();
+              }}
+            >
+              <TextButton label={t("focus.controls.cancel")} />
             </form>
           )}
-          <FinishButton
-            label={t("focus.controls.finish")}
-            soundEnabled={soundEnabled}
-            completeTitle={t("focus.alerts.completeTitle")}
-            onUnlocked={notifyRewards}
-          />
-          <form
-            action={cancelFocusSession}
-            onSubmit={(e) => {
-              if (!confirm(t("focus.cancelConfirm"))) e.preventDefault();
-            }}
-          >
-            <TextButton label={t("focus.controls.cancel")} />
-          </form>
+        </div>
+      ) : (
+        <div className="mt-auto flex flex-col items-center gap-3 pt-6">
+          <div className="flex items-center justify-center gap-3">
+            {isPaused ? (
+              <form action={resumeFocusSession}>
+                <PrimaryButton icon={Play} label={t("focus.controls.resume")} />
+              </form>
+            ) : (
+              <form action={pauseFocusSession}>
+                <PrimaryButton icon={Pause} label={t("focus.controls.pause")} />
+              </form>
+            )}
+            <FinishButton
+              label={t("focus.controls.finish")}
+              soundEnabled={soundEnabled}
+              completeTitle={t("focus.alerts.completeTitle")}
+              onUnlocked={notifyRewards}
+            />
+          </div>
+          {canCancel && (
+            <form
+              action={cancelFocusSession}
+              onSubmit={(e) => {
+                if (!confirm(t("focus.cancelConfirm"))) e.preventDefault();
+              }}
+            >
+              <TextButton label={t("focus.controls.cancel")} />
+            </form>
+          )}
         </div>
       )}
     </div>
@@ -145,30 +160,39 @@ function FinishButton({
           onUnlocked(unlockedTiers);
         })
       }
-      className="rounded-lg border border-border px-5 py-2.5 text-[12.5px] font-medium disabled:opacity-60"
+      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-5 py-2.5 text-[12.5px] font-medium disabled:opacity-60"
     >
+      <Check size={15} strokeWidth={2} aria-hidden />
       {label}
     </button>
   );
 }
 
-function PrimaryButton({ label }: { label: string }) {
+function PrimaryButton({ label, icon: Icon }: { label: string; icon: LucideIcon }) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
       disabled={pending}
-      className="rounded-lg bg-text px-5 py-2.5 text-[12.5px] font-semibold text-surface disabled:opacity-60"
+      className="inline-flex items-center gap-1.5 rounded-lg bg-text px-5 py-2.5 text-[12.5px] font-semibold text-surface disabled:opacity-60"
     >
+      <Icon size={15} strokeWidth={2} aria-hidden />
       {label}
     </button>
   );
 }
 
+/** Estilo deliberadamente discreto — a diferencia de Pausar/Terminar, no
+ * compite por atención: solo existe como salida rápida en los primeros
+ * segundos (ver `CANCEL_VISIBLE_ACTIVE_SECONDS`). */
 function TextButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} className="px-3 py-2.5 text-[12.5px] text-muted disabled:opacity-60">
+    <button
+      type="submit"
+      disabled={pending}
+      className="px-3 py-2.5 text-[11px] text-muted/70 transition-colors hover:text-muted disabled:opacity-60"
+    >
       {label}
     </button>
   );

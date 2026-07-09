@@ -6,17 +6,25 @@ import { LogOut } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { ThemeToggle } from "@/components/nav/theme-toggle";
 import { LangToggle } from "@/components/nav/lang-toggle";
+import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
 import { Select } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n/client";
 import { logout } from "@/lib/actions/auth";
 import { setDayCutoffHour } from "@/lib/actions/preferences";
+import type { FocusHeaderData } from "@/lib/queries/focus";
 
 const CUTOFF_HOURS = Array.from({ length: 24 }, (_, h) => ({
   value: String(h),
   label: `${String(h).padStart(2, "0")}:00`,
 }));
 
-export function AjustesClient({ cutoffHour }: { cutoffHour: number }) {
+export function AjustesClient({
+  cutoffHour,
+  focusHeader,
+}: {
+  cutoffHour: number;
+  focusHeader: FocusHeaderData;
+}) {
   const { t } = useI18n();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -57,6 +65,7 @@ export function AjustesClient({ cutoffHour }: { cutoffHour: number }) {
         titleKey="screens.ajustes.title"
         subtitleKey="screens.ajustes.subtitle"
         showControls={false}
+        headerAccessory={<FocusHeaderChip session={focusHeader.session} soundEnabled={focusHeader.soundEnabled} />}
       />
 
       <div className="flex flex-col">

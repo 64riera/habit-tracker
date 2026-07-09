@@ -110,6 +110,20 @@ export async function getActiveFocusSession(): Promise<FocusSessionRow | null> {
   return result?.session ?? null;
 }
 
+/**
+ * Datos mínimos que necesita cualquier pantalla para mostrar el estado de
+ * enfoque en curso — vía `FocusHeaderChip` (header) o `MiniFocusIndicator`
+ * (flotante). Único punto de lectura para ambos en vez de repetir el mismo
+ * `Promise.all([getActiveFocusSession(), getFocusSettings()])` en cada
+ * layout/página que lo necesita.
+ */
+export type FocusHeaderData = { session: FocusSessionRow | null; soundEnabled: boolean };
+
+export async function getFocusHeaderData(): Promise<FocusHeaderData> {
+  const [session, settings] = await Promise.all([getActiveFocusSession(), getFocusSettings()]);
+  return { session, soundEnabled: settings.soundEnabled };
+}
+
 export async function getFocusSettings(): Promise<FocusSettingsRow> {
   const userId = await getCurrentUserId();
   const [row] = await db.select().from(focusSettings).where(eq(focusSettings.userId, userId)).limit(1);

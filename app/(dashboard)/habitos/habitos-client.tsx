@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Tags, Repeat, Trophy, RotateCcw, Archive, Star } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
+import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
 import { ReorderableList } from "@/components/ui/reorderable-list";
 import { SwipeableRow, SwipeableListProvider } from "@/components/ui/swipeable-row";
 import { useI18n } from "@/lib/i18n/client";
@@ -20,13 +21,16 @@ import {
   applyPendingHabitEdit,
 } from "@/lib/offline/pending-selectors";
 import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
+import type { FocusHeaderData } from "@/lib/queries/focus";
 
 export function HabitosClient({
   habits,
   categories,
+  focusHeader,
 }: {
   habits: HabitWithExtras[];
   categories: CategoryRow[];
+  focusHeader: FocusHeaderData;
 }) {
   const { t, dict, locale } = useI18n();
   const router = useRouter();
@@ -97,7 +101,11 @@ export function HabitosClient({
 
   return (
     <div>
-      <ContentHeader titleKey="screens.habitos.title" subtitleKey="screens.habitos.subtitle" />
+      <ContentHeader
+        titleKey="screens.habitos.title"
+        subtitleKey="screens.habitos.subtitle"
+        headerAccessory={<FocusHeaderChip session={focusHeader.session} soundEnabled={focusHeader.soundEnabled} />}
+      />
 
       {visibleHabits.length === 0 ? (
         <p className="text-sm text-muted">{t("habit.empty")}</p>

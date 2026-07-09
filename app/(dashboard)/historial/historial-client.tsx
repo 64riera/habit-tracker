@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Download, Pencil } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { HistorialTabs } from "@/components/nav/historial-tabs";
+import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
 import { Heatmap } from "@/components/heatmap/heatmap";
 import { CalendarMonth } from "@/components/heatmap/calendar-month";
 import { Select } from "@/components/ui/select";
@@ -15,6 +16,7 @@ import { categoryDisplayName } from "@/lib/habits/describe";
 import { addDays, groupByDate, parseISODate } from "@/lib/date";
 import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
 import type { CalendarCell, DayCell, LogEntry } from "@/lib/queries/history";
+import type { FocusHeaderData } from "@/lib/queries/focus";
 
 const MOOD_EMOJI = ["😞", "🙁", "😐", "🙂", "😄"];
 
@@ -28,6 +30,7 @@ export function HistorialClient({
   selectedCategory,
   selectedRange,
   today,
+  focusHeader,
 }: {
   habits: HabitWithExtras[];
   categories: CategoryRow[];
@@ -38,6 +41,7 @@ export function HistorialClient({
   selectedCategory: string;
   selectedRange: string;
   today: string;
+  focusHeader: FocusHeaderData;
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -100,7 +104,11 @@ export function HistorialClient({
 
   return (
     <div>
-      <ContentHeader titleKey="screens.historial.title" subtitleKey="screens.historial.subtitle" />
+      <ContentHeader
+        titleKey="screens.historial.title"
+        subtitleKey="screens.historial.subtitle"
+        headerAccessory={<FocusHeaderChip session={focusHeader.session} soundEnabled={focusHeader.soundEnabled} />}
+      />
       <HistorialTabs />
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-2.5">

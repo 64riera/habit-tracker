@@ -7,7 +7,7 @@ import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
 import { SkeletonHoyRows } from "@/components/ui/skeleton";
 import { getTodayDateString } from "@/lib/date";
 import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
-import { getActiveFocusSession, getFocusSettings } from "@/lib/queries/focus";
+import { getFocusHeaderData } from "@/lib/queries/focus";
 import { HoyHabits } from "./hoy-habits";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -29,7 +29,7 @@ export default async function HoyPage({
   const cutoffHour = await getDayCutoffHour();
   const today = getTodayDateString(cutoffHour);
   const date = resolveViewedDate(fecha, today);
-  const [focusSession, focusSettings] = await Promise.all([getActiveFocusSession(), getFocusSettings()]);
+  const focusHeader = await getFocusHeaderData();
 
   return (
     <HoySummaryProvider>
@@ -37,7 +37,7 @@ export default async function HoyPage({
         <ContentHeader
           titleKey="screens.hoy.title"
           subtitleKey="screens.hoy.subtitle"
-          headerAccessory={<FocusHeaderChip session={focusSession} soundEnabled={focusSettings.soundEnabled} />}
+          headerAccessory={<FocusHeaderChip session={focusHeader.session} soundEnabled={focusHeader.soundEnabled} />}
         />
         <DaySwitcher date={date} today={today} />
         {/* HoySummaryDisplay vive fuera del <Suspense>: al cambiar de día no

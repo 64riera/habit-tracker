@@ -2,18 +2,14 @@ import { Sidebar } from "@/components/nav/sidebar";
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { MiniFocusIndicator } from "@/components/focus/mini-focus-indicator";
 import { getStreakMax } from "@/lib/streaks";
-import { getActiveFocusSession, getFocusSettings } from "@/lib/queries/focus";
+import { getFocusHeaderData } from "@/lib/queries/focus";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [streakMax, focusSession, focusSettings] = await Promise.all([
-    getStreakMax(),
-    getActiveFocusSession(),
-    getFocusSettings(),
-  ]);
+  const [streakMax, focusHeader] = await Promise.all([getStreakMax(), getFocusHeaderData()]);
 
   return (
     // Shell fijo al viewport (h-dvh + overflow-hidden): el header y el bottom
@@ -34,7 +30,7 @@ export default async function DashboardLayout({
       <main className="mx-auto w-full min-w-0 max-w-5xl flex-1 overflow-y-auto px-5 pb-6 [overflow-anchor:none] md:px-10 md:pb-9">
         {children}
       </main>
-      <MiniFocusIndicator session={focusSession} soundEnabled={focusSettings.soundEnabled} />
+      <MiniFocusIndicator session={focusHeader.session} soundEnabled={focusHeader.soundEnabled} />
       <BottomNav />
     </div>
   );
