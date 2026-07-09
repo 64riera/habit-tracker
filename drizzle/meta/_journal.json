@@ -15,6 +15,13 @@
       "when": 1783226379580,
       "tag": "0001_same_deathbird",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1783578848494,
+      "tag": "0002_overconfident_slayback",
+      "breakpoints": true
     }
   ]
 }

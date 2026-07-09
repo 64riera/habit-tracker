@@ -6,13 +6,19 @@ export const users = sqliteTable(
   {
     id: text("id").primaryKey(),
     username: text("username").notNull(),
-    passwordHash: text("password_hash").notNull(),
+    passwordHash: text("password_hash"),
+    email: text("email"),
+    googleId: text("google_id"),
     themePreference: text("theme_preference", { enum: ["light", "dark", "system"] })
       .notNull()
       .default("system"),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
-  (t) => [uniqueIndex("users_username_idx").on(t.username)]
+  (t) => [
+    uniqueIndex("users_username_idx").on(t.username),
+    uniqueIndex("users_email_idx").on(t.email),
+    uniqueIndex("users_google_id_idx").on(t.googleId),
+  ]
 );
 
 export const categories = sqliteTable(

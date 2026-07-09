@@ -50,11 +50,14 @@
     "haveAccount": "¿Ya tienes cuenta?",
     "signupLink": "Regístrate",
     "loginLink": "Inicia sesión",
+    "googleSubmit": "Continuar con Google",
+    "orDivider": "o",
     "errors": {
       "invalidCredentials": "Usuario o contraseña incorrectos",
       "usernameTaken": "Ese usuario ya existe",
       "usernameInvalid": "El usuario debe tener 3 a 30 caracteres (letras, números, . _ -)",
-      "passwordTooShort": "La contraseña debe tener al menos 8 caracteres"
+      "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
+      "googleAuthFailed": "Algo salió mal al iniciar sesión con Google. Inténtalo de nuevo."
     }
   },
   "habit": {

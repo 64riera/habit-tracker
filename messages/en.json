@@ -50,11 +50,14 @@
     "haveAccount": "Already have an account?",
     "signupLink": "Sign up",
     "loginLink": "Log in",
+    "googleSubmit": "Continue with Google",
+    "orDivider": "or",
     "errors": {
       "invalidCredentials": "Incorrect username or password",
       "usernameTaken": "That username is already taken",
       "usernameInvalid": "Username must be 3-30 characters (letters, numbers, . _ -)",
-      "passwordTooShort": "Password must be at least 8 characters"
+      "passwordTooShort": "Password must be at least 8 characters",
+      "googleAuthFailed": "Something went wrong signing in with Google. Please try again."
     }
   },
   "habit": {

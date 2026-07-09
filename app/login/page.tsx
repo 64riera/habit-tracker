@@ -5,17 +5,19 @@ import { LoginForm } from "./login-form";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; error?: string }>;
 }) {
-  const { next } = await searchParams;
+  const { next, error } = await searchParams;
 
   if (await hasValidSession()) {
     redirect(safeNextPath(next ?? "/"));
   }
 
+  const googleEnabled = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+
   return (
     <div className="flex min-h-dvh items-center justify-center bg-bg px-6">
-      <LoginForm next={next ?? "/"} />
+      <LoginForm next={next ?? "/"} error={error} googleEnabled={googleEnabled} />
     </div>
   );
 }
