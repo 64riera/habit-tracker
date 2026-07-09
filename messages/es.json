@@ -277,7 +277,7 @@
       "none": "Sin vincular"
     },
     "status": {
-      "running": "Enfocado",
+      "running": "Enfoque",
       "on_break": "Pausa activa",
       "paused": "En pausa",
       "completed": "Completado",

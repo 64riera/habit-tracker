@@ -32,20 +32,18 @@ export default async function EnfoquePage({
     <div className="flex flex-1 flex-col">
       <ContentHeader titleKey="screens.enfoque.title" subtitleKey="screens.enfoque.subtitle" backHref="/" />
 
-      <FocusProgressWidget completedSeconds={progress.completedSeconds} goalMinutes={progress.goalMinutes} />
-      <div className="mb-6 flex flex-col gap-3">
-        {/* Cambiar el objetivo a mitad de una sesión movería la meta del día
-            mientras se está corriendo hacia ella — se oculta mientras hay
-            una sesión en curso, no solo se deshabilita, para no sugerir que
-            es una opción disponible en ese momento. */}
-        {!isLive && <FocusGoalControl goalMinutes={settings.dailyGoalMinutes} />}
-        <FocusSoundToggle enabled={settings.soundEnabled} />
-      </div>
-
       {isLive && session ? (
+        // Con una sesión en curso, la pantalla es solo el tiempo y sus
+        // acciones — nada de objetivo diario, sonido ni progreso general
+        // compitiendo por atención mientras se está enfocado.
         <FocusTimerDisplay session={session} soundEnabled={settings.soundEnabled} />
       ) : (
         <>
+          <FocusProgressWidget completedSeconds={progress.completedSeconds} goalMinutes={progress.goalMinutes} />
+          <div className="mb-6 flex flex-col gap-3">
+            <FocusGoalControl goalMinutes={settings.dailyGoalMinutes} />
+            <FocusSoundToggle enabled={settings.soundEnabled} />
+          </div>
           <FocusStartForm settings={settings} habitOptions={habitOptions} defaultHabitId={habitId} />
           <FocusSecondaryLinks />
         </>
