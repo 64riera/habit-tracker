@@ -12,6 +12,7 @@ export const users = sqliteTable(
     themePreference: text("theme_preference", { enum: ["light", "dark", "system"] })
       .notNull()
       .default("system"),
+    localePreference: text("locale_preference", { enum: ["es", "en"] }).notNull().default("es"),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (t) => [

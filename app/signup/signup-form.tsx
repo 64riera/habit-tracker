@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { signup, type AuthState } from "@/lib/actions/auth";
 import { useI18n } from "@/lib/i18n/client";
 import { LangToggle } from "@/components/nav/lang-toggle";
@@ -22,12 +22,22 @@ export function SignupForm({
   const [state, formAction, pending] = useActionState(signup, initialState);
   const displayedError = state.error ?? error;
 
+  // Recarga real del documento (no navegación suave del router) al crear la
+  // cuenta: el idioma que corresponde mostrar pasa de "detectado por
+  // dispositivo" a "preferencia recién guardada en la cuenta", y el layout
+  // raíz compartido por toda la app necesita reflejar eso desde cero.
+  useEffect(() => {
+    if (state.redirectTo) window.location.href = state.redirectTo;
+  }, [state.redirectTo]);
+
   return (
     <form
       action={formAction}
-      className="flex w-full max-w-[300px] flex-col items-center gap-6 rounded-2xl border border-border bg-surface p-8 shadow-sm"
+      className="relative flex w-full max-w-[300px] flex-col items-center gap-6 rounded-2xl border border-border bg-surface p-8 shadow-sm"
     >
-      <LangToggle />
+      <div className="absolute top-4 right-4">
+        <LangToggle />
+      </div>
       <div className="text-center">
         <div className="font-serif-italic text-2xl font-semibold">{t("auth.title")}</div>
         <div className="mt-1 text-[12.5px] text-muted">{t("auth.signupSubtitle")}</div>
@@ -77,10 +87,10 @@ export function SignupForm({
       )}
       <button
         type="submit"
-        disabled={pending}
+        disabled={pending || Boolean(state.redirectTo)}
         className="w-full rounded-lg bg-text px-5 py-2.5 text-sm font-semibold text-surface disabled:opacity-60"
       >
-        {pending ? t("common.loading") : t("auth.signupSubmit")}
+        {pending || state.redirectTo ? t("common.loading") : t("auth.signupSubmit")}
       </button>
       <div className="text-xs text-muted">
         {t("auth.haveAccount")}{" "}

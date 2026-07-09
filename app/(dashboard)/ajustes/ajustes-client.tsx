@@ -9,7 +9,6 @@ import { LangToggle } from "@/components/nav/lang-toggle";
 import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
 import { Select } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n/client";
-import { logout } from "@/lib/actions/auth";
 import { setDayCutoffHour } from "@/lib/actions/preferences";
 import type { FocusHeaderData } from "@/lib/queries/focus";
 
@@ -80,7 +79,10 @@ export function AjustesClient({
         ))}
       </div>
 
-      <form action={logout} className="mt-6">
+      {/* POST normal a un Route Handler (no Server Action): ver el comentario
+          en app/api/auth/logout/route.ts — evita que Next intente refrescar
+          esta misma pantalla, ya autenticada, justo después de cerrar sesión. */}
+      <form action="/api/auth/logout" method="post" className="mt-6">
         <button type="submit" className="flex items-center gap-1.5 text-[12.5px] font-medium text-muted">
           <LogOut size={14} strokeWidth={2} aria-hidden />
           {t("settings.logout")}

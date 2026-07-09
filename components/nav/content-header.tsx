@@ -5,15 +5,16 @@ import { ArrowLeft } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { useScrolledPastBar } from "@/lib/hooks/use-scrolled-past-bar";
-import { LangToggle } from "./lang-toggle";
 import { ThemeToggle } from "./theme-toggle";
 
+/** El idioma dejó de ser algo que se cambia sobre la marcha desde cualquier
+ * pantalla: ahora es una preferencia de cuenta, elegida una vez al crear el
+ * usuario (ver login/signup) y editable solo desde Ajustes. */
 function HeaderControls({ showControls }: { showControls: boolean }) {
   if (!showControls) return null;
   return (
-    <div className="flex shrink-0 items-center gap-2 md:gap-3.5">
+    <div className="shrink-0">
       <ThemeToggle />
-      <LangToggle />
     </div>
   );
 }

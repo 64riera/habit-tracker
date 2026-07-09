@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `locale_preference` text DEFAULT 'es' NOT NULL;

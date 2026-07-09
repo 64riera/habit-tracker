@@ -32,6 +32,21 @@ export function I18nProvider({
 }) {
   const [current, setCurrent] = useState(locale);
   const [isPending, startTransition] = useTransition();
+
+  // I18nProvider vive en el layout raíz, compartido entre TODAS las rutas
+  // (incluidas /login y /signup) — una navegación client-side no lo
+  // remonta, así que `useState(locale)` solo captura el valor inicial. Si
+  // el locale que calcula el servidor cambia entre una navegación y otra
+  // (p. ej. justo al iniciar sesión: la pantalla de login lo detectaba por
+  // dispositivo, y ya logueado pasa a la preferencia guardada en la
+  // cuenta), hay que resincronizar el estado local — mismo patrón de
+  // "ajustar estado durante el render" que usa use-live-focus-state.ts.
+  const [prevLocale, setPrevLocale] = useState(locale);
+  if (locale !== prevLocale) {
+    setPrevLocale(locale);
+    setCurrent(locale);
+  }
+
   const activeDict = DICTS[current] ?? dict;
 
   const value = useMemo<I18nContextValue>(

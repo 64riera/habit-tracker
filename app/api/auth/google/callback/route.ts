@@ -5,8 +5,14 @@ import { nanoid } from "nanoid";
 import { db } from "@/lib/db/client";
 import { users } from "@/lib/db/schema";
 import { getGoogleClient, getGoogleProfile, type GoogleProfile } from "@/lib/auth/google";
-import { generateUniqueUsernameFromEmail, seedDefaultCategories } from "@/lib/actions/auth";
+import {
+  generateUniqueUsernameFromEmail,
+  invalidateLocaleAcrossApp,
+  seedDefaultCategories,
+  syncLocalePreferenceOnLogin,
+} from "@/lib/actions/auth";
 import { createSessionCookie, safeNextPath } from "@/lib/auth/session";
+import { resolvePreAuthLocale } from "@/lib/i18n/locale";
 import {
   GOOGLE_OAUTH_COOKIE,
   googleCallbackURI,
@@ -22,17 +28,24 @@ function loginErrorRedirect(request: Request, next: string): string {
 
 async function findOrCreateGoogleUser(profile: GoogleProfile): Promise<string> {
   const [byGoogleId] = await db.select().from(users).where(eq(users.googleId, profile.googleId)).limit(1);
-  if (byGoogleId) return byGoogleId.id;
+  if (byGoogleId) {
+    await syncLocalePreferenceOnLogin(byGoogleId.id);
+    return byGoogleId.id;
+  }
 
   const [byEmail] = await db.select().from(users).where(eq(users.email, profile.email)).limit(1);
   if (byEmail) {
     await db.update(users).set({ googleId: profile.googleId }).where(eq(users.id, byEmail.id));
+    await syncLocalePreferenceOnLogin(byEmail.id);
     return byEmail.id;
   }
 
   const userId = nanoid();
   const username = await generateUniqueUsernameFromEmail(profile.email);
-  await db.insert(users).values({ id: userId, username, email: profile.email, googleId: profile.googleId });
+  const localePreference = await resolvePreAuthLocale();
+  await db
+    .insert(users)
+    .values({ id: userId, username, email: profile.email, googleId: profile.googleId, localePreference });
   await seedDefaultCategories(userId);
   return userId;
 }
@@ -67,6 +80,7 @@ export async function GET(request: Request) {
     const profile = getGoogleProfile(tokens.idToken());
     const userId = await findOrCreateGoogleUser(profile);
     await createSessionCookie(userId);
+    await invalidateLocaleAcrossApp();
   } catch {
     redirect(loginErrorRedirect(request, next));
   }
