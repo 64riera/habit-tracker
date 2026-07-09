@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { SegmentedRouteTabs } from "@/components/nav/segmented-route-tabs";
 import { TrendBars } from "@/components/charts/trend-bars";
@@ -7,11 +8,12 @@ import { CategoryBars } from "@/components/charts/category-bars";
 import { MetricSummaryCard } from "@/components/stats/metric-summary-card";
 import { useI18n } from "@/lib/i18n/client";
 import { formatMinutesShort } from "@/lib/focus/format";
+import { bucketHourOfDay, TIME_OF_DAY_ORDER } from "@/lib/focus/time-of-day";
 import type {
   FocusHabitStat,
   FocusOverallTotals,
   FocusPeriodComparison,
-  FocusTimeOfDayStat,
+  FocusTimeOfDaySample,
   FocusTrendPoint,
 } from "@/lib/queries/focus-stats";
 
@@ -31,7 +33,7 @@ export function FocusEstadisticasClient({
   weekSummary,
   monthSummary,
   habitBreakdown,
-  timeOfDay,
+  timeOfDaySamples,
   streak,
 }: {
   overall: FocusOverallTotals;
@@ -39,11 +41,24 @@ export function FocusEstadisticasClient({
   weekSummary: FocusPeriodComparison;
   monthSummary: FocusPeriodComparison;
   habitBreakdown: FocusHabitStat[];
-  timeOfDay: FocusTimeOfDayStat[];
+  timeOfDaySamples: FocusTimeOfDaySample[];
   streak: { current: number; longest: number };
 }) {
   const { t } = useI18n();
   const hasAnyData = overall.minutes90 > 0;
+
+  // Bucketizado en el cliente (no en el servidor): la franja horaria de
+  // cada sesión depende de la hora local de quien mira la pantalla, y
+  // `Date.getHours()` solo da esa hora correctamente si corre en el
+  // navegador — el servidor (Vercel) corre en UTC.
+  const timeOfDay = useMemo(() => {
+    const minutesByBucket = new Map<string, number>();
+    for (const s of timeOfDaySamples) {
+      const bucket = bucketHourOfDay(new Date(s.startedAt).getHours());
+      minutesByBucket.set(bucket, (minutesByBucket.get(bucket) ?? 0) + s.minutes);
+    }
+    return TIME_OF_DAY_ORDER.map((bucket) => ({ bucket, minutes: Math.round(minutesByBucket.get(bucket) ?? 0) }));
+  }, [timeOfDaySamples]);
 
   const summaryCards = [
     { value: overall.minutes7, label: t("stats.last7") },

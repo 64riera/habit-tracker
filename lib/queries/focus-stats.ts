@@ -4,7 +4,6 @@ import { db } from "@/lib/db/client";
 import { focusSessions, habits } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { addDays, dateRange, startOfMonth, startOfWeek } from "@/lib/date";
-import { bucketHourOfDay, type TimeOfDayBucket } from "@/lib/focus/time-of-day";
 import { computeFocusStreak } from "@/lib/focus/streak";
 import { getFocusSettings } from "@/lib/queries/focus";
 
@@ -189,11 +188,18 @@ export async function getFocusHabitBreakdown(today: string, days = 30): Promise<
     .sort((a, b) => b.totalMinutes - a.totalMinutes);
 }
 
-export type FocusTimeOfDayStat = { bucket: TimeOfDayBucket; minutes: number };
+export type FocusTimeOfDaySample = { startedAt: string; minutes: number };
 
-const TIME_OF_DAY_ORDER: TimeOfDayBucket[] = ["morning", "afternoon", "evening", "night"];
-
-export async function getFocusTimeOfDayDistribution(today: string, days = 30): Promise<FocusTimeOfDayStat[]> {
+/**
+ * Devuelve muestras crudas (sin bucketizar): la franja horaria de cada
+ * sesión depende de la hora local del navegador de quien mira la pantalla,
+ * no la del servidor — Vercel corre en UTC, así que bucketizar acá (con
+ * `Date.getHours()` en el servidor) desalinea esta estadística respecto a
+ * la hora que Historial ya muestra correctamente (esa sí, calculada en el
+ * cliente). El bucketing con `bucketHourOfDay` se hace en el componente
+ * cliente, sobre `new Date(startedAt).getHours()` evaluado en el navegador.
+ */
+export async function getFocusTimeOfDaySamples(today: string, days = 30): Promise<FocusTimeOfDaySample[]> {
   const userId = await getCurrentUserId();
   const from = addDays(today, -(days - 1));
   const rows = await db
@@ -208,13 +214,7 @@ export async function getFocusTimeOfDayDistribution(today: string, days = 30): P
       )
     );
 
-  const minutesByBucket = new Map<TimeOfDayBucket, number>();
-  for (const r of rows) {
-    const bucket = bucketHourOfDay(new Date(r.startedAt).getHours());
-    minutesByBucket.set(bucket, (minutesByBucket.get(bucket) ?? 0) + r.accumulatedActiveSeconds / 60);
-  }
-
-  return TIME_OF_DAY_ORDER.map((bucket) => ({ bucket, minutes: Math.round(minutesByBucket.get(bucket) ?? 0) }));
+  return rows.map((r) => ({ startedAt: r.startedAt, minutes: r.accumulatedActiveSeconds / 60 }));
 }
 
 export type FocusHistorySummary = { totalMinutes: number; sessionCount: number; completionRatePct: number };

@@ -16,3 +16,5 @@ export function bucketHourOfDay(hour: number): TimeOfDayBucket {
   if (hour < EVENING_START_HOUR) return "afternoon";
   return "evening";
 }
+
+export const TIME_OF_DAY_ORDER: TimeOfDayBucket[] = ["morning", "afternoon", "evening", "night"];
