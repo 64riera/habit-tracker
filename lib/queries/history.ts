@@ -137,6 +137,8 @@ export type LogEntry = {
   note: string | null;
   mood: number | null;
   value: number | null;
+  /** ISO 8601, solo presente cuando status === "done" (ver logHabit). */
+  completedAt: string | null;
 };
 
 export async function getRecentLog(
@@ -158,6 +160,7 @@ export async function getRecentLog(
       note: habitLogs.note,
       mood: habitLogs.mood,
       value: habitLogs.value,
+      completedAt: habitLogs.completedAt,
       habitName: habits.name,
     })
     .from(habitLogs)

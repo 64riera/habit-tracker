@@ -1,0 +1,1 @@
+ALTER TABLE `habit_logs` ADD `completed_at` text;

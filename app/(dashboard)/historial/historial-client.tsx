@@ -62,6 +62,10 @@ export function HistorialClient({
     day: "numeric",
     month: "long",
   });
+  const timeFormatter = new Intl.DateTimeFormat(locale === "es" ? "es-ES" : "en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   function formatDayHeader(date: string) {
     if (date === today) return t("checkin.today");
@@ -223,6 +227,11 @@ export function HistorialClient({
                             <span className="shrink-0 text-[11px] text-muted">
                               {t(`checkin.logStatus.${entry.status}`)}
                             </span>
+                            {entry.status === "done" && entry.completedAt && (
+                              <span className="shrink-0 text-[11px] text-muted">
+                                {timeFormatter.format(new Date(entry.completedAt))}
+                              </span>
+                            )}
                             {entry.mood && (
                               <span className="shrink-0 text-[11px]">{MOOD_EMOJI[entry.mood - 1]}</span>
                             )}

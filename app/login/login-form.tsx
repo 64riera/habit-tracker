@@ -51,64 +51,60 @@ export function LoginForm({
         <div className="mt-4 text-[12.5px] text-muted">{t("auth.loginSubtitle")}</div>
       </div>
       <input type="hidden" name="next" value={next} />
-      {googleEnabled && (
-        <>
-          <GoogleButton next={next} />
-          <div className="flex w-full items-center gap-3 text-[10px] tracking-wide text-muted uppercase">
-            <div className="h-px flex-1 bg-border" />
-            {t("auth.orDivider")}
-            <div className="h-px flex-1 bg-border" />
-          </div>
-        </>
-      )}
-      <div className="flex w-full flex-col gap-2.5">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="login-username" className="text-[10px] tracking-wide text-muted uppercase">
-            {t("auth.usernameLabel")}
-          </label>
-          <input
-            id="login-username"
-            name="username"
-            type="text"
-            autoComplete="username"
-            autoFocus
-            className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm outline-none focus:border-text"
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="login-password" className="text-[10px] tracking-wide text-muted uppercase">
-            {t("auth.passwordLabel")}
-          </label>
-          <input
-            id="login-password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm outline-none focus:border-text"
-          />
-        </div>
-      </div>
       {displayedError && (
         <div role="alert" className="text-xs text-cat-fitness">
           {t(`auth.errors.${displayedError}`)}
         </div>
       )}
-      <button
-        type="submit"
-        disabled={pending || Boolean(state.redirectTo)}
-        className="w-full rounded-lg bg-text px-5 py-2.5 text-sm font-semibold text-surface disabled:opacity-60"
-      >
-        {pending || state.redirectTo ? t("common.loading") : t("auth.loginSubmit")}
-      </button>
-      <div className="text-xs text-muted">
-        {t("auth.noAccount")}{" "}
-        <Link
-          href={`/signup?next=${encodeURIComponent(next)}`}
-          className="font-semibold text-text underline"
-        >
-          {t("auth.signupLink")}
-        </Link>
-      </div>
+      {googleEnabled ? (
+        <GoogleButton next={next} />
+      ) : (
+        <>
+          <div className="flex w-full flex-col gap-2.5">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="login-username" className="text-[10px] tracking-wide text-muted uppercase">
+                {t("auth.usernameLabel")}
+              </label>
+              <input
+                id="login-username"
+                name="username"
+                type="text"
+                autoComplete="username"
+                autoFocus
+                className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm outline-none focus:border-text"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="login-password" className="text-[10px] tracking-wide text-muted uppercase">
+                {t("auth.passwordLabel")}
+              </label>
+              <input
+                id="login-password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm outline-none focus:border-text"
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            disabled={pending || Boolean(state.redirectTo)}
+            className="w-full rounded-lg bg-text px-5 py-2.5 text-sm font-semibold text-surface disabled:opacity-60"
+          >
+            {pending || state.redirectTo ? t("common.loading") : t("auth.loginSubmit")}
+          </button>
+          <div className="text-xs text-muted">
+            {t("auth.noAccount")}{" "}
+            <Link
+              href={`/signup?next=${encodeURIComponent(next)}`}
+              className="font-semibold text-text underline"
+            >
+              {t("auth.signupLink")}
+            </Link>
+          </div>
+        </>
+      )}
     </form>
   );
 }

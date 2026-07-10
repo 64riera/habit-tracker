@@ -8,6 +8,7 @@ import { categories, users } from "@/lib/db/schema";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { createSessionCookie, safeNextPath } from "@/lib/auth/session";
 import { getPreAuthLocaleCookie, resolvePreAuthLocale } from "@/lib/i18n/locale";
+import { isGoogleAuthEnabled } from "@/lib/auth/google";
 
 /** `redirectTo` en vez de `redirect()` de next/navigation: login/signup
  * cambian qué cuenta está activa, y con ella el idioma que debe mostrarse
@@ -95,6 +96,13 @@ export async function generateUniqueUsernameFromEmail(email: string): Promise<st
 }
 
 export async function signup(_prevState: AuthState, formData: FormData): Promise<AuthState> {
+  // Defensa en profundidad: el form ya oculta estos campos cuando Google
+  // está configurado, pero el Server Action también debe rechazar un POST
+  // directo (curl, devtools) en vez de confiar solo en la UI.
+  if (isGoogleAuthEnabled()) {
+    return { error: "manualAuthDisabled" };
+  }
+
   const username = normalizeUsername(String(formData.get("username") ?? ""));
   const password = String(formData.get("password") ?? "");
   const next = String(formData.get("next") ?? "/");
@@ -127,6 +135,11 @@ export async function signup(_prevState: AuthState, formData: FormData): Promise
 }
 
 export async function login(_prevState: AuthState, formData: FormData): Promise<AuthState> {
+  // Ver comentario equivalente en signup().
+  if (isGoogleAuthEnabled()) {
+    return { error: "manualAuthDisabled" };
+  }
+
   const username = normalizeUsername(String(formData.get("username") ?? ""));
   const password = String(formData.get("password") ?? "");
   const next = String(formData.get("next") ?? "/");

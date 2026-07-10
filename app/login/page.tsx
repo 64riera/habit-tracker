@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { hasValidSession, safeNextPath } from "@/lib/auth/session";
+import { isGoogleAuthEnabled } from "@/lib/auth/google";
 import { LoginForm } from "./login-form";
 
 export default async function LoginPage({
@@ -13,7 +14,7 @@ export default async function LoginPage({
     redirect(safeNextPath(next ?? "/"));
   }
 
-  const googleEnabled = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+  const googleEnabled = isGoogleAuthEnabled();
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-bg px-6">

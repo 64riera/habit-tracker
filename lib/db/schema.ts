@@ -82,6 +82,9 @@ export const habitLogs = sqliteTable(
     note: text("note"),
     mood: integer("mood"),
     loggedAt: text("logged_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    // ISO 8601, solo cuando status === "done" — null en cualquier otro
+    // status (partial/missed/justified/skipped/frozen). Ver logHabit().
+    completedAt: text("completed_at"),
   },
   (t) => [
     uniqueIndex("habit_logs_habit_date_idx").on(t.habitId, t.date),

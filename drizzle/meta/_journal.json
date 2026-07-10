@@ -57,6 +57,13 @@
       "when": 1783656838830,
       "tag": "0007_glamorous_living_tribunal",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1783727372390,
+      "tag": "0008_pink_boomerang",
+      "breakpoints": true
     }
   ]
 }

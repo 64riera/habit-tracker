@@ -76,6 +76,12 @@ export async function logHabit(input: LogInput) {
     ? computeNewAchievements({ habit: habit as HabitRow, logs: updatedLogs, streak, alreadyUnlockedTypes, today })
     : [];
 
+  // Hora de "completado" solo cuando el status es done — cualquier otro
+  // status la deja en null (incluido el caso de bajar de done a otro
+  // status en una edición posterior), y desmarcar borra la fila entera
+  // (ver deleteLog), así que no hay nada que limpiar ahí.
+  const completedAt = values.status === "done" ? new Date().toISOString() : null;
+
   await db.batch([
     db
       .insert(habitLogs)
@@ -88,10 +94,17 @@ export async function logHabit(input: LogInput) {
         value: values.value ?? null,
         note: values.note || null,
         mood: values.mood ?? null,
+        completedAt,
       })
       .onConflictDoUpdate({
         target: [habitLogs.habitId, habitLogs.date],
-        set: { status: values.status, value: values.value ?? null, note: values.note || null, mood: values.mood ?? null },
+        set: {
+          status: values.status,
+          value: values.value ?? null,
+          note: values.note || null,
+          mood: values.mood ?? null,
+          completedAt,
+        },
       }),
     ...(streak
       ? [
@@ -132,7 +145,10 @@ export async function freezeHabitDay(habitId: string, date: string) {
     db
       .insert(habitLogs)
       .values({ id: `${habitId}:${date}`, userId, habitId, date, status: "frozen" })
-      .onConflictDoUpdate({ target: [habitLogs.habitId, habitLogs.date], set: { status: "frozen", value: null, note: null, mood: null } }),
+      .onConflictDoUpdate({
+        target: [habitLogs.habitId, habitLogs.date],
+        set: { status: "frozen", value: null, note: null, mood: null, completedAt: null },
+      }),
     ...(streak
       ? [
           db
