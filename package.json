@@ -11,6 +11,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "seed": "tsx scripts/seed.ts",
+    "og:capture": "tsx scripts/capture-landing-mobile-screenshot.ts",
     "test": "vitest run"
   },
   "dependencies": {

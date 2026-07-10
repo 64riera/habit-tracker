@@ -10,13 +10,21 @@ import { translate } from "@/lib/i18n/t";
 const COLOR_BG = "#faf7f2";
 const COLOR_TEXT = "#211d18";
 const COLOR_MUTED = "#756d62";
+const COLOR_BORDER = "#e9e2d6";
 
-export const alt = `${APP_NAME} — ${APP_TAGLINE}`;
+// Capturada con `npm run og:capture` (ver scripts/capture-landing-mobile-screenshot.ts).
+const SCREENSHOT_ASPECT_RATIO = 1290 / 2220;
+const SCREENSHOT_HEIGHT = 580;
+
+export const alt = `${APP_NAME} — ${APP_TAGLINE}, en la versión mobile`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function Image() {
-  const logo = await readFile(join(process.cwd(), "public/icons/icon-512.png"), "base64");
+  const [logo, screenshot] = await Promise.all([
+    readFile(join(process.cwd(), "public/icons/icon-512.png"), "base64"),
+    readFile(join(process.cwd(), "app/bienvenida/_assets/mobile-screenshot.png"), "base64"),
+  ]);
   const dict = getDictionary(DEFAULT_LOCALE);
 
   return new ImageResponse(
@@ -26,31 +34,50 @@ export default async function Image() {
           width: "100%",
           height: "100%",
           display: "flex",
-          flexDirection: "column",
+          alignItems: "center",
           justifyContent: "space-between",
           background: COLOR_BG,
-          padding: "80px",
+          padding: "64px",
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={`data:image/png;base64,${logo}`} width={64} height={64} />
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontSize: 36, fontWeight: 700, color: COLOR_TEXT, letterSpacing: -1 }}>
-              {APP_NAME}
-            </span>
-            <span style={{ fontSize: 20, color: COLOR_MUTED }}>{APP_TAGLINE}</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 32, maxWidth: 520 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`data:image/png;base64,${logo}`} width={48} height={48} />
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: 30, fontWeight: 700, color: COLOR_TEXT, letterSpacing: -1 }}>
+                {APP_NAME}
+              </span>
+              <span style={{ fontSize: 16, color: COLOR_MUTED }}>{APP_TAGLINE}</span>
+            </div>
           </div>
-        </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 920 }}>
-          <span style={{ fontSize: 64, fontWeight: 600, color: COLOR_TEXT, lineHeight: 1.15, letterSpacing: -1 }}>
+          <span style={{ fontSize: 46, fontWeight: 600, color: COLOR_TEXT, lineHeight: 1.15, letterSpacing: -1 }}>
             {translate(dict, "landing.hero.headline")}
           </span>
-          <span style={{ fontSize: 28, color: COLOR_MUTED, lineHeight: 1.4 }}>
+          <span style={{ fontSize: 22, color: COLOR_MUTED, lineHeight: 1.4 }}>
             {translate(dict, "landing.hero.subtitle")}
           </span>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            height: SCREENSHOT_HEIGHT,
+            width: SCREENSHOT_HEIGHT * SCREENSHOT_ASPECT_RATIO,
+            borderRadius: 28,
+            border: `1.5px solid ${COLOR_BORDER}`,
+            overflow: "hidden",
+            boxShadow: "0 30px 60px -20px rgba(33, 29, 24, 0.25)",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`data:image/png;base64,${screenshot}`}
+            width={SCREENSHOT_HEIGHT * SCREENSHOT_ASPECT_RATIO}
+            height={SCREENSHOT_HEIGHT}
+          />
         </div>
       </div>
     ),
