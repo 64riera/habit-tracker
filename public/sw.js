@@ -1,4 +1,4 @@
-const CACHE_VERSION = "habito-v2";
+const CACHE_VERSION = "just-go-v1";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const PAGES_CACHE = `${CACHE_VERSION}-pages`;
 const FLIGHT_CACHE = `${CACHE_VERSION}-flight`;

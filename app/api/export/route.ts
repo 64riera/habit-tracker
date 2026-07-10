@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     return new Response(JSON.stringify(rows, null, 2), {
       headers: {
         "Content-Type": "application/json",
-        "Content-Disposition": 'attachment; filename="habito-historial.json"',
+        "Content-Disposition": 'attachment; filename="just-go-historial.json"',
       },
     });
   }
@@ -52,7 +52,7 @@ export async function GET(request: Request) {
   return new Response(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": 'attachment; filename="habito-historial.csv"',
+      "Content-Disposition": 'attachment; filename="just-go-historial.csv"',
     },
   });
 }

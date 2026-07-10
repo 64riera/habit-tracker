@@ -13,8 +13,8 @@ services:
       # viva en el volumen persistente en vez de dentro del contenedor.
       TURSO_DATABASE_URL: file:/app/data/local.db
     volumes:
-      - habito-data:/app/data
+      - just-go-data:/app/data
     restart: unless-stopped
 
 volumes:
-  habito-data:
+  just-go-data:

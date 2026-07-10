@@ -24,7 +24,7 @@ export type QueuedMutation =
 
 export type QueuedRecord = QueuedMutation & { id: number; createdAt: number };
 
-const DB_NAME = "habito-offline";
+const DB_NAME = "justgo-offline";
 const STORE_NAME = "mutations";
 
 function openDb(): Promise<IDBDatabase> {

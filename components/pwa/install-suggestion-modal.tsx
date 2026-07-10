@@ -5,6 +5,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useI18n } from "@/lib/i18n/client";
 import { useInstallPrompt } from "@/lib/hooks/use-install-prompt";
 import { setInstallPromptSeen } from "@/lib/actions/preferences";
+import { APP_NAME } from "@/lib/branding";
 
 /**
  * Sugerencia de instalar la PWA, una sola vez, justo después de crear el
@@ -46,7 +47,7 @@ export function InstallSuggestionModal({ shouldOffer }: { shouldOffer: boolean }
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <Dialog.Title className="font-serif-italic text-xl font-semibold">
-            {t("pwa.installTitle")}
+            {t("pwa.installTitle", { name: APP_NAME })}
           </Dialog.Title>
           <Dialog.Description className="mt-2 text-[13.5px] leading-relaxed text-muted">
             {isIOSManual ? t("pwa.installIos") : t("pwa.installBody")}

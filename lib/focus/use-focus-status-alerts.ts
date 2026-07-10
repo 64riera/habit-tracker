@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useI18n } from "@/lib/i18n/client";
 import { flashTitle, playChime } from "@/lib/focus/alerts";
 import type { FocusSessionRow } from "@/lib/focus/compute";
+import { APP_NAME } from "@/lib/branding";
 
 /**
  * Dispara sonido/flash de título al *entrar* a "on_break" o "completed" —
@@ -25,10 +26,10 @@ export function useFocusStatusAlerts(session: FocusSessionRow | null, soundEnabl
 
     if (current === "on_break") {
       if (soundEnabled) playChime();
-      flashTitle(t("focus.alerts.breakTitle"));
+      flashTitle(t("focus.alerts.breakTitle", { name: APP_NAME }));
     } else if (current === "completed") {
       if (soundEnabled) playChime();
-      flashTitle(t("focus.alerts.completeTitle"));
+      flashTitle(t("focus.alerts.completeTitle", { name: APP_NAME }));
     }
   }, [session, soundEnabled, t]);
 }

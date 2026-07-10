@@ -1,6 +1,5 @@
 {
   "app": {
-    "name": "Habit.",
     "tagline": "Calm Editorial"
   },
   "nav": {
@@ -41,7 +40,6 @@
     "filter": "Filter"
   },
   "auth": {
-    "title": "Habit.",
     "loginSubtitle": "Log in to your account",
     "signupSubtitle": "Create your account to get started",
     "usernameLabel": "Username",
@@ -253,7 +251,7 @@
     "savedOffline": "Saved offline. It will sync automatically."
   },
   "pwa": {
-    "installTitle": "Install Habit.",
+    "installTitle": "Install {name}",
     "installBody": "Add it to your home screen for instant access.",
     "installIos": "Tap share, then \"Add to Home Screen\".",
     "install": "Install",
@@ -307,8 +305,8 @@
     "startForHabit": "Focus on this habit",
     "alerts": {
       "soundLabel": "Sound when finished",
-      "breakTitle": "⏸ Active break — Habit.",
-      "completeTitle": "✅ Session complete — Habit."
+      "breakTitle": "⏸ Active break — {name}",
+      "completeTitle": "✅ Session complete — {name}"
     },
     "goal": {
       "label": "Daily goal"

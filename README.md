@@ -37,7 +37,7 @@ Requiere que exista `.env.local` (mismo archivo que usas en desarrollo, con `APP
 docker compose up --build
 ```
 
-Esto compila la imagen, aplica las migraciones de `drizzle/` contra una base SQLite dentro del volumen persistente `habito-data`, y levanta la app en [http://localhost:3000](http://localhost:3000). Los datos sobreviven a `docker compose down` y a reconstrucciones de la imagen; solo se pierden con `docker compose down -v`.
+Esto compila la imagen, aplica las migraciones de `drizzle/` contra una base SQLite dentro del volumen persistente `just-go-data`, y levanta la app en [http://localhost:3000](http://localhost:3000). Los datos sobreviven a `docker compose down` y a reconstrucciones de la imagen; solo se pierden con `docker compose down -v`.
 
 Si prefieres usar Turso remoto en vez del SQLite local del volumen, define `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN` en `.env.local` y quita la variable `TURSO_DATABASE_URL` de `docker-compose.yml`.
 

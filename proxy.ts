@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const SESSION_COOKIE = "habito_session";
+const SESSION_COOKIE = "justgo_session";
 // /api/cron/reminders no tiene sesión de usuario (lo llama un cron externo,
 // ver .github/workflows/push-reminders.yml) — se autentica con su propio
 // secreto compartido (CRON_SECRET) dentro del route handler, no con cookie.

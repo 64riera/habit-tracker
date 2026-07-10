@@ -27,7 +27,7 @@ export async function setLocale(locale: string) {
 
 export async function setDayCutoffHour(hour: number) {
   const store = await cookies();
-  store.set("habito_day_cutoff", String(hour), { path: "/", maxAge: YEAR_SECONDS });
+  store.set("justgo_day_cutoff", String(hour), { path: "/", maxAge: YEAR_SECONDS });
 }
 
 /** Guarda la preferencia de tema en la cuenta, para que siga al usuario entre dispositivos. */

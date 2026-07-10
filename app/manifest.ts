@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
+import { APP_NAME, APP_NAME_FULL } from "@/lib/branding";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Hábito. — Sistema de Hábitos",
-    short_name: "Hábito.",
+    name: APP_NAME_FULL,
+    short_name: APP_NAME,
     description: "Seguimiento cercano de hábitos personales, bilingüe ES/EN.",
     start_url: "/",
     display: "standalone",

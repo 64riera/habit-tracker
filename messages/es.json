@@ -1,6 +1,5 @@
 {
   "app": {
-    "name": "Hábito.",
     "tagline": "Editorial Calma"
   },
   "nav": {
@@ -41,7 +40,6 @@
     "filter": "Filtrar"
   },
   "auth": {
-    "title": "Hábito.",
     "loginSubtitle": "Ingresa a tu cuenta",
     "signupSubtitle": "Crea tu cuenta para empezar",
     "usernameLabel": "Usuario",
@@ -253,7 +251,7 @@
     "savedOffline": "Guardado sin conexión. Se sincronizará automáticamente."
   },
   "pwa": {
-    "installTitle": "Instalar Hábito.",
+    "installTitle": "Instalar {name}",
     "installBody": "Agrégala a tu pantalla de inicio para un acceso instantáneo.",
     "installIos": "Toca compartir y luego \"Agregar a inicio\".",
     "install": "Instalar",
@@ -307,8 +305,8 @@
     "startForHabit": "Enfocarme en este hábito",
     "alerts": {
       "soundLabel": "Sonido al terminar",
-      "breakTitle": "⏸ Pausa activa — Hábito.",
-      "completeTitle": "✅ Sesión completada — Hábito."
+      "breakTitle": "⏸ Pausa activa — {name}",
+      "completeTitle": "✅ Sesión completada — {name}"
     },
     "goal": {
       "label": "Objetivo diario"

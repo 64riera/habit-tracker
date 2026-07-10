@@ -9,6 +9,7 @@ import { OfflineIndicator } from "@/components/pwa/offline-indicator";
 import { getCurrentLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getThemePreference } from "@/lib/queries/user";
+import { APP_NAME } from "@/lib/branding";
 import "./globals.css";
 
 const newsreader = Newsreader({
@@ -23,13 +24,13 @@ const publicSans = Public_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Hábito.",
+  title: APP_NAME,
   description: "Seguimiento cercano de hábitos personales",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Hábito.",
+    title: APP_NAME,
   },
 };
 

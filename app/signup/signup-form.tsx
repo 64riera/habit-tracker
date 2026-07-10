@@ -6,6 +6,7 @@ import { signup, type AuthState } from "@/lib/actions/auth";
 import { useI18n } from "@/lib/i18n/client";
 import { LangToggle } from "@/components/nav/lang-toggle";
 import { GoogleButton } from "@/components/auth/google-button";
+import { APP_NAME_FULL } from "@/lib/branding";
 
 const initialState: AuthState = {};
 
@@ -39,7 +40,9 @@ export function SignupForm({
         <LangToggle />
       </div>
       <div className="text-center">
-        <div className="font-serif-italic text-2xl font-semibold">{t("auth.title")}</div>
+        <div className="font-serif-italic text-lg leading-snug font-semibold text-balance">
+          {APP_NAME_FULL}
+        </div>
         <div className="mt-1 text-[12.5px] text-muted">{t("auth.signupSubtitle")}</div>
       </div>
       <input type="hidden" name="next" value={next} />

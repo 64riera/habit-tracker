@@ -3,7 +3,7 @@ import { cookies, headers } from "next/headers";
 import { DEFAULT_LOCALE, isLocale, type Locale } from "./dictionaries";
 import { getLocalePreference } from "@/lib/queries/user";
 
-export const LOCALE_COOKIE = "habito_locale";
+export const LOCALE_COOKIE = "justgo_locale";
 
 function firstSupportedLocale(acceptLanguage: string | null): Locale {
   if (!acceptLanguage) return DEFAULT_LOCALE;

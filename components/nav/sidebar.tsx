@@ -5,17 +5,18 @@ import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n/client";
 import { NAV_ITEMS } from "./nav-items";
 import { cn } from "@/lib/utils";
+import { APP_NAME } from "@/lib/branding";
 
 export function Sidebar({ streakMax }: { streakMax?: number | null }) {
   const pathname = usePathname();
-  const { t, dict } = useI18n();
+  const { t } = useI18n();
 
   return (
     // El shell padre (h-dvh) ya fija la altura disponible; overflow-y-auto
     // es solo la red de seguridad si el contenido del propio sidebar no
     // cabe en pantallas muy bajas.
     <aside className="hidden w-[220px] shrink-0 flex-col gap-8 overflow-y-auto border-r border-border px-6 py-8 md:flex">
-      <div className="font-serif-italic text-xl font-semibold">{dict.app.name}</div>
+      <div className="font-serif-italic text-xl font-semibold">{APP_NAME}</div>
       <nav className="flex flex-col gap-0.5">
         {NAV_ITEMS.map((item) => {
           const active = item.activeWhen(pathname);

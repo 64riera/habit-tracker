@@ -12,6 +12,7 @@ import { useFocusStatusAlerts } from "@/lib/focus/use-focus-status-alerts";
 import { flashTitle, playChime } from "@/lib/focus/alerts";
 import { formatClock } from "@/lib/focus/format";
 import { LIVE_STATUSES, type FocusSessionRow } from "@/lib/focus/compute";
+import { APP_NAME } from "@/lib/branding";
 import {
   cancelFocusSession,
   finishFocusSession,
@@ -112,7 +113,7 @@ export function FocusTimerDisplay({
             <FinishButton
               label={t("focus.controls.finish")}
               soundEnabled={soundEnabled}
-              completeTitle={t("focus.alerts.completeTitle")}
+              completeTitle={t("focus.alerts.completeTitle", { name: APP_NAME })}
               onUnlocked={notifyRewards}
             />
           </div>
