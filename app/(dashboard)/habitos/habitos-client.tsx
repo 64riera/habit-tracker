@@ -9,7 +9,7 @@ import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
 import { ReorderableList } from "@/components/ui/reorderable-list";
 import { SwipeableRow, SwipeableListProvider } from "@/components/ui/swipeable-row";
 import { useI18n } from "@/lib/i18n/client";
-import { categoryDisplayName, describeFrequency } from "@/lib/habits/describe";
+import { categoryDisplayName, describeFrequency, habitAvatarGlyph } from "@/lib/habits/describe";
 import { useOffline } from "@/lib/offline/client";
 import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
 import {
@@ -163,7 +163,7 @@ export function HabitosClient({
                         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-serif-italic text-[13px] font-semibold"
                         style={{ background: `color-mix(in oklch, ${color} 16%, transparent)`, color }}
                       >
-                        {habit.name.charAt(0).toUpperCase()}
+                        {habitAvatarGlyph(habit)}
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 truncate text-[13px] font-semibold">

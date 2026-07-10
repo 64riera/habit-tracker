@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/client";
 import { useOffline } from "@/lib/offline/client";
-import { categoryDisplayName, describeFrequency } from "@/lib/habits/describe";
+import { categoryDisplayName, describeFrequency, habitAvatarGlyph } from "@/lib/habits/describe";
 import type { HabitWithExtras } from "@/lib/queries/habits";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -12,6 +12,7 @@ import { LogEditor } from "./log-editor";
 import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
 import type { LogStatus } from "@/lib/habits/status";
 import { getStatusVisual } from "@/lib/habits/status-visual";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 type Props = {
   habit: HabitWithExtras;
@@ -31,16 +32,29 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
   );
   const [value, setValue] = useState(habit.todayLog?.value ?? 0);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const color = habit.category?.color ?? "var(--color-text)";
   const isBinary = habit.goalType === "binary";
+  const isDuration = habit.goalType === "duration";
   const target = habit.goalTarget ?? 1;
-  const step = Math.max(target / 4, 1);
 
   const isDone = status === "done";
   const progressPct = isBinary ? (isDone ? 100 : 0) : Math.min(100, Math.round((value / target) * 100));
 
   const visual = getStatusVisual(status, progressPct);
+
+  function logDone(doneValue?: number) {
+    setStatus("done");
+    if (doneValue != null) setValue(doneValue);
+    startTransition(async () => {
+      await runOrQueue({
+        type: "log",
+        input: { habitId: habit.id, date, status: "done", value: doneValue },
+      });
+      router.refresh();
+    });
+  }
 
   function handleClick() {
     if (isBinary) {
@@ -51,31 +65,28 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
           router.refresh();
         });
       } else {
-        setStatus("done");
-        startTransition(async () => {
-          await runOrQueue({ type: "log", input: { habitId: habit.id, date, status: "done" } });
-          router.refresh();
-        });
+        logDone();
       }
       return;
     }
 
-    const next = value + step;
+    if (isDone) {
+      // Ya está completo: confirma antes de perder el progreso del día.
+      setConfirmOpen(true);
+      return;
+    }
+
+    if (isDuration) {
+      // Duración se completa en un solo toque; el editor ("⋯") sigue
+      // disponible para cargar un valor parcial a mano.
+      logDone(target);
+      return;
+    }
+
+    // Cuantitativo: se rellena de a una unidad por toque.
+    const next = value + 1;
     if (next >= target) {
-      setStatus("done");
-      setValue(target);
-      startTransition(async () => {
-        await runOrQueue({ type: "log", input: { habitId: habit.id, date, status: "done", value: target } });
-        router.refresh();
-      });
-    } else if (isDone) {
-      // ya estaba completo: reinicia el ciclo
-      setStatus(null);
-      setValue(0);
-      startTransition(async () => {
-        await runOrQueue({ type: "delete", habitId: habit.id, date });
-        router.refresh();
-      });
+      logDone(target);
     } else {
       setStatus("partial");
       setValue(next);
@@ -86,6 +97,15 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
     }
   }
 
+  function handleUnmarkConfirmed() {
+    setStatus(null);
+    setValue(0);
+    startTransition(async () => {
+      await runOrQueue({ type: "delete", habitId: habit.id, date });
+      router.refresh();
+    });
+  }
+
   return (
     <div className={cn(isPendingSync && "opacity-70")}>
       <div className="flex items-center gap-4 border-b border-border py-3.5">
@@ -94,7 +114,7 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-serif-italic text-[15px] font-semibold md:h-[42px] md:w-[42px] md:text-[17px]"
           style={{ background: `color-mix(in oklch, ${color} 16%, transparent)`, color }}
         >
-          {habit.name.charAt(0).toUpperCase()}
+          {habitAvatarGlyph(habit)}
         </Link>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 truncate text-[13.5px] font-semibold md:text-[15px]">
@@ -166,6 +186,15 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
           }}
         />
       )}
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={t("checkin.unmarkConfirmTitle")}
+        description={t("checkin.unmarkConfirmBody")}
+        confirmLabel={t("common.confirm")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={handleUnmarkConfirmed}
+      />
     </div>
   );
 }

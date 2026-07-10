@@ -39,3 +39,12 @@ export function categoryDisplayName(
   if (!category) return "";
   return locale === "es" ? category.nameEs : category.nameEn;
 }
+
+/** Ícono de la categoría si el hábito tiene una asignada, si no la inicial
+ * del nombre — mismo glifo para el avatar en Hoy y en la lista de Hábitos. */
+export function habitAvatarGlyph(habit: {
+  name: string;
+  category?: { icon: string } | null;
+}): string {
+  return habit.category?.icon || habit.name.charAt(0).toUpperCase();
+}

@@ -113,6 +113,8 @@
     "markDone": "Mark done",
     "unmark": "Undo mark done",
     "moreOptions": "More options",
+    "unmarkConfirmTitle": "Unmark habit?",
+    "unmarkConfirmBody": "This will clear today's progress for this habit.",
     "logStatus": {
       "done": "Done",
       "partial": "Partial",

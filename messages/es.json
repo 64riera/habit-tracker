@@ -113,6 +113,8 @@
     "markDone": "Marcar hecho",
     "unmark": "Quitar marca de hecho",
     "moreOptions": "Más opciones",
+    "unmarkConfirmTitle": "¿Desmarcar hábito?",
+    "unmarkConfirmBody": "Vas a borrar el progreso de hoy para este hábito.",
     "logStatus": {
       "done": "Hecho",
       "partial": "Parcial",

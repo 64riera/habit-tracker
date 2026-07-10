@@ -42,7 +42,6 @@ export function HabitForm({ categories, habit }: Props) {
   const [frequencyType, setFrequencyType] = useState(habit?.frequencyType ?? "daily");
   const [categoryId, setCategoryId] = useState(habit?.categoryId ?? categories[0]?.id ?? "");
   const [weekdays, setWeekdays] = useState<number[]>(cfg.days ?? [1, 2, 3, 4, 5]);
-  const [isPinned, setIsPinned] = useState(habit?.isPinned ?? false);
 
   return (
     <form action={formAction} className="flex flex-1 flex-col min-w-0">
@@ -247,23 +246,17 @@ export function HabitForm({ categories, habit }: Props) {
             className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm outline-none focus:border-text md:w-fit"
           />
         </Field>
-
-        <label className="flex items-center gap-2 text-[11.5px] md:self-end md:pb-2.5">
-          <input
-            type="checkbox"
-            checked={isPinned}
-            onChange={(e) => setIsPinned(e.target.checked)}
-            className="accent-text"
-          />
-          {t("habit.pin")}
-          <input type="hidden" name="isPinned" value={isPinned ? "on" : ""} />
-        </label>
       </div>
 
       {/* hardMode se preserva sin exponer control: hoy no cambia ningún cálculo
           (racha, comodines, días libres), así que un interruptor sin efecto
           real solo genera confusión — ver discusión con el usuario. */}
       <input type="hidden" name="hardMode" value={habit?.hardMode ? "on" : ""} />
+      {/* isPinned se preserva sin exponer control en el form: se destaca
+          desde el gesto de swipe en la lista de hábitos (ver
+          habitos-client.tsx), así que acá solo evitamos pisar el valor
+          existente al guardar. */}
+      <input type="hidden" name="isPinned" value={habit?.isPinned ? "on" : ""} />
 
       <div className="mt-auto flex items-center gap-2.5 pt-6">
         <SaveButton label={t("common.save")} loadingLabel={t("common.loading")} />
