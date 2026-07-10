@@ -256,7 +256,9 @@
     "installTitle": "Instalar Hábito.",
     "installBody": "Agrégala a tu pantalla de inicio para un acceso instantáneo.",
     "installIos": "Toca compartir y luego \"Agregar a inicio\".",
-    "install": "Instalar"
+    "install": "Instalar",
+    "installDecline": "Ahora no",
+    "installIosDismiss": "Entendido"
   },
   "focus": {
     "cta": "Iniciar sesión de enfoque",

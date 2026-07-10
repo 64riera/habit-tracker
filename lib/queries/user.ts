@@ -41,3 +41,17 @@ export async function getTimezonePreference(): Promise<string | null> {
   const [user] = await db.select({ timezone: users.timezone }).from(users).where(eq(users.id, userId)).limit(1);
   return user?.timezone ?? null;
 }
+
+/** Si ya se le mostró (y decidió algo en) el modal de sugerencia de
+ * instalación tras su primer hábito — ver install-suggestion-modal.tsx.
+ * `true` si no hay sesión, para no ofrecerlo nunca en páginas públicas. */
+export async function getInstallPromptSeen(): Promise<boolean> {
+  const userId = await getCurrentUserIdOrNull();
+  if (!userId) return true;
+  const [user] = await db
+    .select({ installPromptSeen: users.installPromptSeen })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return user?.installPromptSeen ?? true;
+}

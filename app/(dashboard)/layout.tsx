@@ -2,20 +2,25 @@ import { Sidebar } from "@/components/nav/sidebar";
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { MiniFocusIndicator } from "@/components/focus/mini-focus-indicator";
 import { TimezoneSync } from "@/components/pwa/timezone-sync";
+import { InstallSuggestionModal } from "@/components/pwa/install-suggestion-modal";
 import { getStreakMax } from "@/lib/streaks";
 import { getFocusHeaderData } from "@/lib/queries/focus";
-import { getTimezonePreference } from "@/lib/queries/user";
+import { getHabitCount } from "@/lib/queries/habits";
+import { getInstallPromptSeen, getTimezonePreference } from "@/lib/queries/user";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [streakMax, focusHeader, timezone] = await Promise.all([
+  const [streakMax, focusHeader, timezone, habitCount, installPromptSeen] = await Promise.all([
     getStreakMax(),
     getFocusHeaderData(),
     getTimezonePreference(),
+    getHabitCount(),
+    getInstallPromptSeen(),
   ]);
+  const shouldOfferInstall = habitCount === 1 && !installPromptSeen;
 
   return (
     // Shell fijo al viewport (h-dvh + overflow-hidden): el header y el bottom
@@ -39,6 +44,7 @@ export default async function DashboardLayout({
       <MiniFocusIndicator session={focusHeader.session} soundEnabled={focusHeader.soundEnabled} />
       <BottomNav />
       <TimezoneSync savedTimezone={timezone} />
+      <InstallSuggestionModal shouldOffer={shouldOfferInstall} />
     </div>
   );
 }

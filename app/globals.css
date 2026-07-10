@@ -107,6 +107,37 @@ body {
   animation: toast-in 0.25s ease-out;
 }
 
+@keyframes modal-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-modal-overlay-in {
+  animation: modal-overlay-in 0.2s ease-out;
+}
+
+@keyframes modal-panel-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.animate-modal-panel-in {
+  /* forwards: sin esto, al terminar la animación el panel perdería el
+     transform de centrado (translate -50%,-50%) porque solo vive dentro
+     del keyframe, no en un estilo base separado. */
+  animation: modal-panel-in 0.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
 /* Tamaño de celda del mapa de calor (components/heatmap/heatmap.tsx): fluido
    en mobile para ocupar todo el ancho disponible (columnas = semanas, dato
    que solo se conoce en runtime, por eso vive en variables en vez de una

@@ -14,6 +14,7 @@ export const users = sqliteTable(
       .default("system"),
     localePreference: text("locale_preference", { enum: ["es", "en"] }).notNull().default("es"),
     timezone: text("timezone"), // IANA, ej. "America/Monterrey" — detectada en el navegador, ver timezone-sync.tsx
+    installPromptSeen: integer("install_prompt_seen", { mode: "boolean" }).notNull().default(false),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (t) => [

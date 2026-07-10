@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `install_prompt_seen` integer DEFAULT false NOT NULL;

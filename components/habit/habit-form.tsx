@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { nanoid } from "nanoid";
 import { Archive, RotateCcw } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
+import { usePushSubscription } from "@/lib/hooks/use-push-subscription";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { parseFrequencyConfig } from "@/lib/habits/frequency";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ const FREQ_TYPES = ["daily", "weekdays", "x_per_week", "x_per_month", "custom_in
 
 export function HabitForm({ categories, habit }: Props) {
   const { t, locale } = useI18n();
+  const { subscribed, subscribe } = usePushSubscription();
   const cfg = parseFrequencyConfig(habit?.frequencyConfig ?? null);
   const [id] = useState(() => habit?.id ?? nanoid());
   const action = useOfflineFormAction({
@@ -214,6 +216,12 @@ export function HabitForm({ categories, habit }: Props) {
             defaultValue={
               habit?.reminders ? (JSON.parse(habit.reminders) as string[])[0] : ""
             }
+            // Pedir el permiso de notificaciones acá, no antes: es el momento
+            // en que el usuario expresa que quiere que le avisen, así que el
+            // pedido llega con contexto en vez de a ciegas al abrir la app.
+            onChange={(e) => {
+              if (e.target.value && !subscribed) subscribe();
+            }}
             className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm outline-none focus:border-text md:w-fit"
           />
         </Field>

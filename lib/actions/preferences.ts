@@ -52,3 +52,11 @@ export async function setTimezone(timezone: string) {
   const userId = await getCurrentUserId();
   await db.update(users).set({ timezone }).where(eq(users.id, userId));
 }
+
+/** Marca que ya se le mostró el modal de sugerencia de instalación y decidió
+ * algo (instalar o no) — no importa cuál, solo que no hay que volver a
+ * preguntar. Ver install-suggestion-modal.tsx. */
+export async function setInstallPromptSeen() {
+  const userId = await getCurrentUserId();
+  await db.update(users).set({ installPromptSeen: true }).where(eq(users.id, userId));
+}

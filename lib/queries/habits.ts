@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { categories, habitLogs, habitStreaks, habits } from "@/lib/db/schema";
 import { isDateApplicable } from "@/lib/habits/frequency";
@@ -19,6 +19,16 @@ export type HabitWithExtras = HabitRow & {
 export async function getCategories(): Promise<CategoryRow[]> {
   const userId = await getCurrentUserId();
   return db.select().from(categories).where(eq(categories.userId, userId)).orderBy(categories.sortOrder);
+}
+
+/** Total de hábitos de la cuenta (incluye archivados/pausados: es sobre el
+ * evento de creación, no sobre cuántos están activos hoy) — usado para
+ * detectar "es el primer hábito" y ofrecer instalar la PWA, ver
+ * install-suggestion-modal.tsx. */
+export async function getHabitCount(): Promise<number> {
+  const userId = await getCurrentUserId();
+  const [row] = await db.select({ count: sql<number>`count(*)` }).from(habits).where(eq(habits.userId, userId));
+  return Number(row?.count ?? 0);
 }
 
 export async function getHabitNames(): Promise<{ id: string; name: string }[]> {

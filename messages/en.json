@@ -256,7 +256,9 @@
     "installTitle": "Install Habit.",
     "installBody": "Add it to your home screen for instant access.",
     "installIos": "Tap share, then \"Add to Home Screen\".",
-    "install": "Install"
+    "install": "Install",
+    "installDecline": "Not now",
+    "installIosDismiss": "Got it"
   },
   "focus": {
     "cta": "Start a focus session",
