@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
+import { APP_CANONICAL_HOST } from "@/lib/branding";
 
 const SESSION_COOKIE = "justgo_session";
 // /api/cron/reminders no tiene sesión de usuario (lo llama un cron externo,
@@ -12,7 +13,6 @@ const PUBLIC_PATHS = ["/login", "/signup", "/bienvenida", "/manifest.webmanifest
 // permanente en vez de servir la app ahí, para no romper accesos directos
 // ni la PWA ya instalada de quien tenía habits.srivera.xyz.
 const LEGACY_HOSTS = new Set(["habits.srivera.xyz", "www.habits.srivera.xyz"]);
-const CANONICAL_HOST = "justgo.srivera.xyz";
 
 function secretKey() {
   return new TextEncoder().encode(process.env.APP_JWT_SECRET ?? "");
@@ -34,7 +34,7 @@ export async function proxy(request: NextRequest) {
   if (host && LEGACY_HOSTS.has(host)) {
     const url = new URL(request.url);
     url.protocol = "https:";
-    url.host = CANONICAL_HOST;
+    url.host = APP_CANONICAL_HOST;
     url.port = "";
     return NextResponse.redirect(url, 308);
   }

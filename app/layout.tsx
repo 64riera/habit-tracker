@@ -9,7 +9,7 @@ import { OfflineIndicator } from "@/components/pwa/offline-indicator";
 import { getCurrentLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getThemePreference } from "@/lib/queries/user";
-import { APP_NAME } from "@/lib/branding";
+import { APP_NAME, APP_NAME_FULL, APP_URL } from "@/lib/branding";
 import "./globals.css";
 
 const newsreader = Newsreader({
@@ -23,14 +23,28 @@ const publicSans = Public_Sans({
   subsets: ["latin"],
 });
 
+const DEFAULT_DESCRIPTION = "Seguimiento cercano de hábitos personales";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(APP_URL),
   title: APP_NAME,
-  description: "Seguimiento cercano de hábitos personales",
+  description: DEFAULT_DESCRIPTION,
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: APP_NAME,
+  },
+  openGraph: {
+    title: APP_NAME_FULL,
+    description: DEFAULT_DESCRIPTION,
+    siteName: APP_NAME_FULL,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: APP_NAME_FULL,
+    description: DEFAULT_DESCRIPTION,
   },
 };
 

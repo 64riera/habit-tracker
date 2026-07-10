@@ -16,9 +16,21 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await resolvePreAuthLocale();
   const dict = getDictionary(locale);
+  const description = translate(dict, "landing.meta.description");
   return {
     title: APP_NAME_FULL,
-    description: translate(dict, "landing.meta.description"),
+    description,
+    openGraph: {
+      title: APP_NAME_FULL,
+      description,
+      type: "website",
+      url: "/bienvenida",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: APP_NAME_FULL,
+      description,
+    },
   };
 }
 
