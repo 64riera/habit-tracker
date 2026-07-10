@@ -10,6 +10,7 @@ import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
 import { PushToggle } from "@/components/pwa/push-toggle";
 import { Select } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n/client";
+import { useInstallPrompt } from "@/lib/hooks/use-install-prompt";
 import { setDayCutoffHour } from "@/lib/actions/preferences";
 import type { FocusHeaderData } from "@/lib/queries/focus";
 
@@ -28,6 +29,7 @@ export function AjustesClient({
   const { t } = useI18n();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const { canInstall, isIOSManual, promptInstall } = useInstallPrompt();
 
   function onCutoffChange(hour: number) {
     startTransition(async () => {
@@ -63,6 +65,29 @@ export function AjustesClient({
       ),
     },
   ];
+
+  // Solo se ofrece instalar si el navegador realmente puede hacer algo con
+  // el click: Chrome/Edge/Android disparan un prompt nativo (canInstall);
+  // Safari/iOS no tiene ese evento, así que ahí se muestran instrucciones en
+  // vez de un botón. Si ya está instalada (modo standalone) o el navegador
+  // no soporta instalación (p. ej. Firefox de escritorio), no se muestra nada.
+  if (canInstall) {
+    rows.push({
+      label: t("settings.installApp"),
+      sub: t("pwa.installBody"),
+      control: (
+        <button
+          type="button"
+          onClick={promptInstall}
+          className="rounded-full border border-border px-3 py-1 text-[11.5px] font-medium"
+        >
+          {t("pwa.install")}
+        </button>
+      ),
+    });
+  } else if (isIOSManual) {
+    rows.push({ label: t("settings.installApp"), sub: t("pwa.installIos"), control: null });
+  }
 
   return (
     <div>

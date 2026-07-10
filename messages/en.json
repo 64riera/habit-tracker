@@ -255,7 +255,8 @@
   "pwa": {
     "installTitle": "Install Habit.",
     "installBody": "Add it to your home screen for instant access.",
-    "installIos": "Tap share, then \"Add to Home Screen\"."
+    "installIos": "Tap share, then \"Add to Home Screen\".",
+    "install": "Install"
   },
   "focus": {
     "cta": "Start a focus session",

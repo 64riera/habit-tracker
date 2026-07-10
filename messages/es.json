@@ -255,7 +255,8 @@
   "pwa": {
     "installTitle": "Instalar Hábito.",
     "installBody": "Agrégala a tu pantalla de inicio para un acceso instantáneo.",
-    "installIos": "Toca compartir y luego \"Agregar a inicio\"."
+    "installIos": "Toca compartir y luego \"Agregar a inicio\".",
+    "install": "Instalar"
   },
   "focus": {
     "cta": "Iniciar sesión de enfoque",
