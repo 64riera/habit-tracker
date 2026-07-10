@@ -6,7 +6,7 @@ import { login, type AuthState } from "@/lib/actions/auth";
 import { useI18n } from "@/lib/i18n/client";
 import { LangToggle } from "@/components/nav/lang-toggle";
 import { GoogleButton } from "@/components/auth/google-button";
-import { APP_NAME_FULL } from "@/lib/branding";
+import { APP_NAME, APP_TAGLINE } from "@/lib/branding";
 
 const initialState: AuthState = {};
 
@@ -40,10 +40,13 @@ export function LoginForm({
         <LangToggle />
       </div>
       <div className="text-center">
-        <div className="font-serif-italic text-lg leading-snug font-semibold text-balance">
-          {APP_NAME_FULL}
+        <div className="font-serif-italic text-[28px] leading-[1.1] font-semibold tracking-tight">
+          {APP_NAME}
         </div>
-        <div className="mt-1 text-[12.5px] text-muted">{t("auth.loginSubtitle")}</div>
+        <div className="mt-1.5 text-[10px] font-medium tracking-[0.16em] text-muted uppercase">
+          {APP_TAGLINE}
+        </div>
+        <div className="mt-4 text-[12.5px] text-muted">{t("auth.loginSubtitle")}</div>
       </div>
       <input type="hidden" name="next" value={next} />
       {googleEnabled && (
