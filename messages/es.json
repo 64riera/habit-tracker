@@ -399,11 +399,9 @@
       "title": "El resto de los detalles",
       "items": {
         "pwa": { "title": "Instalable", "body": "Agrégala a tu pantalla de inicio y ábrela como una app nativa." },
-        "bilingual": { "title": "Español e inglés", "body": "Cambia de idioma cuando quieras, sin perder tus datos." },
         "theme": { "title": "Claro u oscuro", "body": "Sigue el tema de tu sistema o elige el tuyo." },
         "reminders": { "title": "Recordatorios por notificación", "body": "Un aviso a la hora que configures para cada hábito." },
-        "export": { "title": "Tus datos, exportables", "body": "Descarga tu historial completo en CSV o JSON cuando quieras." },
-        "selfHosted": { "title": "Código abierto y autohospedable", "body": "Corre tu propia instancia con Docker si prefieres controlar tus datos." }
+        "export": { "title": "Tus datos, exportables", "body": "Descarga tu historial completo en CSV o JSON cuando quieras." }
       }
     },
     "cta": {
