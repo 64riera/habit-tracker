@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Clock, Hash } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { useOffline } from "@/lib/offline/client";
-import { categoryDisplayName, describeFrequency, habitAvatarGlyph } from "@/lib/habits/describe";
+import { categoryDisplayName, describeFrequency, describeGoal, habitAvatarGlyph } from "@/lib/habits/describe";
 import type { HabitWithExtras } from "@/lib/queries/habits";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -126,9 +127,21 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
             <span className="truncate">{habit.name}</span>
             {isPendingSync && <PendingSyncBadge />}
           </div>
-          <div className="mt-0.5 truncate text-[11px] text-muted md:text-xs">
-            {!compact && habit.category ? `${categoryDisplayName(habit.category, locale)} · ` : ""}
-            {describeFrequency(habit, dict)}
+          <div className="mt-0.5 flex items-center gap-1 text-[11px] text-muted md:text-xs">
+            <span className="min-w-0 truncate">
+              {!compact && habit.category ? `${categoryDisplayName(habit.category, locale)} · ` : ""}
+              {describeFrequency(habit, dict)}
+            </span>
+            {!isBinary && (
+              <span className="inline-flex shrink-0 items-center gap-0.5 text-[9px]">
+                {isDuration ? (
+                  <Clock size={9} strokeWidth={2.2} aria-hidden />
+                ) : (
+                  <Hash size={9} strokeWidth={2.2} aria-hidden />
+                )}
+                {isDuration ? describeGoal(habit) : `${Math.min(value, target)}/${target}`}
+              </span>
+            )}
           </div>
           {!isBinary && (
             <div className="mt-2 h-0.5 w-40 max-w-full rounded-full bg-border">
