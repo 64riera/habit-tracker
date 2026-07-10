@@ -399,7 +399,6 @@
       "title": "El resto de los detalles",
       "items": {
         "pwa": { "title": "Instalable", "body": "Agrégala a tu pantalla de inicio y ábrela como una app nativa." },
-        "theme": { "title": "Claro u oscuro", "body": "Sigue el tema de tu sistema o elige el tuyo." },
         "reminders": { "title": "Recordatorios por notificación", "body": "Un aviso a la hora que configures para cada hábito." },
         "export": { "title": "Tus datos, exportables", "body": "Descarga tu historial completo en CSV o JSON cuando quieras." }
       }

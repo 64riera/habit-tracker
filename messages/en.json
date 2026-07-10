@@ -399,7 +399,6 @@
       "title": "The rest of the details",
       "items": {
         "pwa": { "title": "Installable", "body": "Add it to your home screen and open it like a native app." },
-        "theme": { "title": "Light or dark", "body": "Follow your system theme or pick your own." },
         "reminders": { "title": "Push reminders", "body": "A notification at the time you set for each habit." },
         "export": { "title": "Your data, exportable", "body": "Download your full history as CSV or JSON whenever you want." }
       }
