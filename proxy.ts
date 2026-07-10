@@ -8,6 +8,12 @@ const SESSION_COOKIE = "justgo_session";
 // secreto compartido (CRON_SECRET) dentro del route handler, no con cookie.
 const PUBLIC_PATHS = ["/login", "/signup", "/bienvenida", "/manifest.webmanifest", "/api/auth/google", "/api/cron/reminders"];
 
+// Dominio viejo (antes del rebrand a "Just Go"): redirige de forma
+// permanente en vez de servir la app ahí, para no romper accesos directos
+// ni la PWA ya instalada de quien tenía habits.srivera.xyz.
+const LEGACY_HOSTS = new Set(["habits.srivera.xyz", "www.habits.srivera.xyz"]);
+const CANONICAL_HOST = "justgo.srivera.xyz";
+
 function secretKey() {
   return new TextEncoder().encode(process.env.APP_JWT_SECRET ?? "");
 }
@@ -24,6 +30,15 @@ async function hasValidSession(request: NextRequest) {
 }
 
 export async function proxy(request: NextRequest) {
+  const host = request.headers.get("host");
+  if (host && LEGACY_HOSTS.has(host)) {
+    const url = new URL(request.url);
+    url.protocol = "https:";
+    url.host = CANONICAL_HOST;
+    url.port = "";
+    return NextResponse.redirect(url, 308);
+  }
+
   const { pathname } = request.nextUrl;
 
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {

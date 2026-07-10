@@ -14,5 +14,5 @@ jobs:
     steps:
       - name: Trigger reminder check
         run: |
-          curl -fsS -X POST "https://habits.srivera.xyz/api/cron/reminders" \
+          curl -fsS -X POST "https://justgo.srivera.xyz/api/cron/reminders" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
