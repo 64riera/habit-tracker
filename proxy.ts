@@ -6,7 +6,7 @@ const SESSION_COOKIE = "justgo_session";
 // /api/cron/reminders no tiene sesión de usuario (lo llama un cron externo,
 // ver .github/workflows/push-reminders.yml) — se autentica con su propio
 // secreto compartido (CRON_SECRET) dentro del route handler, no con cookie.
-const PUBLIC_PATHS = ["/login", "/signup", "/manifest.webmanifest", "/api/auth/google", "/api/cron/reminders"];
+const PUBLIC_PATHS = ["/login", "/signup", "/bienvenida", "/manifest.webmanifest", "/api/auth/google", "/api/cron/reminders"];
 
 function secretKey() {
   return new TextEncoder().encode(process.env.APP_JWT_SECRET ?? "");
@@ -33,9 +33,13 @@ export async function proxy(request: NextRequest) {
   const authenticated = await hasValidSession(request);
 
   if (!authenticated) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(loginUrl);
+    // La raíz no tiene su propia página pública: un visitante sin sesión
+    // que pide "/" va a la landing (/bienvenida) en vez de directo al
+    // formulario de login, sin tocar la ruta del dashboard.
+    const destination = pathname === "/" ? "/bienvenida" : "/login";
+    const redirectUrl = new URL(destination, request.url);
+    if (destination === "/login") redirectUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(redirectUrl);
   }
 
   return NextResponse.next();

@@ -361,5 +361,58 @@
         "forest_50": "Gran bosque"
       }
     }
+  },
+  "landing": {
+    "meta": {
+      "description": "Just Go: hábitos y enfoque sin fricción. Rachas, mapa de calor, sesiones de concentración y recordatorios, en una app rápida e instalable."
+    },
+    "hero": {
+      "headline": "Hábitos que se sostienen solos.",
+      "subtitle": "Marca tu día en segundos, sigue tus rachas de un vistazo y entra en modo enfoque cuando toca concentrarte."
+    },
+    "heroPreview": {
+      "caption": "Un vistazo a tus últimos meses"
+    },
+    "features": {
+      "checkin": {
+        "title": "Registro diario sin fricción",
+        "body": "Un toque para marcar hecho. Cuantitativo o por duración cuando el hábito lo pide."
+      },
+      "streaks": {
+        "title": "Rachas que dan ganas de seguir",
+        "body": "Mapa de calor de todo el año, y comodines para no perder la racha por un mal día."
+      },
+      "focus": {
+        "title": "Sesiones de enfoque",
+        "body": "Cuenta regresiva o cronómetro, con pausas activas y vínculo directo a un hábito."
+      },
+      "stats": {
+        "title": "Progreso real, no solo rachas",
+        "body": "Tendencias, comparativas semanales y tus mejores horarios de cumplimiento."
+      }
+    },
+    "categories": {
+      "title": "Organiza por categorías",
+      "body": "Colorea y agrupa tus hábitos como quieras: creatividad, fitness, aprendizaje, lo que sea."
+    },
+    "extras": {
+      "title": "El resto de los detalles",
+      "items": {
+        "pwa": { "title": "Instalable", "body": "Agrégala a tu pantalla de inicio y ábrela como una app nativa." },
+        "bilingual": { "title": "Español e inglés", "body": "Cambia de idioma cuando quieras, sin perder tus datos." },
+        "theme": { "title": "Claro u oscuro", "body": "Sigue el tema de tu sistema o elige el tuyo." },
+        "reminders": { "title": "Recordatorios por notificación", "body": "Un aviso a la hora que configures para cada hábito." },
+        "export": { "title": "Tus datos, exportables", "body": "Descarga tu historial completo en CSV o JSON cuando quieras." },
+        "selfHosted": { "title": "Código abierto y autohospedable", "body": "Corre tu propia instancia con Docker si prefieres controlar tus datos." }
+      }
+    },
+    "cta": {
+      "title": "Empieza con tu primer hábito hoy",
+      "body": "Gratis, sin anuncios, y en menos de un minuto."
+    },
+    "footer": {
+      "tagline": "Hábitos y enfoque, sin fricción.",
+      "rights": "© {year} Just Go"
+    }
   }
 }

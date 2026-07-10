@@ -40,12 +40,14 @@ export function SignupForm({
         <LangToggle />
       </div>
       <div className="text-center">
-        <div className="font-serif-italic text-[28px] leading-[1.1] font-semibold tracking-tight">
-          {APP_NAME}
-        </div>
-        <div className="mt-1.5 text-[10px] font-medium tracking-[0.16em] text-muted uppercase">
-          {APP_TAGLINE}
-        </div>
+        <Link href="/bienvenida" className="inline-block">
+          <div className="font-serif-italic text-[28px] leading-[1.1] font-semibold tracking-tight">
+            {APP_NAME}
+          </div>
+          <div className="mt-1.5 text-[10px] font-medium tracking-[0.16em] text-muted uppercase">
+            {APP_TAGLINE}
+          </div>
+        </Link>
         <div className="mt-4 text-[12.5px] text-muted">{t("auth.signupSubtitle")}</div>
       </div>
       <input type="hidden" name="next" value={next} />

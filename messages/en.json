@@ -361,5 +361,58 @@
         "forest_50": "Great forest"
       }
     }
+  },
+  "landing": {
+    "meta": {
+      "description": "Just Go: frictionless habits and focus. Streaks, a full-year heatmap, concentration sessions and reminders, in a fast, installable app."
+    },
+    "hero": {
+      "headline": "Habits that stick on their own.",
+      "subtitle": "Check off your day in seconds, watch your streaks build, and start a focus session whenever you need to concentrate."
+    },
+    "heroPreview": {
+      "caption": "A look at your last few months"
+    },
+    "features": {
+      "checkin": {
+        "title": "Frictionless daily check-in",
+        "body": "One tap to mark it done. Quantitative or duration-based when the habit calls for it."
+      },
+      "streaks": {
+        "title": "Streaks worth keeping",
+        "body": "A full-year heatmap, plus freezes so one bad day doesn't break your streak."
+      },
+      "focus": {
+        "title": "Focus sessions",
+        "body": "Countdown or stopwatch, with active breaks and a direct link to a habit."
+      },
+      "stats": {
+        "title": "Real progress, not just streaks",
+        "body": "Trends, weekly comparisons, and the times of day you actually follow through."
+      }
+    },
+    "categories": {
+      "title": "Organize by category",
+      "body": "Color and group your habits however you like: creativity, fitness, learning, whatever fits."
+    },
+    "extras": {
+      "title": "The rest of the details",
+      "items": {
+        "pwa": { "title": "Installable", "body": "Add it to your home screen and open it like a native app." },
+        "bilingual": { "title": "Spanish and English", "body": "Switch languages whenever you want, without losing your data." },
+        "theme": { "title": "Light or dark", "body": "Follow your system theme or pick your own." },
+        "reminders": { "title": "Push reminders", "body": "A notification at the time you set for each habit." },
+        "export": { "title": "Your data, exportable", "body": "Download your full history as CSV or JSON whenever you want." },
+        "selfHosted": { "title": "Open source and self-hostable", "body": "Run your own instance with Docker if you'd rather control your own data." }
+      }
+    },
+    "cta": {
+      "title": "Start your first habit today",
+      "body": "Free, no ads, and it takes less than a minute."
+    },
+    "footer": {
+      "tagline": "Habits and focus, without friction.",
+      "rights": "© {year} Just Go"
+    }
   }
 }
