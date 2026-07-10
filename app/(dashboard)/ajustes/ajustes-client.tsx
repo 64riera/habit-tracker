@@ -7,6 +7,7 @@ import { ContentHeader } from "@/components/nav/content-header";
 import { ThemeToggle } from "@/components/nav/theme-toggle";
 import { LangToggle } from "@/components/nav/lang-toggle";
 import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
+import { PushToggle } from "@/components/pwa/push-toggle";
 import { Select } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n/client";
 import { setDayCutoffHour } from "@/lib/actions/preferences";
@@ -42,6 +43,11 @@ export function AjustesClient({
   const rows: { label: string; sub?: string; control: React.ReactNode }[] = [
     { label: t("settings.theme"), control: <ThemeToggle /> },
     { label: t("settings.language"), control: <LangToggle /> },
+    {
+      label: t("settings.notifications"),
+      sub: t("settings.notificationsSub"),
+      control: <PushToggle />,
+    },
     {
       label: t("settings.dayCutoff"),
       sub: t("settings.dayCutoffSub"),

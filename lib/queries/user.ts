@@ -32,3 +32,12 @@ export async function getLocalePreference(): Promise<Locale | null> {
     .limit(1);
   return user?.localePreference ?? null;
 }
+
+/** Zona horaria IANA guardada en la cuenta (detectada en el navegador, ver
+ * `timezone-sync.tsx`). `null` si no hay sesion o aun no se detecto. */
+export async function getTimezonePreference(): Promise<string | null> {
+  const userId = await getCurrentUserIdOrNull();
+  if (!userId) return null;
+  const [user] = await db.select({ timezone: users.timezone }).from(users).where(eq(users.id, userId)).limit(1);
+  return user?.timezone ?? null;
+}

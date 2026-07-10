@@ -13,6 +13,7 @@ export const users = sqliteTable(
       .notNull()
       .default("system"),
     localePreference: text("locale_preference", { enum: ["es", "en"] }).notNull().default("es"),
+    timezone: text("timezone"), // IANA, ej. "America/Monterrey" — detectada en el navegador, ver timezone-sync.tsx
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (t) => [
@@ -186,6 +187,22 @@ export const focusRewardTiers = sqliteTable(
   (t) => [
     uniqueIndex("focus_reward_tiers_user_tier_idx").on(t.userId, t.tier),
     index("focus_reward_tiers_user_idx").on(t.userId),
+  ]
+);
+
+export const pushSubscriptions = sqliteTable(
+  "push_subscriptions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    endpoint: text("endpoint").notNull(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    uniqueIndex("push_subscriptions_endpoint_idx").on(t.endpoint),
+    index("push_subscriptions_user_idx").on(t.userId),
   ]
 );
 

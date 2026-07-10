@@ -1,0 +1,18 @@
+name: Push reminders
+
+# Dispara app/api/cron/reminders/route.ts cada 15 min — reemplaza a Vercel
+# Cron (limitado a 1x/día en el plan Hobby) sin costo, ver el plan de
+# implementación de recordatorios push.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger reminder check
+        run: |
+          curl -fsS -X POST "https://habits.srivera.xyz/api/cron/reminders" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

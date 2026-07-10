@@ -39,3 +39,16 @@ export async function setThemePreference(theme: string) {
     .set({ themePreference: theme satisfies ThemePreference })
     .where(eq(users.id, userId));
 }
+
+/** Guarda la zona horaria IANA detectada en el navegador (ver
+ * `timezone-sync.tsx`) — necesaria para saber a qué hora UTC corresponde el
+ * horario local de un recordatorio, ver `app/api/cron/reminders/route.ts`. */
+export async function setTimezone(timezone: string) {
+  try {
+    new Intl.DateTimeFormat(undefined, { timeZone: timezone });
+  } catch {
+    return;
+  }
+  const userId = await getCurrentUserId();
+  await db.update(users).set({ timezone }).where(eq(users.id, userId));
+}

@@ -1,15 +1,21 @@
 import { Sidebar } from "@/components/nav/sidebar";
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { MiniFocusIndicator } from "@/components/focus/mini-focus-indicator";
+import { TimezoneSync } from "@/components/pwa/timezone-sync";
 import { getStreakMax } from "@/lib/streaks";
 import { getFocusHeaderData } from "@/lib/queries/focus";
+import { getTimezonePreference } from "@/lib/queries/user";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [streakMax, focusHeader] = await Promise.all([getStreakMax(), getFocusHeaderData()]);
+  const [streakMax, focusHeader, timezone] = await Promise.all([
+    getStreakMax(),
+    getFocusHeaderData(),
+    getTimezonePreference(),
+  ]);
 
   return (
     // Shell fijo al viewport (h-dvh + overflow-hidden): el header y el bottom
@@ -32,6 +38,7 @@ export default async function DashboardLayout({
       </main>
       <MiniFocusIndicator session={focusHeader.session} soundEnabled={focusHeader.soundEnabled} />
       <BottomNav />
+      <TimezoneSync savedTimezone={timezone} />
     </div>
   );
 }
