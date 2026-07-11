@@ -3,7 +3,7 @@
     "tagline": "Editorial Calma"
   },
   "nav": {
-    "hoy": "Hoy",
+    "hoy": "Inicio",
     "historial": "Historial",
     "estadisticas": "Estadísticas",
     "enfoque": "Enfoque",
@@ -11,7 +11,7 @@
     "ajustes": "Ajustes"
   },
   "screens": {
-    "hoy": { "title": "Hoy", "subtitle": "Registro diario sin fricción" },
+    "hoy": { "title": "Inicio", "subtitle": "Registro diario sin fricción" },
     "historial": { "title": "Historial", "subtitle": "Cada día, con contexto" },
     "estadisticas": { "title": "Estadísticas", "subtitle": "Progreso a lo largo del tiempo" },
     "habitos": { "title": "Hábitos", "subtitle": "Gestiona y personaliza" },

@@ -3,7 +3,7 @@
     "tagline": "Calm Editorial"
   },
   "nav": {
-    "hoy": "Today",
+    "hoy": "Home",
     "historial": "History",
     "estadisticas": "Stats",
     "enfoque": "Focus",
@@ -11,7 +11,7 @@
     "ajustes": "Settings"
   },
   "screens": {
-    "hoy": { "title": "Today", "subtitle": "Frictionless daily check-in" },
+    "hoy": { "title": "Home", "subtitle": "Frictionless daily check-in" },
     "historial": { "title": "History", "subtitle": "Every day, with context" },
     "estadisticas": { "title": "Stats", "subtitle": "Progress over time" },
     "habitos": { "title": "Habits", "subtitle": "Manage and personalize" },
