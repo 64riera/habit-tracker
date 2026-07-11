@@ -194,13 +194,14 @@ export function FocusStartForm({ settings, habitOptions, categories, defaultHabi
                       type="button"
                       key={c.id}
                       onClick={() => setCategoryId(c.id)}
-                      className="rounded-full border px-3 py-1.5 text-[11px] font-medium"
+                      className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium"
                       style={{
                         background: active ? "var(--color-text)" : "transparent",
                         color: active ? "var(--color-surface)" : "var(--color-muted)",
                         borderColor: active ? "var(--color-text)" : "var(--color-border)",
                       }}
                     >
+                      <span aria-hidden>{c.icon}</span>
                       {categoryDisplayName(c, locale)}
                     </button>
                   );
