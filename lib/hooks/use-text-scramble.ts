@@ -8,15 +8,15 @@ const DURATION_MS = 480;
 const FPS = 30;
 
 /**
- * Revela `target` de izquierda a derecha, mostrando caracteres al azar en
- * las posiciones aún no reveladas — un efecto de "decodificación" discreto
- * (no de tragamonedas) acorde al tono editorial de la app. Espacios y
- * símbolos de puntuación no se scramblean, para que la cadencia de
- * palabras siga siendo legible mientras el resto se resuelve.
+ * Reveals `target` left to right, showing random characters in the
+ * positions not yet revealed — a subtle "decoding" effect (not a slot
+ * machine) that fits the app's editorial tone. Spaces and punctuation
+ * marks are not scrambled, so the word cadence stays legible while the
+ * rest resolves.
  *
- * No anima el primer render (cuando `target` llega vacío/inicial): solo
- * transiciona entre dos valores reales ya mostrados, evitando un scramble
- * gratuito al montar.
+ * Doesn't animate on the first render (when `target` arrives empty/initial):
+ * it only transitions between two already-displayed real values, avoiding
+ * a gratuitous scramble on mount.
  */
 export function useTextScramble(target: string, variant: "digits" | "alpha" = "alpha") {
   const [display, setDisplay] = useState(target);

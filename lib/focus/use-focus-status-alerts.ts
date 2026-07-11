@@ -7,12 +7,13 @@ import type { FocusSessionRow } from "@/lib/focus/compute";
 import { APP_NAME } from "@/lib/branding";
 
 /**
- * Dispara sonido/flash de título al *entrar* a "on_break" o "completed" —
- * detecta la transición (compara contra el status anterior), no el estado
- * actual, para no repetir la alerta en cada re-render mientras el status no
- * cambia. Compartido entre `FocusTimerDisplay` y `MiniFocusIndicator`: nunca
- * están montados los dos a la vez (el indicador se oculta en /focus), así
- * que no hay riesgo de disparar la alerta dos veces para la misma sesión.
+ * Fires the sound/title-flash alert on *entering* "on_break" or
+ * "completed" — it detects the transition (compares against the previous
+ * status), not the current state, so the alert doesn't repeat on every
+ * re-render while the status stays the same. Shared between
+ * `FocusTimerDisplay` and `MiniFocusIndicator`: they're never mounted at
+ * the same time (the indicator hides itself on /focus), so there's no
+ * risk of firing the alert twice for the same session.
  */
 export function useFocusStatusAlerts(session: FocusSessionRow | null, soundEnabled: boolean) {
   const { t } = useI18n();

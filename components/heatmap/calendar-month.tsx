@@ -8,10 +8,10 @@ const LEVEL_ALPHA = [0, 18, 38, 62, 90];
 const WEEKDAY_KEYS = [1, 2, 3, 4, 5, 6, 7];
 
 /**
- * `today` habilita cada día pasado (o de hoy) del mes como un link directo a
- * Hoy con esa fecha (`/?fecha=...`) — es la entrada natural para registrar o
- * corregir un hábito de un día específico, sin agregar una pantalla nueva.
- * Días futuros o fuera del mes se quedan como celdas planas.
+ * `today` enables every past day (or today) of the month as a direct link to
+ * Today with that date (`/?fecha=...`) — it's the natural entry point for
+ * logging or correcting a habit for a specific day, without adding a new
+ * screen. Future days or ones outside the month stay as plain cells.
  */
 export function CalendarMonth({
   cells,
@@ -28,10 +28,10 @@ export function CalendarMonth({
     <div>
       <div className="mb-2 text-[10px] tracking-wide text-muted uppercase">{monthLabel}</div>
       <div className="overflow-x-auto">
-        {/* Columnas fluidas en mobile para ocupar todo el ancho disponible
-            (los días ya son cuadrados vía aspect-square, así que solo hace
-            falta que la columna deje de ser fija); desde md vuelve a la
-            grilla de tamaño fijo de siempre. */}
+        {/* Fluid columns on mobile to use up all the available width (days
+            are already squares via aspect-square, so all that's needed is
+            for the column to stop being fixed-size); from md up it goes
+            back to the usual fixed-size grid. */}
         <div className="grid w-full gap-[5px] [grid-template-columns:repeat(7,minmax(0,1fr))] md:w-fit md:[grid-template-columns:repeat(7,32px)]">
           {WEEKDAY_KEYS.map((d) => (
             <div key={d} className="text-center text-[9px] font-semibold text-muted">

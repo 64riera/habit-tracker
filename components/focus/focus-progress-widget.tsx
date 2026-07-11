@@ -3,9 +3,9 @@
 import { useI18n } from "@/lib/i18n/client";
 import { useTextScramble } from "@/lib/hooks/use-text-scramble";
 
-/** Espejo visual de TodaySummaryDisplay (% grande con scramble + barra fina),
- * pero con datos propios del módulo de enfoque en vez de reutilizar aquel
- * componente, que está atado a la forma de datos de hábitos (total/done/
+/** Visual mirror of TodaySummaryDisplay (big % with scramble + thin bar),
+ * but with data of its own from the focus module instead of reusing that
+ * component, which is tied to the shape of habit data (total/done/
  * inProgress/bestStreak). */
 export function FocusProgressWidget({
   completedSeconds,

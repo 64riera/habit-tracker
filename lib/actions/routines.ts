@@ -28,8 +28,8 @@ export async function createRoutineCore(id: string, rawValues: unknown): Promise
   const userId = await getCurrentUserId();
   const count = (await db.select().from(routines).where(eq(routines.userId, userId))).length;
 
-  // onConflictDoNothing: idempotente si el replay offline se reintenta tras un
-  // drenado interrumpido entre el insert y el retiro de la mutación de la cola.
+  // onConflictDoNothing: idempotent if the offline replay retries after a
+  // drain gets interrupted between the insert and removing the mutation from the queue.
   await db
     .insert(routines)
     .values({
@@ -75,7 +75,7 @@ export async function updateRoutineCore(
   return {};
 }
 
-/** Ruta online: escribe vía el core y redirige. El replay offline usa `deleteRoutineCore` directo. */
+/** Online path: writes via the core and redirects. The offline replay uses `deleteRoutineCore` directly. */
 export async function deleteRoutine(routineId: string): Promise<void> {
   await deleteRoutineCore(routineId);
   redirect("/habits/routines");

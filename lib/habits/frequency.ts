@@ -7,13 +7,13 @@ export type FrequencyType =
   | "x_per_month"
   | "custom_interval";
 
-/** Config JSON guardada en habits.frequency_config, según frequency_type. */
+/** Config JSON stored in habits.frequency_config, depending on frequency_type. */
 export type FrequencyConfig = {
-  /** weekdays: días ISO (1=lunes..7=domingo) en que aplica el hábito */
+  /** weekdays: ISO days (1=Monday..7=Sunday) on which the habit applies */
   days?: number[];
-  /** x_per_week / x_per_month: cuántas veces hay que cumplirlo en el período */
+  /** x_per_week / x_per_month: how many times it must be completed in the period */
   timesPerPeriod?: number;
-  /** custom_interval: cada cuántos días aplica, contando desde start_date */
+  /** custom_interval: how many days between occurrences, counting from start_date */
   intervalDays?: number;
 };
 
@@ -26,7 +26,7 @@ export function parseFrequencyConfig(raw: string | null): FrequencyConfig {
   }
 }
 
-/** Construye el `frequency_config` a partir de los campos crudos de un formulario de hábito. */
+/** Builds the `frequency_config` from the raw fields of a habit form. */
 export function buildFrequencyConfig(input: {
   frequencyType: string;
   weekdays?: number[];
@@ -53,9 +53,9 @@ export type HabitFrequencyInfo = {
 };
 
 /**
- * ¿El hábito "aplica" (se espera un check-in) en esta fecha?
- * Para x_per_week / x_per_month no hay un día fijo: aplica todos los días del período
- * hasta que se cumpla la cuota, así que se consideran "aplicables" todos los días.
+ * Does the habit "apply" (is a check-in expected) on this date?
+ * For x_per_week / x_per_month there's no fixed day: it applies every day of the
+ * period until the quota is met, so every day is considered "applicable".
  */
 export function isDateApplicable(habit: HabitFrequencyInfo, date: string): boolean {
   if (date < habit.startDate) return false;

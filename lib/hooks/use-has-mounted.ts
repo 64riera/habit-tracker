@@ -4,7 +4,7 @@ function subscribe() {
   return () => {};
 }
 
-/** true sólo después de la hidratación en cliente; evita mismatches de SSR sin usar un efecto. */
+/** true only after client hydration; avoids SSR mismatches without using an effect. */
 export function useHasMounted(): boolean {
   return useSyncExternalStore(
     subscribe,

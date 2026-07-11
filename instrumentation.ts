@@ -12,13 +12,13 @@ export async function register() {
   try {
     await migrate(drizzle(client), { migrationsFolder: "./drizzle" });
   } catch (error) {
-    // No dejar que un desajuste de migraciones (p. ej. el registro de
-    // __drizzle_migrations desincronizado del estado real de las tablas)
-    // tumbe la instancia entera: eso rompia CADA request, incluido el
-    // login, en cada arranque en frio. Si el esquema ya esta al dia esto
-    // es inofensivo; si no lo esta, las queries afectadas fallaran con un
-    // error claro en vez de tirar toda la app.
-    console.error("No se pudo aplicar la migracion de la base de datos:", error);
+    // Don't let a migration mismatch (e.g. the __drizzle_migrations
+    // ledger being out of sync with the tables' real state) take down the
+    // whole instance: that used to break EVERY request, including login,
+    // on every cold start. If the schema is already up to date this is
+    // harmless; if it isn't, the affected queries will fail with a clear
+    // error instead of crashing the whole app.
+    console.error("Failed to apply the database migration:", error);
   } finally {
     client.close();
   }

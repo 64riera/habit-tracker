@@ -19,16 +19,18 @@ type OfflineFormActionConfig<TValues> = {
 };
 
 /**
- * Envuelve una server action de formulario (crear/editar) para que, sin conexión,
- * valide con el mismo schema en el cliente y encole la mutación en vez de fallar.
+ * Wraps a form server action (create/edit) so that, when offline, it
+ * validates with the same schema on the client and queues the mutation
+ * instead of failing.
  *
- * La ruta online sigue redirigiendo desde el propio server action (real navegación,
- * la misma que ya cachea el Service Worker) — `unstable_rethrow` deja pasar ese
- * `NEXT_REDIRECT` sin que nuestro try/catch lo confunda con un fallo de transporte,
- * que es el único caso que debe caer a la rama offline. Sin conexión NO navegamos:
- * un `router.push` a una ruta que el navegador no tiene cacheada puede fallar de
- * forma fea (pantalla de error del propio navegador); el indicador global de
- * sincronización ya avisa que quedó en cola.
+ * The online path still redirects from the server action itself (a real
+ * navigation, the same one the Service Worker already caches) —
+ * `unstable_rethrow` lets that `NEXT_REDIRECT` pass through without our
+ * try/catch confusing it with a transport failure, which is the only case
+ * that should fall to the offline branch. When offline we do NOT navigate:
+ * a `router.push` to a route the browser hasn't cached can fail ugly (the
+ * browser's own error screen); the global sync indicator already signals
+ * that it was queued.
  */
 export function useOfflineFormAction<TValues>(config: OfflineFormActionConfig<TValues>) {
   const { isOnline, runOrQueue } = useOffline();
@@ -40,8 +42,8 @@ export function useOfflineFormAction<TValues>(config: OfflineFormActionConfig<TV
           return await config.onlineAction(prevState, formData);
         } catch (err) {
           unstable_rethrow(err);
-          // Solo un fallo de transporte/conexión real llega aquí: la validación
-          // nunca lanza (usa safeParse) y un éxito ya redirigió más arriba.
+          // Only a real transport/connection failure reaches here: validation
+          // never throws (it uses safeParse) and a success already redirected above.
         }
       }
       const parsed = config.schema.safeParse(config.extractFields(formData));
@@ -59,7 +61,7 @@ type OfflineIdActionConfig = {
   buildMutation: () => QueuedMutation;
 };
 
-/** Igual que `useOfflineFormAction` pero para acciones sin campos (archivar, eliminar). */
+/** Same as `useOfflineFormAction` but for actions without fields (archive, delete). */
 export function useOfflineIdAction(config: OfflineIdActionConfig) {
   const { isOnline, runOrQueue } = useOffline();
 
@@ -70,7 +72,7 @@ export function useOfflineIdAction(config: OfflineIdActionConfig) {
         return;
       } catch (err) {
         unstable_rethrow(err);
-        // Fallo de transporte/conexión real: cae a la rama offline.
+        // Real transport/connection failure: falls to the offline branch.
       }
     }
     await runOrQueue(config.buildMutation());

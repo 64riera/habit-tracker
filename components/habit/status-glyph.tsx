@@ -1,8 +1,8 @@
 import { getStatusVisual } from "@/lib/habits/status-visual";
 import type { LogStatus } from "@/lib/habits/status";
 
-/** Versión de solo lectura (sin botón) del glyph de check de Hoy — mismo
- * vocabulario visual (✓ J – ❄ ×), usado en el registro de Historial. */
+/** Read-only version (no button) of the Today check glyph — same visual
+ * vocabulary (✓ J – ❄ ×), used in the History log. */
 export function StatusGlyph({ status, size = 20 }: { status: string; size?: number }) {
   const visual = getStatusVisual(status as LogStatus);
   return (

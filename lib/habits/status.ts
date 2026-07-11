@@ -2,7 +2,7 @@ import { periodKeyFor } from "./frequency";
 
 export type LogStatus = "done" | "partial" | "missed" | "justified" | "skipped" | "frozen";
 
-/** Comodines de racha disponibles por hábito y por mes calendario. */
+/** Streak freezes available per habit, per calendar month. */
 export const FREEZE_MONTHLY_ALLOWANCE = 1;
 
 const KEEPS_STREAK_STATUSES = new Set<LogStatus>(["done", "partial", "justified", "skipped", "frozen"]);
@@ -15,9 +15,10 @@ type SkipLimitHabit = {
 };
 
 /**
- * Fechas con status "skipped" que exceden skip_days_allowed dentro de su período
- * (semana o mes, según frequency_type). Esos días no deben contar como racha viva
- * ni como cumplimiento, a diferencia de un "skipped" dentro del límite.
+ * Dates with status "skipped" that exceed skip_days_allowed within their
+ * period (week or month, depending on frequency_type). Those days must not
+ * count toward a live streak or completion, unlike a "skipped" within the
+ * limit.
  */
 export function overLimitSkipDates(
   habit: SkipLimitHabit,
@@ -36,7 +37,7 @@ export function overLimitSkipDates(
   return overLimit;
 }
 
-/** ¿Este status en esta fecha mantiene la racha/cumplimiento vivo? */
+/** Does this status on this date keep the streak/completion alive? */
 export function keepsStreakOn(
   status: string | undefined,
   date: string,

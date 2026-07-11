@@ -15,7 +15,7 @@ type OfflineContextValue = {
   syncState: SyncState;
   pendingCount: number;
   pendingMutations: QueuedRecord[];
-  /** Intenta ejecutar la mutación; si falla o no hay conexión, la encola para reintentar al reconectar. */
+  /** Tries to run the mutation; if it fails or there's no connection, queues it for retry on reconnect. */
   runOrQueue: (mutation: QueuedMutation) => Promise<void>;
 };
 
@@ -41,7 +41,7 @@ function getServerConnectivitySnapshot() {
   return true;
 }
 
-/** Mejora progresiva: si el navegador soporta Background Sync, pide que nos despierte al reconectar. Silencioso si no. */
+/** Progressive enhancement: if the browser supports Background Sync, ask it to wake us up on reconnect. Silent if not. */
 async function tryRegisterBackgroundSync() {
   if (!("serviceWorker" in navigator) || !("SyncManager" in window)) return;
   try {
@@ -50,7 +50,7 @@ async function tryRegisterBackgroundSync() {
     };
     await registration.sync.register(BACKGROUND_SYNC_TAG);
   } catch {
-    // Best-effort: permiso denegado, o carrera con la activación del SW.
+    // Best-effort: permission denied, or a race with the SW activation.
   }
 }
 
@@ -96,7 +96,7 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
         setTimeout(() => setJustSynced(false), SYNCED_BANNER_MS);
       }
     } catch {
-      // Seguimos sin conexión de verdad: se reintentará en el próximo evento "online".
+      // Still genuinely offline: will retry on the next "online" event.
     } finally {
       draining.current = false;
       setIsDraining(false);
@@ -104,27 +104,27 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
   }, [notifyAchievements, push, refreshQueue, router, t]);
 
   useEffect(() => {
-    // Lee el estado de la cola (IndexedDB) al montar; no es estado derivable en render.
+    // Reads the queue state (IndexedDB) on mount; it's not derivable state during render.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     refreshQueue();
   }, [refreshQueue]);
 
-  // `drainQueue` se recrea cuando cambian sus dependencias (p. ej. `t` tras un
-  // router.refresh()); guardarlo en un ref evita que ese cambio de identidad
-  // por sí solo dispare el efecto de abajo, lo que causaba un ciclo:
-  // refresh -> nuevo `t` -> nuevo drainQueue -> efecto -> refresh -> ...
+  // `drainQueue` is recreated when its dependencies change (e.g. `t` after a
+  // router.refresh()); storing it in a ref prevents that identity change
+  // alone from triggering the effect below, which caused a cycle:
+  // refresh -> new `t` -> new drainQueue -> effect -> refresh -> ...
   const drainQueueRef = useRef(drainQueue);
   useEffect(() => {
     drainQueueRef.current = drainQueue;
   });
 
   useEffect(() => {
-    // Reintenta la cola cuando el navegador recupera conexión (evento externo real).
+    // Retries the queue when the browser regains connectivity (real external event).
     if (isOnline) drainQueueRef.current();
   }, [isOnline]);
 
   useEffect(() => {
-    // Mejora progresiva: si el Service Worker nos avisa (Background Sync), reintenta también.
+    // Progressive enhancement: if the Service Worker notifies us (Background Sync), retry as well.
     if (!("serviceWorker" in navigator)) return;
     function handleMessage(event: MessageEvent) {
       if (event.data?.type === "drain-queue") drainQueueRef.current();

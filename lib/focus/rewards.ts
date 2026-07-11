@@ -9,7 +9,7 @@ export type FocusRewardTier =
   | "forest_25"
   | "forest_50";
 
-/** Eje 1: tamaño del árbol, por horas de enfoque acumuladas (de por vida). */
+/** Axis 1: tree size, by cumulative focus hours (lifetime). */
 export const HOUR_TIERS: { tier: FocusRewardTier; hours: number }[] = [
   { tier: "seed", hours: 0 },
   { tier: "sprout", hours: 1 },
@@ -18,9 +18,9 @@ export const HOUR_TIERS: { tier: FocusRewardTier; hours: number }[] = [
   { tier: "mature_tree", hours: 40 },
 ];
 
-/** Eje 2: tamaño del bosque, por cantidad de sesiones completadas. Un eje
- * independiente de las horas — sesiones cortas frecuentes también hacen
- * crecer el bosque, no solo sesiones largas. */
+/** Axis 2: forest size, by number of completed sessions. An axis
+ * independent from hours — frequent short sessions also grow the forest,
+ * not just long ones. */
 export const SESSION_COUNT_TIERS: { tier: FocusRewardTier; sessions: number }[] = [
   { tier: "grove_3", sessions: 3 },
   { tier: "grove_10", sessions: 10 },
@@ -29,10 +29,10 @@ export const SESSION_COUNT_TIERS: { tier: FocusRewardTier; sessions: number }[] 
 ];
 
 /**
- * Cómputo puro (sin I/O) de qué tiers se desbloquean, mirror de
- * `computeNewAchievements`. Se invoca solo justo después de que una sesión
- * pasa a "completed" (nunca con 0 sesiones completadas todavía), así que el
- * umbral de 0 horas de "seed" no se desbloquea prematuramente.
+ * Pure computation (no I/O) of which tiers unlock, mirroring
+ * `computeNewAchievements`. Only invoked right after a session transitions
+ * to "completed" (never with 0 completed sessions yet), so the "seed"
+ * threshold of 0 hours doesn't unlock prematurely.
  */
 export function computeNewRewardTiers({
   totalCompletedFocusSeconds,

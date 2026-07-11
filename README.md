@@ -29,17 +29,17 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Correr con Docker
+## Running with Docker
 
-Requiere que exista `.env.local` (mismo archivo que usas en desarrollo, con `APP_JWT_SECRET`). La autenticación es por cuenta (usuario/contraseña, `/signup`), no por variable de entorno.
+Requires a `.env.local` file to exist (the same one you use in development, with `APP_JWT_SECRET`). Authentication is per-account (username/password, `/signup`), not via environment variable.
 
 ```bash
 docker compose up --build
 ```
 
-Esto compila la imagen, aplica las migraciones de `drizzle/` contra una base SQLite dentro del volumen persistente `just-go-data`, y levanta la app en [http://localhost:3000](http://localhost:3000). Los datos sobreviven a `docker compose down` y a reconstrucciones de la imagen; solo se pierden con `docker compose down -v`.
+This builds the image, applies the migrations from `drizzle/` against a SQLite database inside the persistent `just-go-data` volume, and starts the app at [http://localhost:3000](http://localhost:3000). Data survives `docker compose down` and image rebuilds; it's only lost with `docker compose down -v`.
 
-Si prefieres usar Turso remoto en vez del SQLite local del volumen, define `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN` en `.env.local` y quita la variable `TURSO_DATABASE_URL` de `docker-compose.yml`.
+If you'd rather use remote Turso instead of the volume's local SQLite, define `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN` in `.env.local` and remove the `TURSO_DATABASE_URL` variable from `docker-compose.yml`.
 
 ## Deploy on Vercel
 

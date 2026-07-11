@@ -21,7 +21,7 @@ export type FocusStateView = {
   overCap: boolean;
   dueForBreak: boolean;
   breakOver: boolean;
-  /** Segundos restantes de la pausa activa en curso; `null` si no está en pausa. */
+  /** Seconds remaining in the current active break; `null` if not on break. */
   breakRemainingSeconds: number | null;
 };
 
@@ -53,10 +53,10 @@ function nextBreakThresholdSeconds(session: FocusSessionRow): number | null {
 }
 
 /**
- * Cómputo puro (sin I/O) del estado derivado de una sesión en un instante `now`.
- * El servidor nunca guarda "tiempo transcurrido": esto se recalcula siempre a
- * partir de timestamps, para que una sesión "siga corriendo" aunque nadie haya
- * tenido la pestaña abierta mientras tanto.
+ * Pure computation (no I/O) of a session's derived state at instant `now`.
+ * The server never stores "elapsed time": this is always recomputed from
+ * timestamps, so a session "keeps running" even if nobody had the tab open
+ * in the meantime.
  */
 export function computeFocusState(session: FocusSessionRow, now: Date): FocusStateView {
   const nowMs = now.getTime();
@@ -69,11 +69,12 @@ export function computeFocusState(session: FocusSessionRow, now: Date): FocusSta
   const overCap = activeSeconds >= capSeconds;
   const remainingSeconds = session.mode === "countdown" ? Math.max(0, capSeconds - activeSeconds) : null;
 
-  // Un umbral de pausa solo es "debido" si cae antes del tope de la sesión —
-  // si ya coincide con el tope o lo supera, gana el cierre por tope, no la
-  // pausa. La comparación usa `activeSeconds` "ingenuo" (como si nunca hubiera
-  // habido pausas) solo para detectar que el umbral ya quedó atrás; el valor
-  // exacto en que ocurrió se reconstruye aparte en reconcileFocusSession.
+  // A break threshold is only "due" if it falls before the session's cap —
+  // if it already coincides with or exceeds the cap, the cap closure wins,
+  // not the break. The comparison uses "naive" `activeSeconds` (as if there
+  // had never been any breaks) only to detect that the threshold has
+  // already passed; the exact value at which it occurred is reconstructed
+  // separately in reconcileFocusSession.
   const threshold = nextBreakThresholdSeconds(session);
   const dueForBreak =
     session.status === "running" && threshold !== null && activeSeconds >= threshold && threshold < capSeconds;
@@ -97,11 +98,11 @@ export type FocusReconciliation = { changed: boolean; session: FocusSessionRow }
 const MAX_RECONCILE_STEPS = 1000;
 
 /**
- * Recalcula el estado de una sesión contra `now`, aplicando en cadena todas las
- * transiciones que "debieron" haber ocurrido mientras nadie miraba (pausas
- * activas cruzadas, tope de tiempo alcanzado). Es un loop, no un solo `if`,
- * porque tras una ausencia larga pueden faltar varios saltos antes de llegar
- * al estado real. Termina siempre porque `overCap` es eventualmente cierto.
+ * Recomputes a session's state against `now`, applying in a chain all the
+ * transitions that "should have" happened while nobody was looking (active
+ * breaks crossed, time cap reached). It's a loop, not a single `if`,
+ * because after a long absence several hops may be missing before reaching
+ * the real state. It always terminates because `overCap` eventually becomes true.
  */
 export function reconcileFocusSession(row: FocusSessionRow, now: Date): FocusReconciliation {
   if (row.status === "completed" || row.status === "cancelled") {
@@ -114,10 +115,10 @@ export function reconcileFocusSession(row: FocusSessionRow, now: Date): FocusRec
   for (let step = 0; step < MAX_RECONCILE_STEPS; step++) {
     const state = computeFocusState(session, now);
 
-    // Las pausas pendientes se resuelven antes que el cierre por tope: un
-    // umbral de pausa más cercano en el tiempo "ocurrió" antes que el tope,
-    // aunque el cálculo ingenuo de `activeSeconds` (que asume que la sesión
-    // corrió sin pausas) ya luzca por encima de ambos a la vez.
+    // Pending breaks are resolved before the cap closure: a break
+    // threshold closer in time "occurred" before the cap, even though the
+    // naive computation of `activeSeconds` (which assumes the session ran
+    // with no breaks) may already look like it's past both at once.
     if (session.status === "running" && state.dueForBreak) {
       const threshold = nextBreakThresholdSeconds(session)!;
       const isReminderOnly = (session.breakDurationMinutes ?? 0) === 0;

@@ -8,30 +8,29 @@ import { addDays, parseISODate } from "@/lib/date";
 import { cn } from "@/lib/utils";
 
 /**
- * Navega un día a la vez desde Hoy — nunca hacia el futuro (el botón
- * siguiente se oculta al llegar a hoy). Reutiliza el mismo mecanismo de
- * check-in parametrizado por fecha que ya existe (HabitCheckRow, LogEditor,
- * RoutineQuickActions ya reciben `date` y no distinguen si es hoy u otro
- * día), así que registrar hábitos de un día anterior es la misma UI de
- * siempre, solo con la fecha cambiada — sin pantalla ni formulario nuevos.
+ * Navigates one day at a time from Today — never into the future (the next
+ * button hides once today is reached). Reuses the same date-parameterized
+ * check-in mechanism that already exists (HabitCheckRow, LogEditor,
+ * RoutineQuickActions already receive `date` and don't distinguish whether
+ * it's today or another day), so logging habits for a previous day is the
+ * same UI as always, just with the date changed — no new screen or form.
  *
- * `shownDate` es estado optimista: aunque este componente vive fuera del
- * <Suspense> que envuelve la lista de hábitos (page.tsx), sigue siendo
- * parte del árbol de Server Components — sin este estado, su propio texto
- * (label, flecha "siguiente", píldora "Volver a hoy") solo se actualizaría
- * después del round-trip al servidor, el mismo retraso visible que ya se
- * evitó para la lista. Al mantenerlo en estado de cliente, cambia en el
- * mismo tick del click; se resincroniza con la prop `date` cuando el
- * servidor confirma (por si se llegó por otra vía, como "atrás" del
- * navegador).
+ * `shownDate` is optimistic state: even though this component lives outside
+ * the <Suspense> that wraps the habit list (page.tsx), it's still part of
+ * the Server Components tree — without this state, its own text (label,
+ * "next" arrow, "Back to today" pill) would only update after the
+ * round-trip to the server, the same visible delay already avoided for the
+ * list. By keeping it in client state, it changes on the same tick as the
+ * click; it resyncs with the `date` prop once the server confirms (in case
+ * it was reached another way, like the browser's "back").
  */
 export function DaySwitcher({ date, today }: { date: string; today: string }) {
   const { t, locale } = useI18n();
   const [shownDate, setShownDate] = useState(date);
-  // Resincroniza durante el render (no en un efecto) si la prop confirmada
-  // por el servidor cambió por otra vía que no fue un click acá (link
-  // directo, "atrás" del navegador) — el patrón recomendado por React para
-  // derivar estado de una prop sin el frame extra de un useEffect.
+  // Resyncs during render (not in an effect) if the prop confirmed by the
+  // server changed through some way other than a click here (direct link,
+  // browser "back") — the pattern React recommends for deriving state from
+  // a prop without the extra frame of a useEffect.
   const [syncedDate, setSyncedDate] = useState(date);
   if (date !== syncedDate) {
     setSyncedDate(date);
@@ -51,12 +50,12 @@ export function DaySwitcher({ date, today }: { date: string; today: string }) {
       }).format(parseISODate(shownDate));
 
   return (
-    // h-7: alto fijo independiente de qué hijos haya — la píldora "Volver a
-    // hoy" (con borde + padding) es más alta que el label de solo texto y
-    // que el área de layout de las flechas (que usan -m-2/p-2 para ampliar
-    // el hit target sin sumar alto), así que sin un alto reservado la fila
-    // crece al aparecer la píldora y empuja hacia abajo el % y la racha de
-    // TodaySummaryDisplay, que van justo debajo.
+    // h-7: fixed height regardless of which children are present — the
+    // "Back to today" pill (with border + padding) is taller than the
+    // text-only label and than the arrows' layout area (which use -m-2/p-2
+    // to expand the hit target without adding height), so without a
+    // reserved height the row grows when the pill appears and pushes down
+    // the % and streak from TodaySummaryDisplay, which sit right below.
     <div className="mb-4 flex h-7 items-center gap-1 md:mb-5">
       <Link
         href={`/?fecha=${prev}`}

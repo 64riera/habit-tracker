@@ -1,20 +1,21 @@
 import { addDays } from "@/lib/date";
 
-/** Tope defensivo para el recorrido hacia atrás — evita un loop infinito si
- * `goalMinutes` fuera 0 o negativo (nunca debería pasar, `dailyGoalMinutes`
- * tiene un mínimo mayor a 0 en el formulario de ajustes de enfoque). */
+/** Defensive cap for the backward walk — avoids an infinite loop if
+ * `goalMinutes` were 0 or negative (should never happen, `dailyGoalMinutes`
+ * has a minimum greater than 0 in the focus settings form). */
 const MAX_LOOKBACK_DAYS = 3650;
 
 /**
- * Racha de días consecutivos cumpliendo el objetivo diario de enfoque, pura
- * (sin I/O): `dailyMinutesByDate` solo necesita traer los días con al menos
- * una sesión *completada* (canceladas y la sesión en curso no cuentan, ver
- * decisión de producto en el historial de enfoque) — un día ausente del mapa
- * se trata igual que un día con 0 minutos.
+ * Streak of consecutive days meeting the daily focus goal, pure (no I/O):
+ * `dailyMinutesByDate` only needs to bring the days with at least one
+ * *completed* session (cancelled sessions and the in-progress one don't
+ * count, see the product decision in the focus history) — a day absent
+ * from the map is treated the same as a day with 0 minutes.
  *
- * `today` no cuenta como corte de racha si todavía no alcanzó el objetivo:
- * el día sigue en curso (según el cutoff de día ya aplicado por el caller),
- * así que la racha actual arranca en ayer si hoy aún no cumple.
+ * `today` doesn't count as breaking the streak if it hasn't reached the
+ * goal yet: the day is still in progress (per the day cutoff already
+ * applied by the caller), so the current streak starts yesterday if today
+ * doesn't meet the goal yet.
  */
 export function computeFocusStreak(
   dailyMinutesByDate: Map<string, number>,

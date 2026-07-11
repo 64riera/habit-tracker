@@ -37,13 +37,14 @@ export function TodayClient({
   const { setSummary } = useTodaySummary();
   const isToday = date === today;
 
-  // Memoizados sobre `pendingMutations`: pendingHabit*() arman un array/Map/Set
-  // nuevo en cada llamada, y sin memoizar acá esa identidad nueva se propagaba
-  // a displayHabits en cada render (ver deps más abajo), lo que reabría el
-  // useEffect que reporta el resumen a TodaySummaryContext, cuyo setState volvía
-  // a renderizar este componente (consumidor del mismo contexto) — un loop de
-  // renders infinito ("Maximum update depth exceeded"), visible sobre todo con
-  // pendingMutations vacío en cuentas nuevas sin hábitos.
+  // Memoized over `pendingMutations`: pendingHabit*() build a new
+  // array/Map/Set on every call, and without memoizing here that new
+  // identity propagated to displayHabits on every render (see deps below),
+  // which reopened the useEffect that reports the summary to
+  // TodaySummaryContext, whose setState re-rendered this component (a
+  // consumer of the same context) — an infinite render loop ("Maximum update
+  // depth exceeded"), visible especially with empty pendingMutations on new
+  // accounts with no habits.
   const pendingNewHabits = useMemo(() => pendingHabitCreates(pendingMutations), [pendingMutations]);
   const pendingEdits = useMemo(() => pendingHabitUpdates(pendingMutations), [pendingMutations]);
   const pendingArchiveIds = useMemo(() => pendingHabitArchiveIds(pendingMutations), [pendingMutations]);
@@ -62,22 +63,21 @@ export function TodayClient({
 
   const total = displayHabits.length;
 
-  // El resumen (%, racha) se calcula acá porque depende de displayHabits
-  // (mezcla server + cola offline), pero se muestra en TodaySummaryDisplay,
-  // que vive fuera del <Suspense key={date}> de page.tsx y por eso
-  // sobrevive al cambiar de día — reportarlo por contexto en vez de
-  // renderizarlo acá es lo que le permite animar la transición en vez de
-  // desaparecer dentro del skeleton de carga.
+  // The summary (%, streak) is computed here because it depends on
+  // displayHabits (server + offline queue merged), but it's shown in
+  // TodaySummaryDisplay, which lives outside page.tsx's <Suspense
+  // key={date}> and therefore survives across day changes — reporting it
+  // through context instead of rendering it here is what lets it animate
+  // the transition instead of disappearing inside the loading skeleton.
   //
-  // startTransition acá es obligatorio, no cosmético: este componente
-  // termina de montarse como parte de la navegación (el <Suspense
-  // key={date}> resolviendo), que Next.js ya maneja como una transición
-  // pendiente. Sin marcar este setState como parte de la misma transición,
-  // React lo trata como una actualización urgente que compite con esa
-  // transición en curso — en la práctica, el router nunca llegaba a
-  // confirmar la navegación (la URL no cambiaba) porque quedaba
-  // compitiendo con esta actualización de un componente fuera del límite
-  // de Suspense.
+  // startTransition here is mandatory, not cosmetic: this component finishes
+  // mounting as part of the navigation (the <Suspense key={date}>
+  // resolving), which Next.js already treats as a pending transition.
+  // Without marking this setState as part of the same transition, React
+  // treats it as an urgent update that competes with that ongoing
+  // transition — in practice, the router never got to confirm the
+  // navigation (the URL wouldn't change) because it kept competing with
+  // this update from a component outside the Suspense boundary.
   useEffect(() => {
     const done = displayHabits.filter((h) => h.todayLog?.status === "done").length;
     const inProgress = displayHabits.filter((h) => h.todayLog?.status === "partial").length;
@@ -114,11 +114,12 @@ export function TodayClient({
         </div>
       ) : (
         <div className="flex flex-col gap-4 md:gap-[22px]">
-          {/* Sin necesidad de key={date} aquí: TodayClient entero se remonta al
-              cambiar de fecha porque vive bajo el <Suspense key={date}> de
-              page.tsx, así que HabitCheckRow/RoutineQuickActions ya parten
-              de estado fresco (status/value/editorOpen, el Set optimista)
-              sin repetir ese mecanismo a este nivel. */}
+          {/* No need for key={date} here: TodayClient as a whole remounts
+              when the date changes because it lives under page.tsx's
+              <Suspense key={date}>, so HabitCheckRow/RoutineQuickActions
+              already start from fresh state (status/value/editorOpen, the
+              optimistic Set) without repeating that mechanism at this
+              level. */}
           <RoutineQuickActions routines={routines} date={date} />
 
           <div className="flex flex-col">

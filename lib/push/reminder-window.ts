@@ -4,13 +4,13 @@ function toMinutes(hhmm: string): number {
 }
 
 /**
- * ¿Ya pasó (o es) la hora de un recordatorio "HH:MM", dentro de la ventana de
- * tolerancia `windowMinutes` hacia atrás? La diferencia se calcula módulo
- * 1440 (minutos del día) para que un recordatorio a las 23:58 siga
- * detectándose aunque `now` ya haya cruzado la medianoche (00:05). Se usa en
- * app/api/cron/reminders/route.ts, que corre cada `windowMinutes` minutos:
- * un recordatorio "due" en una corrida no debe volver a disparar en la
- * siguiente, por eso la ventana mira solo hacia atrás, nunca hacia adelante.
+ * Has the time for a "HH:MM" reminder already passed (or is it now), within
+ * the `windowMinutes` tolerance window looking backward? The difference is
+ * computed modulo 1440 (minutes in a day) so a reminder at 23:58 is still
+ * detected even if `now` has already crossed midnight (00:05). Used in
+ * app/api/cron/reminders/route.ts, which runs every `windowMinutes` minutes:
+ * a reminder that's "due" in one run shouldn't fire again in the next, which
+ * is why the window only looks backward, never forward.
  */
 export function isReminderDue(reminderHHMM: string, nowHHMM: string, windowMinutes: number): boolean {
   const diff = (toMinutes(nowHHMM) - toMinutes(reminderHHMM) + 1440) % 1440;

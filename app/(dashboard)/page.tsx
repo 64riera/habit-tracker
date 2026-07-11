@@ -12,9 +12,9 @@ import { TodayHabits } from "./today-habits";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-/** Solo se puede ver/registrar hoy o un día anterior — nunca el futuro. Una
- * fecha inválida o futura en el query cae de vuelta a hoy en silencio, en
- * vez de propagar el valor sucio hacia las queries. */
+/** You can only view/log today or a past day — never the future. An invalid
+ * or future date in the query silently falls back to today, instead of
+ * propagating the dirty value into the queries. */
 function resolveViewedDate(requested: string | undefined, today: string): string {
   if (requested && ISO_DATE.test(requested) && requested <= today) return requested;
   return today;
@@ -40,14 +40,14 @@ export default async function TodayPage({
           headerAccessory={<FocusHeaderChip session={focusHeader.session} soundEnabled={focusHeader.soundEnabled} />}
         />
         <DaySwitcher date={date} today={today} />
-        {/* TodaySummaryDisplay vive fuera del <Suspense>: al cambiar de día no
-            se remonta, así que el % y la racha no cargan de nuevo — se
-            quedan mostrando el valor del día anterior y transicionan al
-            nuevo con scramble de texto una vez que TodayHabits los reporta. */}
+        {/* TodaySummaryDisplay lives outside the <Suspense>: it doesn't
+            remount when the day changes, so the % and streak don't reload —
+            they keep showing the previous day's value and transition to the
+            new one with a text scramble once TodayHabits reports them. */}
         <TodaySummaryDisplay />
-        {/* key={date}: fuerza un límite de Suspense nuevo por cada fecha para
-            que la lista de hábitos muestre el skeleton mientras carga en vez
-            de dejar el contenido del día anterior congelado en pantalla. */}
+        {/* key={date}: forces a new Suspense boundary per date so the habit
+            list shows the skeleton while loading instead of leaving the
+            previous day's content frozen on screen. */}
         <Suspense key={date} fallback={<SkeletonHoyRows />}>
           <TodayHabits date={date} today={today} />
         </Suspense>

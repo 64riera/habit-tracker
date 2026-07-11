@@ -1,7 +1,7 @@
 import { Skeleton, SkeletonContentHeader } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-// Anchos de los 5 filtros reales (hábito, categoría, rango, CSV, JSON) — ver
+// Widths of the 5 real filters (habit, category, range, CSV, JSON) — see
 // historial-client.tsx.
 const FILTER_WIDTHS = ["w-24", "w-28", "w-20", "w-20", "w-20"];
 

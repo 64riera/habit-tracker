@@ -4,10 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Fade + slide-in la primera vez que el elemento entra en viewport.
- * IntersectionObserver en vez de un listener de scroll (ver AGENTS del
- * skill de diseño: ningún `window.addEventListener("scroll")`).
- * `prefers-reduced-motion` colapsa directo al estado final, sin transición.
+ * Fade + slide-in the first time the element enters the viewport.
+ * IntersectionObserver instead of a scroll listener (see the design
+ * skill's AGENTS: no `window.addEventListener("scroll")`).
+ * `prefers-reduced-motion` collapses straight to the final state, no
+ * transition.
  */
 export function Reveal({
   children,

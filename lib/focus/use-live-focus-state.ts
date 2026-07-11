@@ -9,16 +9,16 @@ const TICK_MS = 1000;
 type ResyncResult = { session: FocusSessionRow | null; unlockedTiers: FocusRewardTier[] };
 
 /**
- * Ticking puramente cosmético: el `setInterval` de acá nunca escribe nada,
- * solo re-renderiza los dígitos en memoria a partir de la última fila que
- * mandó el servidor. Lo que hace que la sesión "siga corriendo" de verdad
- * es `resync` — se llama al montar, al recuperar foco/conexión, y cada vez
- * que el cálculo local detecta que ya debió ocurrir una transición (pausa
- * activa, tope alcanzado), para que el status mostrado nunca sea una
- * transición decidida solo por el cliente, sino siempre la que confirmó el
- * servidor. `onUnlocked` avisa si ese mismo resync fue el momento en que la
- * reconciliación completó la sesión y desbloqueó recompensas (p. ej. el
- * usuario mira la cuenta regresiva llegar a cero sin tocar "Terminar").
+ * Purely cosmetic ticking: the `setInterval` here never writes anything,
+ * it just re-renders the digits in memory from the last row the server
+ * sent. What actually makes the session "keep running" is `resync` — it's
+ * called on mount, when focus/connection is regained, and every time the
+ * local computation detects that a transition must have already occurred
+ * (active break, cap reached), so that the displayed status is never a
+ * transition decided by the client alone, but always the one the server
+ * confirmed. `onUnlocked` notifies if that same resync was the moment
+ * reconciliation completed the session and unlocked rewards (e.g. the
+ * user watches the countdown reach zero without tapping "Finish").
  */
 export function useLiveFocusState(
   initialSession: FocusSessionRow | null,
@@ -33,11 +33,11 @@ export function useLiveFocusState(
     onUnlockedRef.current = onUnlocked;
   }, [onUnlocked]);
 
-  // Ajuste de estado durante el render (patrón documentado de React para
-  // "resetear" estado derivado de una prop) en vez de un efecto separado:
-  // si el server-render mandó una fila distinta (p. ej. tras un
-  // router.refresh()), se adopta de inmediato, sin un frame extra de por
-  // medio ni depender de otro effect para sincronizarla.
+  // State adjustment during render (React's documented pattern for
+  // "resetting" state derived from a prop) instead of a separate effect:
+  // if the server-render sent a different row (e.g. after a
+  // router.refresh()), it's adopted immediately, with no extra frame in
+  // between and without depending on another effect to sync it.
   const [prevInitialSession, setPrevInitialSession] = useState(initialSession);
   if (initialSession !== prevInitialSession) {
     setPrevInitialSession(initialSession);

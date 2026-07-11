@@ -17,8 +17,8 @@ import type { AchievementType } from "@/lib/achievements";
 export type ReplayResult = { unlocked?: AchievementType[]; freezeQuotaExhausted?: boolean } | void;
 
 /**
- * Mapped type sobre el discriminante de `QueuedMutation`: agregar una variante
- * sin registrar aquí su replay es un error de compilación (Open/Closed).
+ * Mapped type over the `QueuedMutation` discriminant: adding a variant
+ * without registering its replay here is a compile-time error (Open/Closed).
  */
 type Registry = {
   [K in QueuedMutation["type"]]: (mutation: Extract<QueuedMutation, { type: K }>) => Promise<ReplayResult>;
@@ -31,8 +31,8 @@ const registry: Registry = {
     const result = await freezeHabitDay(m.habitId, m.date);
     return result.ok ? { unlocked: result.unlocked } : { freezeQuotaExhausted: true };
   },
-  // El resultado `{error?}` de los *Core solo tiene sentido en la ruta online (formulario
-  // recién validado en el cliente): en el replay offline se descarta a propósito.
+  // The `{error?}` result from the *Core functions only makes sense on the online path
+  // (a form just validated on the client): it's deliberately discarded in the offline replay.
   createHabit: async (m) => {
     await createHabitCore(m.id, m.values);
   },

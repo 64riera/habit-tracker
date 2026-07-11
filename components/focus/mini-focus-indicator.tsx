@@ -13,14 +13,14 @@ import { LIVE_STATUSES, type FocusSessionRow } from "@/lib/focus/compute";
 import { hasFocusHeaderSlot } from "@/lib/focus/header-slot";
 
 /**
- * Pastilla flotante visible en cualquier ruta del dashboard salvo /focus
- * (ahí ya se ve la sesión completa) y las de `hasFocusHeaderSlot` (esas
- * pantallas muestran el mismo estado como `FocusHeaderChip` en su propio
- * header, que además es quien dispara ahí las alertas de sonido/título —
- * evita que ambos estén montados a la vez y las dupliquen). Solo monta el
- * hook de ticking si hay una sesión activa de entrada — si no, no hay
- * `setInterval` corriendo para siempre en cada página de la app sin nada
- * que mostrar.
+ * Floating pill visible on any dashboard route except /focus (the full
+ * session is already visible there) and the ones in `hasFocusHeaderSlot`
+ * (those screens show the same state as `FocusHeaderChip` in their own
+ * header, which is also what triggers the sound/title alerts there —
+ * this prevents both from being mounted at the same time and duplicating
+ * them). Only mounts the ticking hook if there's an active session to
+ * begin with — otherwise there'd be a `setInterval` running forever on
+ * every page of the app with nothing to show.
  */
 export function MiniFocusIndicator({
   session,

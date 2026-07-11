@@ -17,7 +17,7 @@ describe("computeFocusStreak", () => {
     const days = new Map([
       ["2026-07-05", 60],
       ["2026-07-06", 60],
-      // 07-07 falta (0 min): corta la racha
+      // 07-07 is missing (0 min): breaks the streak
       ["2026-07-08", 60],
       ["2026-07-09", 60],
     ]);
@@ -32,7 +32,7 @@ describe("computeFocusStreak", () => {
       ["2026-07-09", 59],
     ]);
     const { current } = computeFocusStreak(days, 60, "2026-07-09");
-    // Hoy no cumple (59 &lt; 60), así que la racha actual arranca en ayer.
+    // Today doesn't meet the goal (59 &lt; 60), so the current streak starts yesterday.
     expect(current).toBe(1);
   });
 
@@ -44,7 +44,7 @@ describe("computeFocusStreak", () => {
     const days = new Map([
       ["2026-07-07", 60],
       ["2026-07-08", 60],
-      // hoy: sin sesiones completadas todavía (la que está en curso no cuenta)
+      // today: no completed sessions yet (the one in progress doesn't count)
     ]);
     const { current } = computeFocusStreak(days, 60, "2026-07-09");
     expect(current).toBe(2);
@@ -56,7 +56,7 @@ describe("computeFocusStreak", () => {
       ["2026-06-02", 60],
       ["2026-06-03", 60],
       ["2026-06-04", 60],
-      // corte
+      // gap
       ["2026-07-09", 60],
     ]);
     const { current, longest } = computeFocusStreak(days, 60, "2026-07-09");

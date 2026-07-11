@@ -3,9 +3,9 @@
 import { useI18n } from "@/lib/i18n/client";
 import type { MoodCorrelation, WorstWeekday } from "@/lib/queries/patterns";
 
-/** Nombre largo del día ISO (1=lunes..7=domingo) en el locale activo. */
+/** Long name of the ISO weekday (1=Monday..7=Sunday) in the active locale. */
 function weekdayName(weekday: number, locale: string): string {
-  // 2024-01-01 fue lunes; sumar (weekday - 1) días da cada día de esa semana de referencia.
+  // 2024-01-01 was a Monday; adding (weekday - 1) days gives each day of that reference week.
   const reference = new Date(2024, 0, 1 + (weekday - 1));
   return new Intl.DateTimeFormat(locale === "es" ? "es-ES" : "en-US", { weekday: "long" }).format(
     reference

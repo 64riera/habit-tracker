@@ -4,13 +4,13 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      # Reutiliza tus variables de desarrollo (APP_JWT_SECRET, etc.).
-      # Si quieres Turso remoto en vez de SQLite local, define aquí
-      # TURSO_DATABASE_URL / TURSO_AUTH_TOKEN sin comentar.
+      # Reuses your development variables (APP_JWT_SECRET, etc.).
+      # If you want remote Turso instead of local SQLite, define
+      # TURSO_DATABASE_URL / TURSO_AUTH_TOKEN here, uncommented.
       - .env.local
     environment:
-      # Sobrescribe cualquier file:./local.db de .env.local para que la base
-      # viva en el volumen persistente en vez de dentro del contenedor.
+      # Overrides any file:./local.db from .env.local so the database
+      # lives in the persistent volume instead of inside the container.
       TURSO_DATABASE_URL: file:/app/data/local.db
     volumes:
       - just-go-data:/app/data

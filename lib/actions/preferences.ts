@@ -11,9 +11,9 @@ import type { ThemePreference } from "@/lib/queries/user";
 
 const YEAR_SECONDS = 60 * 60 * 24 * 365;
 
-/** Antes de tener sesión (selector en login/signup) la elección se guarda
- * como cookie puente. Con sesión (selector en Ajustes) se guarda en la
- * cuenta directamente, igual que `setThemePreference`. */
+/** Before having a session (selector in login/signup) the choice is saved
+ * as a bridge cookie. With a session (selector in Settings) it's saved
+ * directly on the account, same as `setThemePreference`. */
 export async function setLocale(locale: string) {
   if (!isLocale(locale)) return;
   const userId = await getCurrentUserIdOrNull();
@@ -30,7 +30,7 @@ export async function setDayCutoffHour(hour: number) {
   store.set("justgo_day_cutoff", String(hour), { path: "/", maxAge: YEAR_SECONDS });
 }
 
-/** Guarda la preferencia de tema en la cuenta, para que siga al usuario entre dispositivos. */
+/** Saves the theme preference on the account, so it follows the user across devices. */
 export async function setThemePreference(theme: string) {
   if (theme !== "light" && theme !== "dark" && theme !== "system") return;
   const userId = await getCurrentUserId();
@@ -40,9 +40,9 @@ export async function setThemePreference(theme: string) {
     .where(eq(users.id, userId));
 }
 
-/** Guarda la zona horaria IANA detectada en el navegador (ver
- * `timezone-sync.tsx`) — necesaria para saber a qué hora UTC corresponde el
- * horario local de un recordatorio, ver `app/api/cron/reminders/route.ts`. */
+/** Saves the IANA timezone detected in the browser (see
+ * `timezone-sync.tsx`) — needed to know which UTC time a reminder's local
+ * time corresponds to, see `app/api/cron/reminders/route.ts`. */
 export async function setTimezone(timezone: string) {
   try {
     new Intl.DateTimeFormat(undefined, { timeZone: timezone });
@@ -53,9 +53,9 @@ export async function setTimezone(timezone: string) {
   await db.update(users).set({ timezone }).where(eq(users.id, userId));
 }
 
-/** Marca que ya se le mostró el modal de sugerencia de instalación y decidió
- * algo (instalar o no) — no importa cuál, solo que no hay que volver a
- * preguntar. Ver install-suggestion-modal.tsx. */
+/** Marks that the install suggestion modal was already shown and they
+ * decided something (install or not) — doesn't matter which, just that
+ * there's no need to ask again. See install-suggestion-modal.tsx. */
 export async function setInstallPromptSeen() {
   const userId = await getCurrentUserId();
   await db.update(users).set({ installPromptSeen: true }).where(eq(users.id, userId));

@@ -4,11 +4,11 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
 const SESSION_COOKIE = "justgo_session";
-const MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 días
+const MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
 function secretKey() {
   const secret = process.env.APP_JWT_SECRET;
-  if (!secret) throw new Error("APP_JWT_SECRET no está configurado");
+  if (!secret) throw new Error("APP_JWT_SECRET is not configured");
   return new TextEncoder().encode(secret);
 }
 
@@ -47,21 +47,21 @@ export async function hasValidSession(): Promise<boolean> {
 }
 
 /**
- * Id del usuario autenticado actual. Solo debe llamarse detras del proxy (rutas ya protegidas).
- * Memoizado por request con `cache()`: se invoca varias veces por página/acción
- * y no vale la pena releer y re-verificar la cookie cada vez.
+ * Id of the currently authenticated user. Should only be called behind the proxy (already-protected routes).
+ * Memoized per request with `cache()`: it's invoked several times per page/action
+ * and it's not worth re-reading and re-verifying the cookie every time.
  */
 export const getCurrentUserId = cache(async (): Promise<string> => {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
-  if (!token) throw new Error("No hay sesión activa");
+  if (!token) throw new Error("No active session");
   const { payload } = await jwtVerify(token, secretKey());
-  if (typeof payload.sub !== "string") throw new Error("Sesión inválida");
+  if (typeof payload.sub !== "string") throw new Error("Invalid session");
   return payload.sub;
 });
 
-/** Como getCurrentUserId(), pero para lugares como el layout raiz que tambien
- * renderizan /login y /signup, donde puede no haber sesion. */
+/** Like getCurrentUserId(), but for places like the root layout that also
+ * render /login and /signup, where there may be no session. */
 export async function getCurrentUserIdOrNull(): Promise<string | null> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
@@ -74,7 +74,7 @@ export async function getCurrentUserIdOrNull(): Promise<string | null> {
   }
 }
 
-/** Evita open redirects: solo permite rutas internas (empiezan con "/"). */
+/** Avoids open redirects: only allows internal routes (starting with "/"). */
 export function safeNextPath(next: string): string {
   return next.startsWith("/") ? next : "/";
 }

@@ -7,20 +7,20 @@ import { toISODate } from "@/lib/date";
 async function main() {
   const username = process.argv[2];
   if (!username) {
-    console.error("Uso: npm run seed -- <username>  (crea la cuenta primero desde /signup)");
+    console.error("Usage: npm run seed -- <username>  (create the account first from /signup)");
     process.exit(1);
   }
 
   const [user] = await db.select().from(users).where(eq(users.username, username)).limit(1);
   if (!user) {
-    console.error(`No existe el usuario "${username}". Crea la cuenta primero desde /signup.`);
+    console.error(`User "${username}" doesn't exist. Create the account first from /signup.`);
     process.exit(1);
   }
   const userId = user.id;
 
   const existing = await db.select().from(categories).where(eq(categories.userId, userId));
   if (existing.length > 0) {
-    console.log("Ya hay datos para este usuario, seed omitido.");
+    console.log("This user already has data, skipping seed.");
     return;
   }
 
@@ -42,7 +42,7 @@ async function main() {
       id: nanoid(),
       userId,
       categoryId: cats[0].id,
-      name: "Practicar guitarra",
+      name: "Practice guitar",
       goalType: "duration",
       goalTarget: 20,
       goalUnit: "min",
@@ -55,7 +55,7 @@ async function main() {
       id: nanoid(),
       userId,
       categoryId: cats[1].id,
-      name: "Ejercicio de fuerza",
+      name: "Strength training",
       goalType: "binary",
       frequencyType: "x_per_week",
       frequencyConfig: JSON.stringify({ timesPerPeriod: 3 }),
@@ -67,7 +67,7 @@ async function main() {
       id: nanoid(),
       userId,
       categoryId: cats[2].id,
-      name: "Practicar inglés",
+      name: "Practice English",
       goalType: "duration",
       goalTarget: 15,
       goalUnit: "min",
@@ -80,10 +80,10 @@ async function main() {
       id: nanoid(),
       userId,
       categoryId: cats[3].id,
-      name: "Estudiar",
+      name: "Study",
       goalType: "quantitative",
       goalTarget: 20,
-      goalUnit: "páginas",
+      goalUnit: "pages",
       frequencyType: "daily",
       startDate: start,
       status: "active",
@@ -93,7 +93,7 @@ async function main() {
       id: nanoid(),
       userId,
       categoryId: cats[4].id,
-      name: "Meditar",
+      name: "Meditate",
       goalType: "duration",
       goalTarget: 10,
       goalUnit: "min",
@@ -104,7 +104,7 @@ async function main() {
     },
   ]);
 
-  console.log(`Seed completo para "${username}".`);
+  console.log(`Seed complete for "${username}".`);
 }
 
 main()

@@ -1,8 +1,8 @@
 name: Push reminders
 
-# Dispara app/api/cron/reminders/route.ts cada 15 min — reemplaza a Vercel
-# Cron (limitado a 1x/día en el plan Hobby) sin costo, ver el plan de
-# implementación de recordatorios push.
+# Triggers app/api/cron/reminders/route.ts every 15 min — replaces Vercel
+# Cron (limited to 1x/day on the Hobby plan) at no cost, see the push
+# reminders implementation plan.
 on:
   schedule:
     - cron: "*/15 * * * *"

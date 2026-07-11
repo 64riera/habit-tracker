@@ -2,8 +2,8 @@ import { Heatmap } from "@/components/heatmap/heatmap";
 import type { DayCell } from "@/lib/queries/history";
 import { toISODate } from "@/lib/date";
 
-/** PRNG determinístico (mulberry32): mismo resultado en servidor y cliente,
- * a diferencia de Math.random(), que rompería la hidratación. */
+/** Deterministic PRNG (mulberry32): same result on server and client,
+ * unlike Math.random(), which would break hydration. */
 function mulberry32(seed: number) {
   let a = seed;
   return function random() {
@@ -18,9 +18,9 @@ function mulberry32(seed: number) {
 const WEEKS = 18;
 const DAYS = WEEKS * 7;
 
-/** Datos de muestra para la landing, con la misma forma que produce
- * getHeatmapRange(): rachas de varias semanas, algún bache y algunos días
- * "hollow" (todo justificado/congelado), como en una cuenta real. */
+/** Sample data for the landing page, in the same shape getHeatmapRange()
+ * produces: multi-week streaks, the occasional gap, and a few "hollow"
+ * days (everything justified/frozen), like a real account would have. */
 function buildDemoCells(): DayCell[] {
   const random = mulberry32(20260710);
   const today = new Date();

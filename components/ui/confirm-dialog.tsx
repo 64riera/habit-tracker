@@ -12,8 +12,8 @@ type Props = {
   onConfirm: () => void;
 };
 
-/** Modal de confirmación genérico con los estilos del resto de la app (mismo
- * patrón que InstallSuggestionModal: overlay + panel animados, radix-dialog). */
+/** Generic confirmation modal with the rest of the app's styling (same
+ * pattern as InstallSuggestionModal: animated overlay + panel, radix-dialog). */
 export function ConfirmDialog({
   open,
   onOpenChange,

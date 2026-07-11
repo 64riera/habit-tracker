@@ -13,7 +13,7 @@ export const users = sqliteTable(
       .notNull()
       .default("system"),
     localePreference: text("locale_preference", { enum: ["es", "en"] }).notNull().default("es"),
-    timezone: text("timezone"), // IANA, ej. "America/Monterrey" — detectada en el navegador, ver timezone-sync.tsx
+    timezone: text("timezone"), // IANA, e.g. "America/Monterrey" — detected in the browser, see timezone-sync.tsx
     installPromptSeen: integer("install_prompt_seen", { mode: "boolean" }).notNull().default(false),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
@@ -82,8 +82,8 @@ export const habitLogs = sqliteTable(
     note: text("note"),
     mood: integer("mood"),
     loggedAt: text("logged_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    // ISO 8601, solo cuando status === "done" — null en cualquier otro
-    // status (partial/missed/justified/skipped/frozen). Ver logHabit().
+    // ISO 8601, only when status === "done" — null for any other status
+    // (partial/missed/justified/skipped/frozen). See logHabit().
     completedAt: text("completed_at"),
   },
   (t) => [
@@ -140,12 +140,12 @@ export const focusSessions = sqliteTable(
     id: text("id").primaryKey(),
     userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     habitId: text("habit_id").references(() => habits.id, { onDelete: "set null" }),
-    // Independiente de habitId: si la sesión está vinculada a un hábito, la
-    // categoría se deriva de ese hábito (ver resolveFocusAttribution en
-    // lib/actions/focus.ts); si no, el usuario puede elegir una directamente.
+    // Independent of habitId: if the session is linked to a habit, the
+    // category is derived from that habit (see resolveFocusAttribution in
+    // lib/actions/focus.ts); otherwise, the user can choose one directly.
     categoryId: text("category_id").references(() => categories.id, { onDelete: "set null" }),
     mode: text("mode", { enum: ["countdown", "stopwatch"] }).notNull(),
-    plannedDurationSeconds: integer("planned_duration_seconds"), // solo countdown
+    plannedDurationSeconds: integer("planned_duration_seconds"), // countdown only
     status: text("status", {
       enum: ["running", "on_break", "paused", "completed", "cancelled"],
     })
@@ -162,7 +162,7 @@ export const focusSessions = sqliteTable(
     pausedAt: text("paused_at"),
     completedAt: text("completed_at"),
     autoCompleted: integer("auto_completed", { mode: "boolean" }).notNull().default(false),
-    date: text("date").notNull(), // YYYY-MM-DD, día en que empezó (según el cutoff de día)
+    date: text("date").notNull(), // YYYY-MM-DD, day it started (per the day cutoff)
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (t) => [

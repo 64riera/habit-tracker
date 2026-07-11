@@ -11,7 +11,7 @@ const MIN_SAMPLES_PER_WEEKDAY = 3;
 
 export type WorstWeekday = { weekday: number; missRate: number } | null;
 
-/** Día ISO (1=lunes..7=domingo) con mayor proporción de hábitos marcados "missed". */
+/** ISO weekday (1=Monday..7=Sunday) with the highest proportion of habits marked "missed". */
 export async function getWorstWeekday(today: string, days = 90): Promise<WorstWeekday> {
   const userId = await getCurrentUserId();
   const activeHabits = await db
@@ -65,7 +65,7 @@ export type MoodCorrelation = {
   sampleSize: number;
 } | null;
 
-/** Agregación simple: ¿los registros con ánimo bajo (1-2) fallan más que los de ánimo alto (4-5)? */
+/** Simple aggregation: do low-mood entries (1-2) miss more often than high-mood ones (4-5)? */
 export async function getMoodCorrelation(today: string, days = 90): Promise<MoodCorrelation> {
   const userId = await getCurrentUserId();
   const from = addDays(today, -(days - 1));

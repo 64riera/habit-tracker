@@ -1,4 +1,4 @@
-/** Fecha efectiva "de hoy" en formato YYYY-MM-DD, respetando la hora de corte del día. */
+/** Effective "today" date in YYYY-MM-DD format, respecting the day's cutoff hour. */
 export function getTodayDateString(cutoffHour: number = 3, now: Date = new Date()): string {
   const effective = new Date(now);
   if (now.getHours() < cutoffHour) {
@@ -25,9 +25,9 @@ export function addDays(value: string, amount: number): string {
   return toISODate(date);
 }
 
-/** Día de la semana en formato lunes=1 ... domingo=7 */
+/** Day of the week in Monday=1 ... Sunday=7 format */
 export function isoWeekday(value: string): number {
-  const jsDay = parseISODate(value).getDay(); // 0=domingo..6=sábado
+  const jsDay = parseISODate(value).getDay(); // 0=Sunday..6=Saturday
   return jsDay === 0 ? 7 : jsDay;
 }
 
@@ -37,7 +37,7 @@ export function daysBetween(from: string, to: string): number {
   return Math.round((b - a) / 86_400_000);
 }
 
-/** Genera un rango inclusivo de fechas YYYY-MM-DD */
+/** Generates an inclusive range of YYYY-MM-DD dates */
 export function dateRange(from: string, to: string): string[] {
   const n = daysBetween(from, to);
   if (n < 0) return [];
@@ -58,16 +58,16 @@ export function monthKey(value: string): string {
   return value.slice(0, 7); // YYYY-MM
 }
 
-/** Hora del día en formato 12h con am/pm — la app entera usa 12h para
- * cualquier hora mostrada al usuario, sin importar el idioma (a diferencia
- * de es-ES, cuyo default de Intl es 24h).
+/** Time of day in 12h format with am/pm — the whole app uses 12h for any
+ * time shown to the user, regardless of language (unlike es-ES, whose
+ * Intl default is 24h).
  *
- * El `.replace(/\s+/g, " ")` no es cosmético: el ICU de Node (SSR) y el
- * del navegador (hidratación) no siempre coinciden en qué caracter de
- * espacio meten dentro de "p. m." en es-ES (uno usa un espacio normal,
- * otro un NBSP/narrow-NBSP) — mismo texto visible, bytes distintos, y
- * React lo trata como mismatch de hidratación. Normalizar todo espacio a
- * uno común deja el string byte-idéntico en ambos lados. */
+ * The `.replace(/\s+/g, " ")` isn't cosmetic: Node's ICU (SSR) and the
+ * browser's (hydration) don't always agree on which space character they
+ * put inside "p. m." in es-ES (one uses a regular space, the other an
+ * NBSP/narrow-NBSP) — same visible text, different bytes, and React
+ * treats it as a hydration mismatch. Normalizing every space to a common
+ * one leaves the string byte-identical on both sides. */
 export function formatTimeOfDay(date: Date, locale: "es" | "en"): string {
   const formatted = new Intl.DateTimeFormat(locale === "es" ? "es-ES" : "en-US", {
     hour: "numeric",
@@ -77,7 +77,7 @@ export function formatTimeOfDay(date: Date, locale: "es" | "en"): string {
   return formatted.replace(/\s+/g, " ");
 }
 
-/** Agrupa una lista ya ordenada por fecha desc en bloques por día consecutivos. */
+/** Groups a list already sorted by date desc into blocks of consecutive days. */
 export function groupByDate<T extends { date: string }>(entries: T[]): { date: string; items: T[] }[] {
   const groups: { date: string; items: T[] }[] = [];
   for (const entry of entries) {

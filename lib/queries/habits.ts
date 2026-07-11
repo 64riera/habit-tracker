@@ -21,9 +21,9 @@ export async function getCategories(): Promise<CategoryRow[]> {
   return db.select().from(categories).where(eq(categories.userId, userId)).orderBy(categories.sortOrder);
 }
 
-/** Total de hábitos de la cuenta (incluye archivados/pausados: es sobre el
- * evento de creación, no sobre cuántos están activos hoy) — usado para
- * detectar "es el primer hábito" y ofrecer instalar la PWA, ver
+/** Total number of habits on the account (includes archived/paused: it's
+ * about the creation event, not how many are active today) — used to
+ * detect "this is the first habit" and offer to install the PWA, see
  * install-suggestion-modal.tsx. */
 export async function getHabitCount(): Promise<number> {
   const userId = await getCurrentUserId();

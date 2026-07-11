@@ -2,10 +2,10 @@ import { getCategories, getHabitsForToday } from "@/lib/queries/habits";
 import { getRoutinesForToday } from "@/lib/queries/routines";
 import { TodayClient } from "./today-client";
 
-/** Única parte de Hoy que depende de datos (habits/routines/categories) —
- * separada de page.tsx para poder envolverla en su propio <Suspense>, sin
- * que el header ni el DaySwitcher (que no dependen de esta consulta)
- * desaparezcan mientras carga. */
+/** The only part of Home that depends on data (habits/routines/categories) —
+ * split out from page.tsx so it can be wrapped in its own <Suspense>,
+ * without the header or the DaySwitcher (which don't depend on this
+ * query) disappearing while it loads. */
 export async function TodayHabits({ date, today }: { date: string; today: string }) {
   const [habits, routines, categories] = await Promise.all([
     getHabitsForToday(date),

@@ -11,9 +11,10 @@ export function BottomNav() {
   const { t } = useI18n();
 
   return (
-    // Sibling normal del shell (no position:fixed): al vivir fuera del
-    // <main> que scrollea, ya queda pegado abajo por el propio layout de
-    // flexbox, sin depender de fixed/sticky sobre el scroll del documento.
+    // Normal sibling of the shell (not position:fixed): by living outside
+    // the scrolling <main>, it's already pinned to the bottom by the
+    // flexbox layout itself, without relying on fixed/sticky over the
+    // document's scroll.
     <nav className="flex shrink-0 border-t border-border bg-bg px-1 md:hidden">
       {NAV_ITEMS.map((item) => {
         const active = item.activeWhen(pathname);

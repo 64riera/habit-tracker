@@ -11,9 +11,9 @@ type PushSubscriptionInput = {
   keys: { p256dh: string; auth: string };
 };
 
-/** Guarda (o actualiza, si el endpoint ya existía) la suscripción push del
- * navegador actual. `endpoint` es único por navegador/dispositivo — un mismo
- * usuario puede tener varias filas (celular + laptop). */
+/** Saves (or updates, if the endpoint already existed) the current
+ * browser's push subscription. `endpoint` is unique per browser/device — the
+ * same user can have several rows (phone + laptop). */
 export async function subscribeToPush(subscription: PushSubscriptionInput) {
   const userId = await getCurrentUserId();
   await db

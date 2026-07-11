@@ -24,9 +24,9 @@ const FOCUS_TABS = [
   { key: "estadisticas", href: "/focus/stats", dictKey: "nav.estadisticas" },
 ] as const;
 
-/** Sin colores por categoría (a diferencia de las barras de hábitos): un
- * solo tono suave y monocromo, coherente con que --color-accent y
- * --color-text son literalmente el mismo valor en este sistema. */
+/** No per-category colors (unlike the habit bars): a single soft, monochrome
+ * tone, consistent with --color-accent and --color-text being literally the
+ * same value in this system. */
 const BAR_COLOR = "color-mix(in srgb, var(--color-text) 65%, transparent)";
 
 export function FocusEstadisticasClient({
@@ -51,10 +51,10 @@ export function FocusEstadisticasClient({
   const { t, locale } = useI18n();
   const hasAnyData = overall.minutes90 > 0;
 
-  // Bucketizado en el cliente (no en el servidor): la franja horaria de
-  // cada sesión depende de la hora local de quien mira la pantalla, y
-  // `Date.getHours()` solo da esa hora correctamente si corre en el
-  // navegador — el servidor (Vercel) corre en UTC.
+  // Bucketed on the client (not on the server): each session's time-of-day
+  // bucket depends on the local time of whoever is viewing the screen, and
+  // `Date.getHours()` only gives that hour correctly if it runs in the
+  // browser — the server (Vercel) runs in UTC.
   const timeOfDay = useMemo(() => {
     const minutesByBucket = new Map<string, number>();
     for (const s of timeOfDaySamples) {

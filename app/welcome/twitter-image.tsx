@@ -1,4 +1,4 @@
-// Misma imagen que opengraph-image.tsx: la mayoría de clientes de mensajería
-// (WhatsApp, iMessage, Slack) leen og:image, pero X/Twitter busca su propio
-// twitter:image. Reexportamos en vez de duplicar la implementación.
+// Same image as opengraph-image.tsx: most messaging clients (WhatsApp,
+// iMessage, Slack) read og:image, but X/Twitter looks for its own
+// twitter:image. We re-export instead of duplicating the implementation.
 export { default, alt, size, contentType } from "./opengraph-image";

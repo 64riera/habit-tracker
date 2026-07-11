@@ -7,11 +7,11 @@ import { cn } from "@/lib/utils";
 
 export type SegmentedRouteTab = { key: string; href: string; dictKey: string };
 
-/** Pares de pantallas que viven en rutas separadas (cada una con su propio
- * data-fetching) pero se presentan como una misma sección mediante un
- * segmented control, al mismo estilo del selector de modo en
- * focus-start-form.tsx. Genérico: lo usan tanto Historial/Estadísticas de
- * hábitos como Historial/Estadísticas de enfoque. */
+/** Pairs of screens that live on separate routes (each with its own
+ * data-fetching) but are presented as a single section via a segmented
+ * control, in the same style as the mode selector in
+ * focus-start-form.tsx. Generic: used by both Habits History/Stats and
+ * Focus History/Stats. */
 export function SegmentedRouteTabs({ tabs }: { tabs: readonly SegmentedRouteTab[] }) {
   const pathname = usePathname();
   const { t } = useI18n();

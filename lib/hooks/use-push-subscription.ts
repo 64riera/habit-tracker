@@ -7,12 +7,12 @@ import { urlBase64ToUint8Array } from "@/lib/push/vapid";
 
 export type PushBrowserState = "unsupported" | "denied" | "unsubscribed";
 
-// El servidor no puede saber si el navegador tiene notificaciones ya
-// bloqueadas o si soporta Push API — leerlo en el valor inicial de
-// useState desalinea el HTML del servidor del que arma el cliente al
-// hidratar. Se lee fresco en cada render, gateado por `useHasMounted()`
-// (mismo patrón que ThemeToggle): antes de montar siempre se asume
-// "unsubscribed", igual que el servidor.
+// The server can't know whether the browser already has notifications
+// blocked or whether it supports the Push API — reading it into the
+// initial useState value would mismatch the server HTML against what the
+// client builds on hydration. It's read fresh on every render, gated by
+// `useHasMounted()` (same pattern as ThemeToggle): before mounting it
+// always assumes "unsubscribed", just like the server.
 function detectBrowserState(): PushBrowserState {
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) return "unsupported";
   if (Notification.permission === "denied") return "denied";
@@ -20,10 +20,10 @@ function detectBrowserState(): PushBrowserState {
 }
 
 /**
- * Estado y acciones de suscripción push, compartido entre el toggle de
- * Ajustes (`PushToggle`) y el pedido contextual al configurar un
- * recordatorio de hábito (`HabitForm`) — la lógica de "pedir permiso +
- * suscribir" vive en un solo lugar en vez de duplicarse entre los dos.
+ * Push subscription state and actions, shared between the Settings toggle
+ * (`PushToggle`) and the contextual prompt when setting up a habit
+ * reminder (`HabitForm`) — the "request permission + subscribe" logic
+ * lives in one place instead of being duplicated between the two.
  */
 export function usePushSubscription() {
   const mounted = useHasMounted();
@@ -52,8 +52,8 @@ export function usePushSubscription() {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          // Cast: la firma DOM de BufferSource en TS 5.9 exige Uint8Array<ArrayBuffer>
-          // específicamente, pero en runtime cualquier Uint8Array funciona igual.
+          // Cast: the DOM BufferSource signature in TS 5.9 specifically
+          // requires Uint8Array<ArrayBuffer>, but at runtime any Uint8Array works fine.
           applicationServerKey: urlBase64ToUint8Array(publicKey) as BufferSource,
         });
         const json = subscription.toJSON();
@@ -61,8 +61,8 @@ export function usePushSubscription() {
         await subscribeToPush({ endpoint: json.endpoint, keys: { p256dh: json.keys.p256dh, auth: json.keys.auth } });
         setSubscribed(true);
       } catch {
-        // p. ej. el navegador rechaza pushManager.subscribe() (cuota, perfil
-        // efímero, etc.) — no dejar la promesa sin manejar, solo quedarse sin activar.
+        // e.g. the browser rejects pushManager.subscribe() (quota, ephemeral
+        // profile, etc.) — don't leave the promise unhandled, just fail to activate.
       }
     });
   }

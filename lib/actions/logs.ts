@@ -23,15 +23,17 @@ export type LogInput = {
 };
 
 /**
- * Cada acción de check-in sigue el mismo patrón: una lectura agrupada (1
- * round-trip a Turso vía db.batch), cómputo puro en memoria, y una escritura
- * agrupada (otro round-trip). Antes, cada paso (ownership, racha, logros)
- * hacía sus propias consultas secuenciales — hasta 10-12 round-trips por tap.
+ * Every check-in action follows the same pattern: one batched read (1
+ * round-trip to Turso via db.batch), pure in-memory computation, and one
+ * batched write (another round-trip). Previously, each step (ownership,
+ * streak, achievements) made its own sequential queries — up to 10-12
+ * round-trips per tap.
  */
 async function loadHabitContext(userId: string, habitId: string) {
-  // Todo en un solo round-trip: aunque deleteLog no necesita los logros
-  // desbloqueados, agregarlos aquí no cuesta un viaje de red extra (van en el
-  // mismo batch) y evita una segunda variante de esta función.
+  // Everything in a single round-trip: even though deleteLog doesn't need
+  // the unlocked achievements, adding them here costs no extra network
+  // trip (they ride the same batch) and avoids a second variant of this
+  // function.
   const [[habit], logs, unlockedRows] = await db.batch([
     db.select().from(habits).where(eq(habits.id, habitId)).limit(1),
     db.select({ date: habitLogs.date, status: habitLogs.status }).from(habitLogs).where(eq(habitLogs.habitId, habitId)),
@@ -44,7 +46,7 @@ async function loadHabitContext(userId: string, habitId: string) {
   return { habit, logs, alreadyUnlockedTypes: new Set(unlockedRows.map((r) => r.type as AchievementType)) };
 }
 
-/** Aplica en memoria el cambio de log que aún no se ha escrito, para que racha/logros se calculen sobre el estado final. */
+/** Applies the not-yet-written log change in memory, so streak/achievements are computed against the final state. */
 function applyLogChange(logs: LogStatusRow[], date: string, newStatus: string | null): LogStatusRow[] {
   const filtered = logs.filter((l) => l.date !== date);
   return newStatus === null ? filtered : [...filtered, { date, status: newStatus }];
@@ -76,10 +78,10 @@ export async function logHabit(input: LogInput) {
     ? computeNewAchievements({ habit: habit as HabitRow, logs: updatedLogs, streak, alreadyUnlockedTypes, today })
     : [];
 
-  // Hora de "completado" solo cuando el status es done — cualquier otro
-  // status la deja en null (incluido el caso de bajar de done a otro
-  // status en una edición posterior), y desmarcar borra la fila entera
-  // (ver deleteLog), así que no hay nada que limpiar ahí.
+  // "Completed" timestamp only when status is done — any other status
+  // leaves it null (including the case of downgrading from done to
+  // another status in a later edit), and unchecking deletes the whole row
+  // (see deleteLog), so there's nothing to clean up there.
   const completedAt = values.status === "done" ? new Date().toISOString() : null;
 
   await db.batch([

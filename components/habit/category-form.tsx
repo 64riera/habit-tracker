@@ -12,21 +12,21 @@ import { useOfflineFormAction } from "@/lib/offline/form";
 const DEFAULT_COLOR = "#8a8175";
 
 /**
- * Las categorías por defecto guardan su color como `var(--cat-x)` (OKLCH vía
- * custom property), que un <input type="color"> nativo no puede mostrar.
- * Se resuelve al hex real dejando que el propio motor del navegador convierta
- * el OKLCH a rgb() en un elemento sonda, en vez de caer a un color inventado
- * que se guardaría por error si el usuario no toca el picker.
+ * Default categories store their color as `var(--cat-x)` (OKLCH via a
+ * custom property), which a native <input type="color"> can't display.
+ * It's resolved to the real hex by letting the browser's own engine convert
+ * the OKLCH to rgb() on a probe element, instead of falling back to a made-up
+ * color that would get saved by mistake if the user doesn't touch the picker.
  */
 function resolveCssVarToHex(varExpr: string): string {
   const match = /var\((--[\w-]+)\)/.exec(varExpr);
   if (!match) return DEFAULT_COLOR;
   const raw = getComputedStyle(document.documentElement).getPropertyValue(match[1]).trim();
   if (!raw) return DEFAULT_COLOR;
-  // Las categorías usan OKLCH, que el navegador puede resolver a lab() u otro
-  // espacio de color amplio (no siempre rgb()) al leer un computed style. Un
-  // canvas 1x1 rasteriza cualquier color CSS válido a píxeles sRGB reales,
-  // sin necesidad de parsear la sintaxis de la función de color de origen.
+  // Categories use OKLCH, which the browser can resolve to lab() or another
+  // wide color space (not always rgb()) when reading a computed style. A 1x1
+  // canvas rasterizes any valid CSS color to real sRGB pixels, without
+  // needing to parse the syntax of the source color function.
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 1;
   const ctx = canvas.getContext("2d");
@@ -44,10 +44,10 @@ export function CategoryForm({ category }: { category?: CategoryRow }) {
   );
 
   useEffect(() => {
-    // React no re-sincroniza el `value` de un <input> controlado durante la
-    // hidratación aunque el estado inicial del cliente difiera del SSR, así
-    // que la corrección real solo se refleja en el DOM si llega vía un
-    // set-state posterior al montaje, no desde el propio inicializador.
+    // React doesn't re-sync the `value` of a controlled <input> during
+    // hydration even if the client's initial state differs from SSR, so the
+    // actual correction only gets reflected in the DOM if it arrives via a
+    // set-state after mount, not from the initializer itself.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (category?.color.startsWith("var(")) setColor(resolveCssVarToHex(category.color));
   }, [category?.color]);

@@ -34,9 +34,9 @@ export default async function EnfoquePage({
       <ContentHeader titleKey="screens.enfoque.title" subtitleKey="screens.enfoque.subtitle" backHref="/" />
 
       {isLive && session ? (
-        // Con una sesión en curso, la pantalla es solo el tiempo y sus
-        // acciones — nada de objetivo diario, sonido ni progreso general
-        // compitiendo por atención mientras se está enfocado.
+        // With a session in progress, the screen is just the timer and its
+        // actions — no daily goal, sound, or overall progress competing
+        // for attention while focused.
         <FocusTimerDisplay session={session} soundEnabled={settings.soundEnabled} />
       ) : (
         <>

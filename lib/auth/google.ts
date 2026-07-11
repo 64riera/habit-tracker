@@ -1,10 +1,10 @@
 import "server-only";
 import { Google, decodeIdToken } from "arctic";
 
-/** Única fuente de verdad para "¿Google OAuth está configurado?" — cuando
- * lo está, el login/registro manual con usuario y contraseña se
- * deshabilita por completo (ver lib/actions/auth.ts y los forms de
- * login/signup), para no dejar dos puertas de entrada abiertas a la vez. */
+/** Single source of truth for "is Google OAuth configured?" — when it is,
+ * manual login/signup with username and password is disabled entirely
+ * (see lib/actions/auth.ts and the login/signup forms), so as not to leave
+ * two entry doors open at the same time. */
 export function isGoogleAuthEnabled(): boolean {
   return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 }
@@ -13,7 +13,7 @@ export function getGoogleClient(redirectURI: string): Google {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   if (!clientId || !clientSecret) {
-    throw new Error("GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET no están configurados");
+    throw new Error("GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET are not configured");
   }
   return new Google(clientId, clientSecret, redirectURI);
 }
@@ -28,11 +28,11 @@ type GoogleIdTokenClaims = {
   email?: string;
 };
 
-/** Extrae el perfil del id_token (claims OpenID Connect), sin llamada adicional al userinfo endpoint. */
+/** Extracts the profile from the id_token (OpenID Connect claims), with no extra call to the userinfo endpoint. */
 export function getGoogleProfile(idToken: string): GoogleProfile {
   const claims = decodeIdToken(idToken) as GoogleIdTokenClaims;
   if (!claims.email) {
-    throw new Error("Google no devolvió un email para esta cuenta");
+    throw new Error("Google didn't return an email for this account");
   }
   return { googleId: claims.sub, email: claims.email };
 }

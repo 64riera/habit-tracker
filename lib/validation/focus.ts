@@ -19,21 +19,21 @@ export const startFocusSessionSchema = z
     categoryId: z.string().trim().optional().or(z.literal("")),
   })
   .refine((v) => v.mode !== "countdown" || v.durationMinutes !== undefined, {
-    message: "La cuenta regresiva necesita una duración",
+    message: "Countdown mode needs a duration",
     path: ["durationMinutes"],
   })
   .refine((v) => !v.breaksEnabled || v.breakIntervalMinutes !== undefined, {
-    message: "Falta el intervalo de las pausas activas",
+    message: "Missing the active break interval",
     path: ["breakIntervalMinutes"],
   })
   .refine((v) => !v.breaksEnabled || v.breakDurationMinutes !== undefined, {
-    message: "Falta la duración de la pausa activa",
+    message: "Missing the active break duration",
     path: ["breakDurationMinutes"],
   });
 
 export type StartFocusSessionValues = z.infer<typeof startFocusSessionSchema>;
 
-/** Extrae los campos crudos del formulario de inicio, listos para `startFocusSessionSchema.parse`. */
+/** Extracts the raw fields from the start form, ready for `startFocusSessionSchema.parse`. */
 export function extractStartFocusSessionFields(formData: FormData): unknown {
   return {
     mode: formData.get("mode"),

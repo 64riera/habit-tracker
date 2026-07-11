@@ -28,8 +28,8 @@ export async function createCategoryCore(id: string, rawValues: unknown): Promis
   const userId = await getCurrentUserId();
   const count = (await db.select().from(categories).where(eq(categories.userId, userId))).length;
 
-  // onConflictDoNothing: idempotente si el replay offline se reintenta tras un
-  // drenado interrumpido entre el insert y el retiro de la mutación de la cola.
+  // onConflictDoNothing: idempotent if the offline replay retries after a
+  // drain gets interrupted between the insert and removing the mutation from the queue.
   await db
     .insert(categories)
     .values({
@@ -82,7 +82,7 @@ export async function updateCategoryCore(
   return {};
 }
 
-/** Ruta online: escribe vía el core y redirige. El replay offline usa `deleteCategoryCore` directo. */
+/** Online path: writes via the core and redirects. The offline replay uses `deleteCategoryCore` directly. */
 export async function deleteCategory(categoryId: string): Promise<void> {
   await deleteCategoryCore(categoryId);
   redirect("/habits/categories");

@@ -5,14 +5,14 @@ import { APP_NAME, APP_TAGLINE } from "@/lib/branding";
 import { DEFAULT_LOCALE, getDictionary } from "@/lib/i18n/dictionaries";
 import { translate } from "@/lib/i18n/t";
 
-// Colores fijos (no oklch): el renderer de next/og (satori) no soporta
-// funciones de color modernas, solo hex/rgb.
+// Fixed colors (no oklch): next/og's renderer (satori) doesn't support
+// modern color functions, only hex/rgb.
 const COLOR_BG = "#faf7f2";
 const COLOR_TEXT = "#211d18";
 const COLOR_MUTED = "#756d62";
 const COLOR_BORDER = "#e9e2d6";
 
-// Capturada con `npm run og:capture` (ver scripts/capture-landing-mobile-screenshot.ts).
+// Captured with `npm run og:capture` (see scripts/capture-landing-mobile-screenshot.ts).
 const SCREENSHOT_ASPECT_RATIO = 1290 / 2220;
 const SCREENSHOT_HEIGHT = 580;
 

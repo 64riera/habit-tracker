@@ -22,10 +22,10 @@ import {
 } from "@/lib/actions/focus";
 import { BreakBanner } from "./break-banner";
 
-/** "Cancelar sesión" solo tiene sentido como salida rápida para una sesión
- * arrancada por error — pasado este umbral de tiempo activo real, se deja
- * de mostrar para no invitar a abandonar una sesión ya en curso (el usuario
- * sigue pudiendo "Terminar" en cualquier momento). */
+/** "Cancel session" only makes sense as a quick exit for a session started
+ * by mistake — past this threshold of real active time, it's hidden so as
+ * not to invite abandoning a session already in progress (the user can
+ * still "Finish" at any time). */
 const CANCEL_VISIBLE_ACTIVE_SECONDS = 10;
 
 export function FocusTimerDisplay({
@@ -40,18 +40,18 @@ export function FocusTimerDisplay({
   const notifyRewards = useFocusRewardToast();
   const { session, state } = useLiveFocusState(initialSession, getActiveFocusSessionAction, notifyRewards);
 
-  // Cubre entrar a "on_break" y el auto-completado mientras se sigue
-  // mirando la pantalla: en ambos casos el componente sigue montado el
-  // tiempo suficiente para observar la transición. El "Terminar" manual NO
-  // pasa por acá — ese caso lo dispara `FinishButton` directamente, porque
-  // el router.refresh() que sigue desmonta este componente antes de que la
-  // transición a "completed" llegue a reflejarse en el estado del hook.
+  // Covers entering "on_break" and auto-completion while the screen is
+  // still being watched: in both cases the component stays mounted long
+  // enough to observe the transition. The manual "Finish" does NOT go
+  // through here — that case is triggered by `FinishButton` directly,
+  // because the router.refresh() that follows unmounts this component
+  // before the transition to "completed" gets reflected in the hook's state.
   useFocusStatusAlerts(session, soundEnabled);
 
-  // La reconciliación del servidor puede cerrar la sesión (tope alcanzado)
-  // sin que el usuario haya tocado nada; en cuanto el resync del hook lo
-  // confirma, se refresca la página para que vuelva a mostrar el formulario
-  // de inicio en vez de quedar mostrando controles de una sesión ya cerrada.
+  // Server-side reconciliation can close the session (cap reached) without
+  // the user touching anything; as soon as the hook's resync confirms it,
+  // the page is refreshed so it goes back to showing the start form instead
+  // of being left showing controls for a session that's already closed.
   useEffect(() => {
     if (session && !LIVE_STATUSES.includes(session.status)) router.refresh();
   }, [session, router]);
@@ -133,11 +133,11 @@ export function FocusTimerDisplay({
   );
 }
 
-/** No usa `<form action>` como las demás: necesita leer `unlockedTiers` de
- * la respuesta para disparar el toast de recompensa, y dispara la
- * alerta de sonido/título acá mismo — el `router.refresh()` que sigue al
- * "Terminar" desmonta este árbol antes de que `useFocusStatusAlerts` llegue
- * a observar la transición a "completed". */
+/** Doesn't use `<form action>` like the others: it needs to read
+ * `unlockedTiers` from the response to trigger the reward toast, and
+ * triggers the sound/title alert right here — the `router.refresh()` that
+ * follows "Finish" unmounts this tree before `useFocusStatusAlerts` gets to
+ * observe the transition to "completed". */
 function FinishButton({
   label,
   soundEnabled,
@@ -184,9 +184,9 @@ function PrimaryButton({ label, icon: Icon }: { label: string; icon: LucideIcon 
   );
 }
 
-/** Estilo deliberadamente discreto — a diferencia de Pausar/Terminar, no
- * compite por atención: solo existe como salida rápida en los primeros
- * segundos (ver `CANCEL_VISIBLE_ACTIVE_SECONDS`). */
+/** Deliberately understated style — unlike Pause/Finish, it doesn't compete
+ * for attention: it only exists as a quick exit in the first few seconds
+ * (see `CANCEL_VISIBLE_ACTIVE_SECONDS`). */
 function TextButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (

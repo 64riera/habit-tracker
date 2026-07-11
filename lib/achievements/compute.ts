@@ -12,9 +12,9 @@ const STREAK_MILESTONES: { type: AchievementType; days: number }[] = [
 ];
 
 /**
- * Cómputo puro (sin I/O) de qué logros se desbloquean tras un check-in.
- * Reutiliza el mismo array de `logs` que ya carga el cómputo de racha
- * (desde habit.startDate hasta hoy) — no vuelve a leer el historial completo.
+ * Pure computation (no I/O) of which achievements unlock after a check-in.
+ * Reuses the same `logs` array already loaded by the streak computation
+ * (from habit.startDate to today) — it doesn't re-read the full history.
  */
 export function computeNewAchievements({
   habit,
@@ -53,16 +53,16 @@ function checkPerfectMonth(habit: HabitRow, logs: LogStatusRow[], today: string)
   const monthStart = `${currentMonth}-01`;
   if (monthStart < habit.startDate) return false;
 
-  // Corte por fechas (sin tocar la base) antes de evaluar los logs: evita
-  // falsos positivos muy al inicio del mes, cuando no puede ser "perfecto" todavía.
+  // Date-based cutoff (without touching the DB) before evaluating the logs:
+  // avoids false positives very early in the month, when it can't be "perfect" yet.
   const daysInMonth = dateRange(monthStart, today).filter((d) => monthKey(d) === currentMonth);
   const applicable = daysInMonth.filter((d) => isDateApplicable(habit, d) && d <= today);
   if (applicable.length < 7) return false;
 
   const statusByDate = new Map(logs.map((l) => [l.date, l.status]));
 
-  // El límite de skips se calcula sobre todo el historial del hábito, ya que un
-  // período semanal puede empezar antes del mes en curso.
+  // The skip limit is computed over the habit's entire history, since a
+  // weekly period can start before the current month.
   const allApplicable = dateRange(habit.startDate, today).filter((d) => isDateApplicable(habit, d));
   const overLimit = overLimitSkipDates(habit, allApplicable, statusByDate);
 

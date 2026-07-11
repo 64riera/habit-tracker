@@ -10,10 +10,11 @@ import { computeStreak } from "./compute";
 export type StreakResult = { current: number; longest: number };
 
 /**
- * Recalcula racha actual y máxima de un hábito a partir de habit_logs, y cachea
- * el resultado. Utilidad de recómputo standalone (varios round-trips propios);
- * el camino de escritura de check-ins (`lib/actions/logs.ts`) usa `computeStreak`
- * directamente sobre datos ya cargados en batch, para no pagar esos round-trips.
+ * Recomputes a habit's current and longest streak from habit_logs, and
+ * caches the result. Standalone recompute utility (does its own
+ * round-trips); the check-in write path (`lib/actions/logs.ts`) uses
+ * `computeStreak` directly on data already loaded in a batch, to avoid
+ * paying for those round-trips.
  */
 export async function recalcStreakForHabit(habitId: string): Promise<StreakResult> {
   const userId = await getCurrentUserId();

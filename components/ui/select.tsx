@@ -11,18 +11,18 @@ type Props = {
   onValueChange: (value: string) => void;
   options: SelectOption[];
   placeholder?: string;
-  /** `field`: mismo tratamiento que un <input> del formulario (borde completo, ancho fijo).
-   *  `pill`: mismo tratamiento que los filtros en píldora (borde redondeado completo, compacto). */
+  /** `field`: same treatment as a form <input> (full border, fixed width).
+   *  `pill`: same treatment as pill filters (fully rounded border, compact). */
   variant?: "field" | "pill";
   ariaLabel?: string;
   className?: string;
 };
 
 /**
- * Reemplazo accesible de <select> nativo: mismo comportamiento de teclado/foco
- * que el navegador ya da gratis, pero con un menú desplegable que se puede
- * estilizar (el <select> nativo no lo permite) para que coincida con el resto
- * del sistema en vez de romper con el look del navegador.
+ * Accessible replacement for the native <select>: same keyboard/focus
+ * behavior that the browser already gives for free, but with a dropdown
+ * menu that can be styled (the native <select> doesn't allow that) so it
+ * matches the rest of the system instead of breaking with the browser's look.
  */
 export function Select({ value, onValueChange, options, placeholder, variant = "field", ariaLabel, className }: Props) {
   const selected = options.find((o) => o.value === value);

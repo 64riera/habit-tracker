@@ -19,7 +19,7 @@ type Props = {
   habit: HabitWithExtras;
   date: string;
   compact?: boolean;
-  /** El hábito en sí (no el check-in) tiene una creación/edición/archivado sin sincronizar. */
+  /** The habit itself (not the check-in) has an unsynced creation/edit/archive. */
   isPendingSync?: boolean;
 };
 
@@ -72,19 +72,19 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
     }
 
     if (isDone) {
-      // Ya está completo: confirma antes de perder el progreso del día.
+      // Already complete: confirm before losing the day's progress.
       setConfirmOpen(true);
       return;
     }
 
     if (isDuration) {
-      // Duración se completa en un solo toque; el editor ("⋯") sigue
-      // disponible para cargar un valor parcial a mano.
+      // Duration completes in a single tap; the editor ("⋯") remains
+      // available to enter a partial value by hand.
       logDone(target);
       return;
     }
 
-    // Cuantitativo: se rellena de a una unidad por toque.
+    // Quantitative: filled one unit at a time per tap.
     const next = value + 1;
     if (next >= target) {
       logDone(target);

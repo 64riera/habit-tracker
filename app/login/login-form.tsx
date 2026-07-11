@@ -23,10 +23,10 @@ export function LoginForm({
   const [state, formAction, pending] = useActionState(login, initialState);
   const displayedError = state.error ?? error;
 
-  // Recarga real del documento (no navegación suave del router) al iniciar
-  // sesión: el idioma que corresponde mostrar pasa de "detectado por
-  // dispositivo" a "preferencia de la cuenta", y el layout raíz compartido
-  // por toda la app necesita reflejar eso desde cero.
+  // Real document reload (not a soft router navigation) on login: the
+  // language that should be shown switches from "detected by device" to
+  // "account preference", and the root layout shared across the whole app
+  // needs to reflect that from scratch.
   useEffect(() => {
     if (state.redirectTo) window.location.href = state.redirectTo;
   }, [state.redirectTo]);

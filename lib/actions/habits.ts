@@ -12,9 +12,9 @@ import { buildFrequencyConfig } from "@/lib/habits/frequency";
 export type HabitFormState = { error?: string };
 
 /**
- * Ruta online (formulario/`useActionState`): delega la escritura al core y
- * redirige aquí (real navegación server-side, no vista por el registro de
- * replay offline, que llama a `createHabitCore` directo).
+ * Online path (form/`useActionState`): delegates the write to the core and
+ * redirects here (real server-side navigation, not seen by the offline
+ * replay log, which calls `createHabitCore` directly).
  */
 export async function createHabit(
   _prevState: HabitFormState,
@@ -28,8 +28,8 @@ export async function createHabit(
 }
 
 /**
- * Núcleo reutilizado por `createHabit` (ruta online) y por el registro de
- * replay offline. No redirige: la navegación la decide quien llama.
+ * Core reused by `createHabit` (online path) and by the offline replay
+ * log. Doesn't redirect: the caller decides navigation.
  */
 export async function createHabitCore(id: string, rawValues: unknown): Promise<HabitFormState> {
   const parsed = habitFormSchema.safeParse(rawValues);
@@ -38,9 +38,10 @@ export async function createHabitCore(id: string, rawValues: unknown): Promise<H
   const userId = await getCurrentUserId();
   const frequencyConfig = buildFrequencyConfig(values);
 
-  // onConflictDoNothing: si el replay offline se reintenta (p. ej. el drenado se
-  // interrumpió justo después de insertar pero antes de retirar la mutación de la
-  // cola), reintentar la misma creación no debe fallar por choque de id.
+  // onConflictDoNothing: if the offline replay is retried (e.g. the drain
+  // was interrupted right after inserting but before removing the mutation
+  // from the queue), retrying the same creation shouldn't fail on an id
+  // collision.
   await db.insert(habits).values({
     id,
     userId,
@@ -107,7 +108,7 @@ export async function updateHabitCore(habitId: string, rawValues: unknown): Prom
   return {};
 }
 
-/** Ruta online: escribe vía el core y redirige. El replay offline usa `archiveHabitCore` directo. */
+/** Online path: writes via the core and redirects. Offline replay uses `archiveHabitCore` directly. */
 export async function archiveHabit(habitId: string): Promise<void> {
   await archiveHabitCore(habitId);
   redirect("/habits");

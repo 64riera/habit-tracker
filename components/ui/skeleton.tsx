@@ -5,9 +5,9 @@ export function Skeleton({ className, style }: { className?: string; style?: CSS
   return <div className={cn("animate-pulse rounded-md bg-border/70", className)} style={style} />;
 }
 
-/** Placeholders de ThemeToggle (3 iconos en píldora) y LangToggle (ES/EN en
- * píldora) — mismas medidas que los componentes reales, ver
- * components/nav/theme-toggle.tsx y lang-toggle.tsx. */
+/** Placeholders for ThemeToggle (3 icons in a pill) and LangToggle (ES/EN in
+ * a pill) — same dimensions as the real components, see
+ * components/nav/theme-toggle.tsx and lang-toggle.tsx. */
 function SkeletonHeaderControls() {
   return (
     <div className="flex shrink-0 items-center gap-2 md:gap-3.5">
@@ -17,11 +17,11 @@ function SkeletonHeaderControls() {
   );
 }
 
-/** Espejo de ContentHeader (components/nav/content-header.tsx): misma fila
- * fija (py-2.5) con los controles a la derecha, y debajo el título — grande
- * a ancho completo para pantallas de nivel superior, compacto junto a una
- * flecha de volver para subvistas. Mismo padding (pb-5/md:pb-[22px]) que el
- * bloque real para que el contenido no salte de alto al montar. */
+/** Mirror of ContentHeader (components/nav/content-header.tsx): same fixed
+ * row (py-2.5) with the controls on the right, and the title below — large
+ * and full-width for top-level screens, compact next to a back arrow for
+ * subviews. Same padding (pb-5/md:pb-[22px]) as the real block so the
+ * content doesn't jump in height when mounting. */
 export function SkeletonContentHeader({ backHref = false }: { backHref?: boolean }) {
   return (
     <>
@@ -44,9 +44,9 @@ export function SkeletonContentHeader({ backHref = false }: { backHref?: boolean
   );
 }
 
-/** Espejo de HabitCheckRow (components/habit/habit-check-row.tsx), la fila
- * de hábitos de Hoy: avatar, nombre/subtítulo, racha, botón "···" y botón de
- * check — mismo gap-4/py-3.5 que la fila real. */
+/** Mirror of HabitCheckRow (components/habit/habit-check-row.tsx), the
+ * Today habit row: avatar, name/subtitle, streak, "···" button and check
+ * button — same gap-4/py-3.5 as the real row. */
 export function SkeletonHabitCheckRow() {
   return (
     <div className="flex items-center gap-4 border-b border-border py-3.5">
@@ -65,13 +65,13 @@ export function SkeletonHabitCheckRow() {
   );
 }
 
-/** Espejo del contenido de Hoy que depende de datos (resumen % + filas de
- * hábito) — usado solo por app/(dashboard)/loading.tsx, el fallback de
- * arranque en frío de toda la página (nada renderizó todavía, ni siquiera
- * el header). Para el cambio de día dentro de Hoy ya no aplica: el resumen
- * vive fuera del <Suspense> por fecha (ver TodaySummaryDisplay) para poder
- * animar la transición en vez de mostrarse en skeleton — ver
- * SkeletonHoyRows para ese caso. */
+/** Mirror of the data-dependent Today content (% summary + habit rows) —
+ * used only by app/(dashboard)/loading.tsx, the cold-start fallback for the
+ * whole page (nothing has rendered yet, not even the header). It no longer
+ * applies for a day change within Today: the summary lives outside the
+ * per-date <Suspense> (see TodaySummaryDisplay) so it can animate the
+ * transition instead of showing a skeleton — see SkeletonHoyRows for that
+ * case. */
 export function SkeletonHoyList() {
   return (
     <div className="flex flex-col gap-4 md:gap-[22px]">
@@ -84,11 +84,11 @@ export function SkeletonHoyList() {
   );
 }
 
-/** Solo las filas de hábito, sin el bloque de % — es el fallback del
- * <Suspense key={date}> en app/(dashboard)/page.tsx para el cambio de día:
- * en ese momento el header, el DaySwitcher y el resumen ya están visibles
- * (el resumen viejo se queda animando su transición), así que el único
- * hueco real que cubrir es la lista de hábitos en sí. */
+/** Just the habit rows, without the % block — this is the fallback for the
+ * <Suspense key={date}> in app/(dashboard)/page.tsx for a day change: at
+ * that point the header, DaySwitcher and summary are already visible (the
+ * old summary keeps animating its transition), so the only real gap to
+ * cover is the habit list itself. */
 export function SkeletonHoyRows() {
   return (
     <div className="flex flex-col">
@@ -99,10 +99,10 @@ export function SkeletonHoyRows() {
   );
 }
 
-/** Espejo de la fila inline de HabitosClient (app/(dashboard)/habits/habits-client.tsx):
- * asa de arrastre, avatar más chico que el de Hoy, nombre/subtítulo y estado
- * a la derecha — mismo gap-2.5/py-3, deliberadamente distinta de
- * SkeletonHabitCheckRow porque la fila real también lo es. */
+/** Mirror of the inline row from HabitosClient (app/(dashboard)/habits/habits-client.tsx):
+ * drag handle, smaller avatar than Today's, name/subtitle and status on the
+ * right — same gap-2.5/py-3, deliberately different from
+ * SkeletonHabitCheckRow because the real row is too. */
 export function SkeletonHabitListRow() {
   return (
     <div className="flex items-center gap-2.5 border-b border-border py-3">
@@ -117,9 +117,9 @@ export function SkeletonHabitListRow() {
   );
 }
 
-/** Tarjeta con borde redondeado (rounded-xl border p-4) que comparten
- * PeriodSummaryCard y StreakProgress en Estadísticas/detalle de hábito:
- * encabezado, cifra grande y `lines` renglones secundarios. */
+/** Rounded-border card (rounded-xl border p-4) shared by PeriodSummaryCard
+ * and StreakProgress in Statistics/habit detail: header, big figure and
+ * `lines` secondary rows. */
 export function SkeletonStatCard({ lines = 2 }: { lines?: number }) {
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-border p-4">
@@ -135,7 +135,7 @@ export function SkeletonStatCard({ lines = 2 }: { lines?: number }) {
   );
 }
 
-/** Espejo de las tarjetas de PatternsPanel (components/stats/patterns-panel.tsx). */
+/** Mirror of the cards from PatternsPanel (components/stats/patterns-panel.tsx). */
 export function SkeletonPatternCard() {
   return (
     <div className="flex-1 rounded-xl border border-border p-3.5" style={{ minWidth: 180 }}>
@@ -146,8 +146,8 @@ export function SkeletonPatternCard() {
   );
 }
 
-/** Espejo de un `Field` de HabitForm (components/habit/habit-form.tsx):
- * etiqueta uppercase + input, mismo gap-1.5. */
+/** Mirror of a `Field` from HabitForm (components/habit/habit-form.tsx):
+ * uppercase label + input, same gap-1.5. */
 function SkeletonFormField({ width = "w-full" }: { width?: string }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -157,9 +157,9 @@ function SkeletonFormField({ width = "w-full" }: { width?: string }) {
   );
 }
 
-/** Espejo de HabitForm completo, usado en el detalle de hábito. Mismo
- * gap-5 entre campos que el formulario real; omite los campos condicionales
- * (según tipo de meta/frecuencia) porque varían por hábito. */
+/** Mirror of the full HabitForm, used in the habit detail view. Same
+ * gap-5 between fields as the real form; omits the conditional fields
+ * (depending on goal/frequency type) because they vary by habit. */
 export function SkeletonHabitForm() {
   return (
     <div className="flex flex-col gap-5">

@@ -20,17 +20,17 @@ function detectIOS(): boolean {
 }
 
 /**
- * Chrome/Edge/Android disparan `beforeinstallprompt` cuando la PWA cumple los
- * criterios de instalabilidad (manifest + service worker + engagement) — hay
- * que capturarlo y guardarlo para poder relanzarlo después, desde un click
- * del usuario en Ajustes en vez del banner nativo del navegador. Safari/iOS
- * nunca dispara ese evento: ahí solo se puede mostrar instrucciones
- * manuales ("Compartir" → "Agregar a inicio").
+ * Chrome/Edge/Android fire `beforeinstallprompt` when the PWA meets the
+ * installability criteria (manifest + service worker + engagement) — it
+ * has to be captured and stored so it can be relaunched later, from a user
+ * click in Settings instead of the browser's native banner. Safari/iOS
+ * never fires that event: there, only manual instructions can be shown
+ * ("Share" → "Add to Home Screen").
  *
- * El servidor no puede saber ninguno de estos dos datos (dependen del
- * navegador real) — se leen recién después de montar (`useHasMounted`,
- * mismo patrón que ThemeToggle/PushToggle) para no desalinear el HTML del
- * servidor del que arma el cliente al hidratar.
+ * The server can't know either of these two facts (they depend on the
+ * actual browser) — they're only read after mounting (`useHasMounted`,
+ * same pattern as ThemeToggle/PushToggle) so as not to mismatch the
+ * server-rendered HTML against what the client builds on hydration.
  */
 export function useInstallPrompt() {
   const mounted = useHasMounted();

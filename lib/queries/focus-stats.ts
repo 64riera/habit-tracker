@@ -8,11 +8,11 @@ import { computeFocusStreak } from "@/lib/focus/streak";
 import { getFocusSettings } from "@/lib/queries/focus";
 
 /**
- * Consultas de agregación/tendencia de enfoque, separadas de las de ciclo de
- * vida de sesión en `lib/queries/focus.ts` — mismo split que ya existe entre
- * `stats.ts`/`summary.ts`/`patterns.ts` para hábitos. Todo se calcula al
- * vuelo a partir de `focusSessions` (sin tabla de rollup): a esta escala es
- * coherente con el resto del código y evita mantenimiento extra.
+ * Focus aggregation/trend queries, separated from the session lifecycle
+ * queries in `lib/queries/focus.ts` — same split that already exists between
+ * `stats.ts`/`summary.ts`/`patterns.ts` for habits. Everything is computed
+ * on the fly from `focusSessions` (no rollup table): at this scale that's
+ * consistent with the rest of the codebase and avoids extra maintenance.
  */
 
 async function sessionsInDateRange(userId: string, from: string, to: string) {
@@ -37,9 +37,9 @@ async function sessionsInDateRange(userId: string, from: string, to: string) {
 
 export type FocusOverallTotals = { minutes7: number; minutes30: number; minutes90: number };
 
-/** Un solo fetch de 90 días, igual que `getOverallStats` para hábitos —
- * las ventanas de 7/30 días se filtran en memoria en vez de hacer tres
- * queries separadas. */
+/** A single 90-day fetch, same as `getOverallStats` for habits — the 7/30
+ * day windows are filtered in memory instead of running three separate
+ * queries. */
 export async function getFocusOverallTotals(today: string): Promise<FocusOverallTotals> {
   const userId = await getCurrentUserId();
   const from90 = addDays(today, -89);
@@ -197,10 +197,10 @@ export type FocusCategoryStat = {
   sessionCount: number;
 };
 
-/** Mismo patrón de dos pasos que getFocusHabitBreakdown: agrega en memoria
- * por categoryId y después resuelve nombre/color en una sola query aparte,
- * en vez de un join — así el agregado no necesita traer una fila por
- * categoría por cada sesión. */
+/** Same two-step pattern as getFocusHabitBreakdown: aggregates in memory
+ * by categoryId and then resolves name/color in a single separate query,
+ * instead of a join — this way the aggregate doesn't need to bring back a
+ * category row for every session. */
 export async function getFocusCategoryBreakdown(today: string, days = 30): Promise<FocusCategoryStat[]> {
   const userId = await getCurrentUserId();
   const from = addDays(today, -(days - 1));
@@ -251,13 +251,13 @@ export async function getFocusCategoryBreakdown(today: string, days = 30): Promi
 export type FocusTimeOfDaySample = { startedAt: string; minutes: number };
 
 /**
- * Devuelve muestras crudas (sin bucketizar): la franja horaria de cada
- * sesión depende de la hora local del navegador de quien mira la pantalla,
- * no la del servidor — Vercel corre en UTC, así que bucketizar acá (con
- * `Date.getHours()` en el servidor) desalinea esta estadística respecto a
- * la hora que Historial ya muestra correctamente (esa sí, calculada en el
- * cliente). El bucketing con `bucketHourOfDay` se hace en el componente
- * cliente, sobre `new Date(startedAt).getHours()` evaluado en el navegador.
+ * Returns raw samples (not bucketed): the time-of-day slot for each session
+ * depends on the local time of the browser of whoever is looking at the
+ * screen, not the server's — Vercel runs on UTC, so bucketing here (with
+ * `Date.getHours()` on the server) would misalign this stat against the
+ * time History already shows correctly (which is computed on the client).
+ * Bucketing via `bucketHourOfDay` is done in the client component, over
+ * `new Date(startedAt).getHours()` evaluated in the browser.
  */
 export async function getFocusTimeOfDaySamples(today: string, days = 30): Promise<FocusTimeOfDaySample[]> {
   const userId = await getCurrentUserId();
@@ -279,10 +279,10 @@ export async function getFocusTimeOfDaySamples(today: string, days = 30): Promis
 
 export type FocusHistorySummary = { totalMinutes: number; sessionCount: number; completionRatePct: number };
 
-/** Tira de resumen de /focus/history: totales sobre todo el historial
- * (sin acotar por fecha, solo por el filtro de hábito si hay uno) — una
- * sola query agregada en SQL en vez de traer todas las filas, porque acá sí
- * puede crecer sin el tope de 90 días que usan las demás consultas. */
+/** Summary strip for /focus/history: totals over the entire history
+ * (not bounded by date, only by the habit filter if there is one) — a
+ * single query aggregated in SQL instead of fetching every row, because
+ * here it can indeed grow without the 90-day cap the other queries use. */
 export async function getFocusHistorySummary(habitId?: string, categoryId?: string): Promise<FocusHistorySummary> {
   const userId = await getCurrentUserId();
   const conditions = [eq(focusSessions.userId, userId), inArray(focusSessions.status, ["completed", "cancelled"])];

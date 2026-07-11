@@ -27,10 +27,10 @@ import {
   type StartFocusSessionValues,
 } from "@/lib/validation/focus";
 
-/** Invalida todo el layout de (dashboard), no solo "/focus" — el indicador
- * flotante de sesión activa vive en el layout compartido, así que una
- * mutación de enfoque hecha estando en /focus debe reflejarse también en
- * cualquier otra ruta a la que el usuario navegue después. */
+/** Invalidates the whole (dashboard) layout, not just "/focus" — the
+ * floating active-session indicator lives in the shared layout, so a focus
+ * mutation made while on /focus must also be reflected on any other route
+ * the user navigates to afterward. */
 function revalidateFocusPaths() {
   revalidatePath("/", "layout");
 }
@@ -55,9 +55,10 @@ async function resolveCategoryId(userId: string, categoryId: string | undefined 
   return category?.id ?? null;
 }
 
-/** La categoría de una sesión vinculada a un hábito siempre es la del
- * hábito (no la que mande el cliente, que en ese caso el form ni siquiera
- * deja editar) — si no hay hábito, se usa la categoría elegida directo. */
+/** The category of a session linked to a habit is always the habit's own
+ * category (not whatever the client sends, which the form doesn't even
+ * let the user edit in that case) — if there's no habit, the directly
+ * chosen category is used. */
 async function resolveFocusAttribution(
   userId: string,
   habitId: string | undefined | null,
@@ -72,8 +73,8 @@ export async function startFocusSession(input: StartFocusSessionValues): Promise
   const values = startFocusSessionSchema.parse(input);
   const userId = await getCurrentUserId();
 
-  // Reconcilia primero: si la sesión "activa" ya venció por tope o pausa
-  // vencida, no debe bloquear el inicio de una nueva.
+  // Reconcile first: if the "active" session already expired due to the
+  // cap or an elapsed break, it shouldn't block starting a new one.
   const existing = await getActiveFocusSession();
   if (existing && LIVE_STATUSES.includes(existing.status)) return existing;
 
@@ -108,7 +109,7 @@ export async function startFocusSession(input: StartFocusSessionValues): Promise
       breakDurationMinutes: breaksEnabled ? breakDurationMinutes : null,
       date: today,
     }),
-    // Lo que se acaba de elegir queda como default recordado para la próxima vez.
+    // What was just chosen is remembered as the default for next time.
     db
       .insert(focusSettings)
       .values({ userId, defaultMode: values.mode, defaultDurationMinutes: durationMinutes, breaksEnabled, breakIntervalMinutes, breakDurationMinutes })
@@ -123,7 +124,7 @@ export async function startFocusSession(input: StartFocusSessionValues): Promise
   return created;
 }
 
-/** Guarda el objetivo diario de enfoque (en minutos) como preferencia recordada del usuario. */
+/** Saves the daily focus goal (in minutes) as the user's remembered preference. */
 export async function setFocusDailyGoal(minutes: number): Promise<void> {
   const { dailyGoalMinutes } = focusSettingsSchema.parse({ dailyGoalMinutes: minutes });
   const userId = await getCurrentUserId();
@@ -134,7 +135,7 @@ export async function setFocusDailyGoal(minutes: number): Promise<void> {
   revalidateFocusPaths();
 }
 
-/** Activa/desactiva el sonido + flash de título al terminar una sesión o entrar a una pausa activa. */
+/** Enables/disables the sound + title flash when a session finishes or an active break starts. */
 export async function setFocusSoundEnabled(enabled: boolean): Promise<void> {
   const userId = await getCurrentUserId();
   await db
@@ -146,7 +147,7 @@ export async function setFocusSoundEnabled(enabled: boolean): Promise<void> {
 
 export type StartFocusSessionFormState = { error?: string };
 
-/** Wrapper apto para `useActionState`/`<form action>`: valida el FormData del formulario de inicio y delega en startFocusSession. */
+/** Wrapper suited for `useActionState`/`<form action>`: validates the start form's FormData and delegates to startFocusSession. */
 export async function startFocusSessionForm(
   _prevState: StartFocusSessionFormState,
   formData: FormData
@@ -160,16 +161,15 @@ export async function startFocusSessionForm(
 export type ActiveFocusSessionResult = { session: FocusSessionRow | null; unlockedTiers: FocusRewardTier[] };
 
 /**
- * RPC de solo lectura para el hook de ticking del cliente: relee la sesión
- * activa (ya reconciliada) sin forzar una invalidación de ruta — a
- * diferencia de las transiciones de abajo, este se llama con frecuencia
- * (cada vez que la pestaña vuelve a foco, o cuando el cliente detecta que
- * ya debió cruzarse un umbral) y no debería refrescar todo el árbol de
- * Server Components en cada llamada. Incluye `unlockedTiers` porque un
- * resync también puede ser el momento en que la reconciliación completa la
- * sesión (p. ej. el usuario mira la cuenta regresiva llegar a cero) — el
- * hook de ticking usa esto para disparar el toast de recompensa incluso sin
- * que el usuario haya tocado "Terminar".
+ * Read-only RPC for the client's ticking hook: rereads the active session
+ * (already reconciled) without forcing a route invalidation — unlike the
+ * transitions below, this is called frequently (every time the tab regains
+ * focus, or when the client detects a threshold must have already been
+ * crossed) and shouldn't refresh the whole Server Components tree on every
+ * call. It includes `unlockedTiers` because a resync can also be the
+ * moment reconciliation completes the session (e.g. the user watches the
+ * countdown reach zero) — the ticking hook uses this to fire the reward
+ * toast even when the user never tapped "Finish".
  */
 export async function getActiveFocusSessionAction(): Promise<ActiveFocusSessionResult> {
   const result = await getActiveFocusSessionWithRewards();
@@ -177,11 +177,12 @@ export async function getActiveFocusSessionAction(): Promise<ActiveFocusSessionR
 }
 
 /**
- * Reconcilia la sesión activa contra `now` y, si sigue en el estado esperado
- * tras eso, le aplica la transición pedida. Si la reconciliación ya la cerró
- * (tope alcanzado mientras el usuario no miraba), simplemente devuelve el
- * estado ya final en vez de aplicar el cambio — mismo camino de código para
- * el caso "en vivo" y el caso "reconciliado tras una ausencia larga".
+ * Reconciles the active session against `now` and, if it's still in the
+ * expected state afterward, applies the requested transition. If
+ * reconciliation already closed it (cap reached while the user wasn't
+ * looking), it simply returns the already-final state instead of applying
+ * the change — same code path for the "live" case and the "reconciled
+ * after a long absence" case.
  */
 async function transition(
   allowedStatuses: FocusSessionStatus[],
@@ -211,9 +212,9 @@ export async function endBreakEarly(): Promise<void> {
   await transition(["on_break"], (_session, now) => applyEndBreakEarly(now));
 }
 
-/** A diferencia de las otras transiciones, esta sí devuelve algo (los tiers
- * recién desbloqueados): el botón "Terminar" lo usa vía `useTransition`, no
- * como `<form action>` plano, justamente para poder disparar el toast. */
+/** Unlike the other transitions, this one does return something (the
+ * newly unlocked tiers): the "Finish" button uses it via `useTransition`,
+ * not as a plain `<form action>`, precisely so it can fire the toast. */
 export async function finishFocusSession(): Promise<{ unlockedTiers: FocusRewardTier[] }> {
   const { unlockedTiers } = await transition(["running", "on_break", "paused"], (session, now) =>
     applyFinalize(session, now, "completed")

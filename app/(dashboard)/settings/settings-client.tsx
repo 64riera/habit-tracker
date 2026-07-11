@@ -34,14 +34,14 @@ export function AjustesClient({
   function onCutoffChange(hour: number) {
     startTransition(async () => {
       await setDayCutoffHour(hour);
-      // El corte del dia cambia que fecha es "hoy" para todas las paginas;
-      // router.refresh() vuelve a pedir esos datos sin recargar el navegador.
+      // The day cutoff changes which date counts as "today" for every page;
+      // router.refresh() re-fetches that data without reloading the browser.
       router.refresh();
     });
   }
 
-  // Tema e idioma usan los mismos controles interactivos del header, para
-  // que esta fila haga lo que dice en vez de solo mostrar el valor actual.
+  // Theme and language use the same interactive controls as the header, so
+  // this row does what it says instead of just displaying the current value.
   const rows: { label: string; sub?: string; control: React.ReactNode }[] = [
     { label: t("settings.theme"), control: <ThemeToggle /> },
     { label: t("settings.language"), control: <LangToggle /> },
@@ -66,11 +66,11 @@ export function AjustesClient({
     },
   ];
 
-  // Solo se ofrece instalar si el navegador realmente puede hacer algo con
-  // el click: Chrome/Edge/Android disparan un prompt nativo (canInstall);
-  // Safari/iOS no tiene ese evento, así que ahí se muestran instrucciones en
-  // vez de un botón. Si ya está instalada (modo standalone) o el navegador
-  // no soporta instalación (p. ej. Firefox de escritorio), no se muestra nada.
+  // Installing is only offered if the browser can actually do something with
+  // the click: Chrome/Edge/Android fire a native prompt (canInstall);
+  // Safari/iOS has no such event, so instructions are shown there instead of
+  // a button. If already installed (standalone mode) or the browser doesn't
+  // support installation (e.g. desktop Firefox), nothing is shown.
   if (canInstall) {
     rows.push({
       label: t("settings.installApp"),
@@ -110,9 +110,9 @@ export function AjustesClient({
         ))}
       </div>
 
-      {/* POST normal a un Route Handler (no Server Action): ver el comentario
-          en app/api/auth/logout/route.ts — evita que Next intente refrescar
-          esta misma pantalla, ya autenticada, justo después de cerrar sesión. */}
+      {/* Plain POST to a Route Handler (not a Server Action): see the comment
+          in app/api/auth/logout/route.ts — avoids Next trying to refresh
+          this same screen, still authenticated, right after logging out. */}
       <form action="/api/auth/logout" method="post" className="mt-6">
         <button type="submit" className="flex items-center gap-1.5 text-[12.5px] font-medium text-muted">
           <LogOut size={14} strokeWidth={2} aria-hidden />

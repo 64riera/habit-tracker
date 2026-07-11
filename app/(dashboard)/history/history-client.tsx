@@ -172,10 +172,10 @@ export function HistorialClient({
         <Heatmap cells={heatmap} />
       </div>
 
-      {/* Calendario (angosto y de alto fijo) al lado del registro (la lista
-          más larga) desde lg: el ancho de la página deja de tener sentido
-          repartido en una sola columna una vez que hay espacio de sobra. En
-          mobile/tablet siguen apilados, calendario primero, igual que antes. */}
+      {/* Calendar (narrow, fixed height) next to the log (the longer list)
+          from lg onward: the page width stops making sense spread over a
+          single column once there's plenty of room to spare. On
+          mobile/tablet they stay stacked, calendar first, same as before. */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr] lg:items-start lg:gap-8">
         <CalendarMonth cells={calendar} monthLabel={monthLabel} today={today} />
 
@@ -187,12 +187,12 @@ export function HistorialClient({
             <p className="text-sm text-muted">{t("history.empty")}</p>
           ) : (
             <>
-              {/* Un encabezado por día en vez de repetir la fecha en cada
-                  fila: la unidad natural de un registro diario es el día,
-                  no la entrada individual — así se lee como un diario, no
-                  como una tabla plana. Cada día es a la vez el punto de
-                  entrada para corregirlo (mismo mecanismo de check-in por
-                  fecha que Hoy y el calendario). */}
+              {/* One header per day instead of repeating the date on every
+                  row: the natural unit of a daily log is the day, not the
+                  individual entry — this way it reads like a diary, not a
+                  flat table. Each day is also the entry point to correct it
+                  (the same date-based check-in mechanism as Home and the
+                  calendar). */}
               <div className="flex flex-col gap-6">
                 {groups.map((group) => (
                   <div key={group.date}>

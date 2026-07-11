@@ -7,7 +7,7 @@ import type { RoutineWithStats, RoutineHabitSummary } from "@/lib/queries/routin
 import { buildFrequencyConfig } from "@/lib/habits/frequency";
 import { FREEZE_MONTHLY_ALLOWANCE } from "@/lib/habits/status";
 
-// --- Hábitos ---
+// --- Habits ---
 
 export function pendingHabitCreates(queue: QueuedRecord[]) {
   return queue.filter((m): m is Extract<QueuedRecord, { type: "createHabit" }> => m.type === "createHabit");
@@ -37,7 +37,7 @@ export function pendingHabitRestoreIds(queue: QueuedRecord[]): Set<string> {
   );
 }
 
-/** Campos editables de un hábito derivados de los valores de formulario — reutilizado por el ghost de creación y el overlay de edición. */
+/** Editable habit fields derived from the form values — reused by the creation ghost and the edit overlay. */
 function habitEditableFields(values: HabitFormValues, categories: CategoryRow[]) {
   return {
     categoryId: values.categoryId || null,
@@ -57,7 +57,7 @@ function habitEditableFields(values: HabitFormValues, categories: CategoryRow[])
   };
 }
 
-/** Construye un `HabitWithExtras` "suficientemente bueno" para mostrar un hábito creado offline aún no sincronizado. */
+/** Builds a "good enough" `HabitWithExtras` to display a habit created offline that hasn't synced yet. */
 export function buildGhostHabit(
   id: string,
   values: HabitFormValues,
@@ -78,7 +78,7 @@ export function buildGhostHabit(
   };
 }
 
-/** Superpone una edición offline aún no sincronizada sobre el hábito real ya cargado. */
+/** Overlays an offline edit not yet synced on top of the already-loaded real habit. */
 export function applyPendingHabitEdit(
   habit: HabitWithExtras,
   values: HabitFormValues,
@@ -87,7 +87,7 @@ export function applyPendingHabitEdit(
   return { ...habit, ...habitEditableFields(values, categories) };
 }
 
-// --- Categorías ---
+// --- Categories ---
 
 export function pendingCategoryCreates(queue: QueuedRecord[]) {
   return queue.filter(
@@ -123,7 +123,7 @@ export function buildGhostCategory(id: string, values: CategoryFormValues): Cate
   };
 }
 
-// --- Rutinas ---
+// --- Routines ---
 
 export function pendingRoutineCreates(queue: QueuedRecord[]) {
   return queue.filter(
@@ -148,9 +148,9 @@ export function pendingRoutineDeleteIds(queue: QueuedRecord[]): Set<string> {
 }
 
 /**
- * Campos editables de una rutina derivados de los valores de formulario — reutilizado por el
- * ghost de creación y el overlay de edición. `goalType`/`goalTarget` de cada hábito son un
- * placeholder (solo se usan para listar nombres, no para el tap rápido de "marcar todo").
+ * Editable routine fields derived from the form values — reused by the creation ghost and
+ * the edit overlay. `goalType`/`goalTarget` for each habit are a placeholder (only used to
+ * list names, not for the quick "mark all" tap).
  */
 function routineEditableFields(values: RoutineFormValues, habitNames: { id: string; name: string }[]) {
   const habitById = new Map(habitNames.map((h) => [h.id, h]));
@@ -176,7 +176,7 @@ export function buildGhostRoutine(
   };
 }
 
-/** Superpone una edición offline aún no sincronizada sobre la rutina real ya cargada. */
+/** Overlays an offline edit not yet synced on top of the already-loaded real routine. */
 export function applyPendingRoutineEdit(
   routine: RoutineWithStats,
   values: RoutineFormValues,

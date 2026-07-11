@@ -23,10 +23,10 @@ export function SignupForm({
   const [state, formAction, pending] = useActionState(signup, initialState);
   const displayedError = state.error ?? error;
 
-  // Recarga real del documento (no navegación suave del router) al crear la
-  // cuenta: el idioma que corresponde mostrar pasa de "detectado por
-  // dispositivo" a "preferencia recién guardada en la cuenta", y el layout
-  // raíz compartido por toda la app necesita reflejar eso desde cero.
+  // Real document reload (not a soft router navigation) on account creation:
+  // the language that should be shown switches from "detected by device" to
+  // "preference just saved on the account", and the root layout shared
+  // across the whole app needs to reflect that from scratch.
   useEffect(() => {
     if (state.redirectTo) window.location.href = state.redirectTo;
   }, [state.redirectTo]);

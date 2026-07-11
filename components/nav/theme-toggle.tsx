@@ -24,8 +24,8 @@ export function ThemeToggle() {
 
   function handleChange(opt: ThemeOption) {
     setTheme(opt);
-    // Guarda la preferencia en la cuenta para que siga al usuario entre
-    // dispositivos; el cambio visual ya ocurrio de inmediato arriba.
+    // Saves the preference to the account so it follows the user across
+    // devices; the visual change already happened immediately above.
     startTransition(() => {
       void setThemePreference(opt);
     });

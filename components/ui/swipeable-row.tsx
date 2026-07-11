@@ -18,8 +18,8 @@ type Coordinator = { openId: string | null; setOpenId: (id: string | null) => vo
 const SwipeCoordinatorContext = createContext<Coordinator | null>(null);
 
 /**
- * Coordina que, al estilo iOS, abrir una fila cierre cualquier otra que haya
- * quedado abierta en la misma lista. Envuelve el contenedor de la lista.
+ * Coordinates that, iOS-style, opening a row closes any other row left open
+ * in the same list. Wraps the list container.
  */
 export function SwipeableListProvider({ children }: { children: React.ReactNode }) {
   const [openId, setOpenId] = useState<string | null>(null);
@@ -39,10 +39,10 @@ type DragState = {
 };
 
 /**
- * Fila con acciones reveladas al deslizar horizontalmente (Mail/Recordatorios
- * de iOS). Sin dependencias — Pointer Events puros, igual que `ReorderableList`.
- * Si el primer movimiento es más vertical que horizontal, cede el gesto al
- * scroll normal de la lista.
+ * Row with actions revealed by swiping horizontally (iOS Mail/Reminders
+ * style). No dependencies — plain Pointer Events, same as `ReorderableList`.
+ * If the first movement is more vertical than horizontal, it yields the
+ * gesture to the list's normal scroll.
  */
 export function SwipeableRow({
   id,
@@ -78,10 +78,11 @@ export function SwipeableRow({
     coordinator?.setOpenId(rowId);
   }
 
-  // Otra fila se abrió: esta se cierra. Patrón de "ajustar estado durante el
-  // render" (https://react.dev/reference/react/useState#storing-information-from-previous-renders):
-  // se compara contra el `openId` visto en el render anterior, no en un efecto,
-  // para no arrastrar un frame de retraso ni disparar un ciclo extra de efectos.
+  // Another row opened: this one closes. "Adjusting state during render"
+  // pattern (https://react.dev/reference/react/useState#storing-information-from-previous-renders):
+  // it's compared against the `openId` seen in the previous render, not in
+  // an effect, so as not to drag a frame of delay or trigger an extra
+  // effects cycle.
   const [lastSeenOpenId, setLastSeenOpenId] = useState(coordinator?.openId ?? null);
   if (coordinator && coordinator.openId !== lastSeenOpenId) {
     setLastSeenOpenId(coordinator.openId);

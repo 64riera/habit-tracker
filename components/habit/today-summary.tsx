@@ -4,13 +4,13 @@ import { useI18n } from "@/lib/i18n/client";
 import { useTextScramble } from "@/lib/hooks/use-text-scramble";
 import { useTodaySummary } from "./today-summary-context";
 
-/** Espejo animado de %, resumen y racha máxima — ver TodaySummaryProvider
- * para por qué vive fuera del límite de Suspense de la lista. El % y la
- * racha se revelan con un scramble de texto al cambiar; la barra se anima
- * vía transición CSS de `width` (solo funciona porque este componente no
- * se remonta al cambiar de día, así el navegador tiene un valor previo del
- * que partir). La línea "N de M completados" se actualiza al instante,
- * sin scramble — es metadata de apoyo, no el foco de la animación. */
+/** Animated mirror of %, summary and best streak — see TodaySummaryProvider
+ * for why it lives outside the list's Suspense boundary. The % and streak
+ * are revealed with a text scramble when they change; the bar animates via
+ * a CSS `width` transition (this only works because this component doesn't
+ * remount when the day changes, so the browser has a previous value to
+ * start from). The "N of M completed" line updates instantly, without a
+ * scramble — it's supporting metadata, not the focus of the animation. */
 export function TodaySummaryDisplay() {
   const { t } = useI18n();
   const { summary } = useTodaySummary();

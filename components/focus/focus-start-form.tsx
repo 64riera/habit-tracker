@@ -28,10 +28,10 @@ type Props = {
 
 const INITIAL_STATE: StartFocusSessionFormState = {};
 const MODES = ["countdown", "stopwatch"] as const;
-// Radix Select no permite un <Select.Item value=""> (ese valor está
-// reservado para "sin selección" a nivel interno y rompe el texto
-// mostrado en el trigger) — un sentinel no vacío evita el bug; nunca sale
-// de este componente, se traduce de vuelta a "" antes de mandarlo al form.
+// Radix Select doesn't allow a <Select.Item value=""> (that value is
+// reserved internally for "no selection" and breaks the text shown in the
+// trigger) — a non-empty sentinel avoids the bug; it never leaves this
+// component, it's translated back to "" before sending it to the form.
 const NONE = "__none__";
 
 export function FocusStartForm({ settings, habitOptions, categories, defaultHabitId }: Props) {
@@ -48,11 +48,11 @@ export function FocusStartForm({ settings, habitOptions, categories, defaultHabi
   ];
   const submittedHabitId = habitId === NONE ? "" : habitId;
 
-  // Vincular a un hábito ya implica una categoría (la del hábito): en vez de
-  // pedirla dos veces (y arriesgar que no coincidan), el picker manual de
-  // categoría se reemplaza por un indicador de solo lectura mientras haya
-  // un hábito elegido. Ver resolveFocusAttribution en lib/actions/focus.ts,
-  // que además vuelve a derivarla en el servidor sin confiar en el cliente.
+  // Linking to a habit already implies a category (the habit's own): instead
+  // of asking for it twice (and risking a mismatch), the manual category
+  // picker is replaced by a read-only indicator while a habit is selected.
+  // See resolveFocusAttribution in lib/actions/focus.ts, which also
+  // re-derives it on the server without trusting the client.
   const linkedHabit = submittedHabitId ? habitOptions.find((h) => h.id === submittedHabitId) : undefined;
   const linkedCategory = linkedHabit?.categoryId
     ? categories.find((c) => c.id === linkedHabit.categoryId)
@@ -209,11 +209,11 @@ export function FocusStartForm({ settings, habitOptions, categories, defaultHabi
   );
 }
 
-// Único CTA de la pantalla — el que arranca el timer — así que rompe la
-// escala de botones secundarios (Guardar, Pausar/Terminar) a propósito:
-// full-width, más alto, texto más grande y radio un escalón mayor. El
-// acento sigue siendo monocromo (bg-text/text-surface, sin color nuevo);
-// la jerarquía se logra con tamaño, peso y espacio.
+// The screen's only CTA — the one that starts the timer — so it deliberately
+// breaks the scale of secondary buttons (Save, Pause/Finish): full-width,
+// taller, bigger text and one step larger radius. The accent is still
+// monochrome (bg-text/text-surface, no new color); the hierarchy is achieved
+// through size, weight and spacing.
 function StartButton({ label, loadingLabel }: { label: string; loadingLabel: string }) {
   const { pending } = useFormStatus();
   return (

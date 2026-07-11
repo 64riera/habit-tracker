@@ -14,29 +14,29 @@ function firstSupportedLocale(acceptLanguage: string | null): Locale {
   return DEFAULT_LOCALE;
 }
 
-/** Idioma del dispositivo a partir del header `Accept-Language` — se usa
- * antes de que exista sesión (login/signup) cuando el usuario todavía no
- * tocó el selector. */
+/** Device language from the `Accept-Language` header — used before a
+ * session exists (login/signup), while the user hasn't touched the
+ * selector yet. */
 export async function detectDeviceLocale(): Promise<Locale> {
   const store = await headers();
   return firstSupportedLocale(store.get("accept-language"));
 }
 
-/** Elección explícita hecha en el selector de login/signup, guardada como
- * cookie de sesión de navegador — puente hasta que `signup()`/`login()` la
- * persistan en la cuenta (ver `lib/actions/auth.ts`). Una vez hay sesión,
- * esto deja de ser la fuente de verdad: gana `localePreference` en la
- * cuenta, igual que el tema (`getThemePreference`), para que el idioma siga
- * al usuario entre dispositivos en vez de quedar atado al navegador. */
+/** Explicit choice made in the login/signup selector, stored as a browser
+ * session cookie — a bridge until `signup()`/`login()` persist it to the
+ * account (see `lib/actions/auth.ts`). Once there's a session, this stops
+ * being the source of truth: `localePreference` on the account wins, just
+ * like the theme (`getThemePreference`), so the language follows the user
+ * across devices instead of staying tied to the browser. */
 export async function getPreAuthLocaleCookie(): Promise<Locale | null> {
   const store = await cookies();
   const value = store.get(LOCALE_COOKIE)?.value;
   return isLocale(value) ? value : null;
 }
 
-/** Idioma a usar para una cuenta nueva (signup) o al sincronizar en login:
- * lo que el usuario eligió explícitamente en el selector pre-auth si lo
- * tocó, si no el detectado del dispositivo. */
+/** Language to use for a new account (signup) or when syncing on login:
+ * whatever the user explicitly chose in the pre-auth selector if they
+ * touched it, otherwise the one detected from the device. */
 export async function resolvePreAuthLocale(): Promise<Locale> {
   const explicit = await getPreAuthLocaleCookie();
   return explicit ?? detectDeviceLocale();

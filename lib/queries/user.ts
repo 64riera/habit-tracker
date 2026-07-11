@@ -7,7 +7,7 @@ import type { Locale } from "@/lib/i18n/dictionaries";
 
 export type ThemePreference = "light" | "dark" | "system";
 
-/** Preferencia de tema guardada en la cuenta. "system" si no hay sesion (p. ej. /login). */
+/** Theme preference saved on the account. "system" if there's no session (e.g. /login). */
 export async function getThemePreference(): Promise<ThemePreference> {
   const userId = await getCurrentUserIdOrNull();
   if (!userId) return "system";
@@ -19,9 +19,9 @@ export async function getThemePreference(): Promise<ThemePreference> {
   return user?.themePreference ?? "system";
 }
 
-/** Preferencia de idioma guardada en la cuenta. `null` si no hay sesion (p.
- * ej. /login, /signup) — ahi el idioma se resuelve por otras vias, ver
- * `getCurrentLocale()` en lib/i18n/locale.ts. */
+/** Language preference saved on the account. `null` if there's no session
+ * (e.g. /login, /signup) — there the language is resolved through other
+ * means, see `getCurrentLocale()` in lib/i18n/locale.ts. */
 export async function getLocalePreference(): Promise<Locale | null> {
   const userId = await getCurrentUserIdOrNull();
   if (!userId) return null;
@@ -33,8 +33,8 @@ export async function getLocalePreference(): Promise<Locale | null> {
   return user?.localePreference ?? null;
 }
 
-/** Zona horaria IANA guardada en la cuenta (detectada en el navegador, ver
- * `timezone-sync.tsx`). `null` si no hay sesion o aun no se detecto. */
+/** IANA timezone saved on the account (detected in the browser, see
+ * `timezone-sync.tsx`). `null` if there's no session or it hasn't been detected yet. */
 export async function getTimezonePreference(): Promise<string | null> {
   const userId = await getCurrentUserIdOrNull();
   if (!userId) return null;
@@ -42,9 +42,9 @@ export async function getTimezonePreference(): Promise<string | null> {
   return user?.timezone ?? null;
 }
 
-/** Si ya se le mostró (y decidió algo en) el modal de sugerencia de
- * instalación tras su primer hábito — ver install-suggestion-modal.tsx.
- * `true` si no hay sesión, para no ofrecerlo nunca en páginas públicas. */
+/** Whether the install-suggestion modal after their first habit has
+ * already been shown (and decided on) — see install-suggestion-modal.tsx.
+ * `true` if there's no session, so it's never offered on public pages. */
 export async function getInstallPromptSeen(): Promise<boolean> {
   const userId = await getCurrentUserIdOrNull();
   if (!userId) return true;

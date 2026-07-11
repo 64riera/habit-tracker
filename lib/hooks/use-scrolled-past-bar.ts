@@ -3,15 +3,15 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 
 /**
- * Detecta si hay contenido tapado detrás de una barra `sticky top-0` de
- * alto constante. Un centinela de alto 0 se coloca justo debajo de la
- * barra; en cuanto ese punto deja de ser visible (offset por el alto real
- * de la barra vía rootMargin, no por el techo del viewport), sabemos que
- * el usuario scrolleó y hay contenido corriendo bajo la barra.
+ * Detects whether content is hidden behind a constant-height `sticky
+ * top-0` bar. A zero-height sentinel is placed right below the bar; as
+ * soon as that point stops being visible (offset by the bar's actual
+ * height via rootMargin, not by the top of the viewport), we know the
+ * user has scrolled and content is running under the bar.
  *
- * Compartido por las variantes de ContentHeader: TopLevelHeader lo usa
- * para cruzar el título por opacidad, y ambas lo usan para activar el
- * fondo translúcido/blur al estilo barra de navegación de iOS.
+ * Shared by the ContentHeader variants: TopLevelHeader uses it to
+ * crossfade the title via opacity, and both use it to trigger the
+ * translucent/blurred background in the style of an iOS navigation bar.
  */
 export function useScrolledPastBar<TBar extends HTMLElement>(): {
   barRef: RefObject<TBar | null>;

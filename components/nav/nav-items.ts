@@ -7,9 +7,9 @@ export const NAV_ITEMS = [
     href: "/history",
     dictKey: "nav.historial",
     icon: History,
-    // Historial y Estadísticas comparten un solo ítem de nav: son dos rutas
-    // independientes presentadas como una misma sección, unidas por el
-    // segmented control en SegmentedRouteTabs (ver esa pantalla).
+    // History and Statistics share a single nav item: they're two
+    // independent routes presented as one section, joined by the segmented
+    // control in SegmentedRouteTabs (see that screen).
     activeWhen: (p: string) => p.startsWith("/history") || p.startsWith("/stats"),
   },
   { key: "enfoque", href: "/focus", dictKey: "nav.enfoque", icon: Timer, activeWhen: (p: string) => p.startsWith("/focus") },

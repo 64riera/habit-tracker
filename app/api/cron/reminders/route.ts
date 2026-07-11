@@ -4,8 +4,8 @@ import { db } from "@/lib/db/client";
 import { habits, pushSubscriptions, users } from "@/lib/db/schema";
 import { isReminderDue } from "@/lib/push/reminder-window";
 
-// Coincide con la frecuencia del cron externo (.github/workflows/push-reminders.yml):
-// cada corrida solo debe atrapar los recordatorios "due" desde la corrida anterior.
+// Matches the frequency of the external cron (.github/workflows/push-reminders.yml):
+// each run should only catch reminders that became "due" since the previous run.
 const WINDOW_MINUTES = 15;
 
 const REMINDER_PREFIX: Record<"es" | "en", string> = {
@@ -22,15 +22,15 @@ function nowHHMMInTimezone(timeZone: string): string {
 }
 
 /**
- * Disparado por un cron externo gratuito (GitHub Actions, no Vercel Cron —
- * ver .github/workflows/push-reminders.yml), no por un navegador: no hay
- * sesión de usuario, así que recorre todas las cuentas en vez de usar
- * getCurrentUserId(). Protegido con un secreto compartido en vez de cookie.
+ * Triggered by a free external cron (GitHub Actions, not Vercel Cron — see
+ * .github/workflows/push-reminders.yml), not by a browser: there's no user
+ * session, so it iterates over all accounts instead of using
+ * getCurrentUserId(). Protected with a shared secret instead of a cookie.
  *
- * Simplificación deliberada (v1): no revisa si el hábito ya se marcó como
- * hecho hoy — eso requeriría el corte de día de cada usuario, que hoy solo
- * vive en una cookie de navegador, no en la cuenta (mismo hueco que el del
- * corte de día global, fuera de alcance acá).
+ * Deliberate simplification (v1): it doesn't check whether the habit was
+ * already marked done today — that would require each user's day cutoff,
+ * which today only lives in a browser cookie, not on the account (the same
+ * gap as the global day-cutoff one, out of scope here).
  */
 export async function POST(request: Request) {
   const expected = process.env.CRON_SECRET;

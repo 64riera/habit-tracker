@@ -10,15 +10,15 @@ import { createSessionCookie, safeNextPath } from "@/lib/auth/session";
 import { getPreAuthLocaleCookie, resolvePreAuthLocale } from "@/lib/i18n/locale";
 import { isGoogleAuthEnabled } from "@/lib/auth/google";
 
-/** `redirectTo` en vez de `redirect()` de next/navigation: login/signup
- * cambian qué cuenta está activa, y con ella el idioma que debe mostrarse
- * (preferencia de la cuenta en vez de lo detectado del dispositivo). El
- * layout raíz — donde vive `I18nProvider` — es compartido por toda la app,
- * así que una navegación *suave* del router de Next puede reutilizar esa
- * parte del árbol tal como estaba antes de iniciar sesión. Devolver la URL
- * de destino y dejar que el formulario haga `window.location.href` fuerza
- * una recarga real del documento, sin depender de que el router decida
- * refrescar el layout compartido. */
+/** `redirectTo` instead of next/navigation's `redirect()`: login/signup
+ * change which account is active, and with it the language that should be
+ * displayed (account preference instead of what's detected from the
+ * device). The root layout — where `I18nProvider` lives — is shared across
+ * the whole app, so a *soft* navigation from the Next router can reuse that
+ * part of the tree exactly as it was before signing in. Returning the
+ * destination URL and letting the form do `window.location.href` forces a
+ * real document reload, without depending on the router deciding to
+ * refresh the shared layout. */
 export type AuthState = { error?: string; redirectTo?: string };
 
 const USERNAME_PATTERN = /^[a-z0-9_.-]+$/;
@@ -51,12 +51,12 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
   );
 }
 
-/** Sincroniza la elección explícita del selector pre-auth (login/signup) a
- * la cuenta que acaba de autenticarse. Solo actúa si el usuario realmente
- * tocó el selector en esta visita (cookie presente) — si no, se respeta la
- * preferencia ya guardada en la cuenta en vez de pisarla con una detección
- * de dispositivo que podría no reflejarla (p. ej. iniciar sesión desde un
- * navegador con otro idioma configurado). */
+/** Syncs the explicit choice made in the pre-auth selector (login/signup) to
+ * the account that just authenticated. Only acts if the user actually
+ * touched the selector during this visit (cookie present) — otherwise, the
+ * preference already saved on the account is respected instead of
+ * overwriting it with a device detection that might not reflect it (e.g.
+ * logging in from a browser configured with a different language). */
 export async function syncLocalePreferenceOnLogin(userId: string): Promise<void> {
   const explicit = await getPreAuthLocaleCookie();
   if (explicit) {
@@ -64,19 +64,20 @@ export async function syncLocalePreferenceOnLogin(userId: string): Promise<void>
   }
 }
 
-/** El layout raíz (donde vive `I18nProvider`) se comparte entre todas las
- * rutas, así que el router del cliente lo reutiliza entre navegaciones
- * suaves en vez de volver a pedirlo — sin esto, el idioma que trae una
- * sesión recién creada/cerrada podía tardar en reflejarse porque el
- * cliente seguía usando el locale calculado en la carga anterior.
- * `revalidatePath("/", "layout")` purga ese caché por completo, así la
- * navegación que sigue al login/signup/logout siempre trae el locale
- * fresco (cuenta si hay sesión, dispositivo si no — ver getCurrentLocale). */
+/** The root layout (where `I18nProvider` lives) is shared across all
+ * routes, so the client router reuses it between soft navigations instead
+ * of requesting it again — without this, the language brought by a
+ * freshly created/closed session could take a while to show up because
+ * the client kept using the locale computed on the previous load.
+ * `revalidatePath("/", "layout")` purges that cache entirely, so the
+ * navigation that follows login/signup/logout always brings the fresh
+ * locale (account if there's a session, device otherwise — see
+ * getCurrentLocale). */
 export async function invalidateLocaleAcrossApp(): Promise<void> {
   revalidatePath("/", "layout");
 }
 
-/** Deriva un username disponible a partir de un email (cuentas creadas vía Google, sin username elegido a mano). */
+/** Derives an available username from an email (accounts created via Google, with no manually chosen username). */
 export async function generateUniqueUsernameFromEmail(email: string): Promise<string> {
   const base = normalizeUsername(email.split("@")[0] ?? "")
     .replace(/[^a-z0-9_.-]/g, "")
@@ -96,9 +97,9 @@ export async function generateUniqueUsernameFromEmail(email: string): Promise<st
 }
 
 export async function signup(_prevState: AuthState, formData: FormData): Promise<AuthState> {
-  // Defensa en profundidad: el form ya oculta estos campos cuando Google
-  // está configurado, pero el Server Action también debe rechazar un POST
-  // directo (curl, devtools) en vez de confiar solo en la UI.
+  // Defense in depth: the form already hides these fields when Google is
+  // configured, but the Server Action must also reject a direct POST
+  // (curl, devtools) instead of relying solely on the UI.
   if (isGoogleAuthEnabled()) {
     return { error: "manualAuthDisabled" };
   }
@@ -135,7 +136,7 @@ export async function signup(_prevState: AuthState, formData: FormData): Promise
 }
 
 export async function login(_prevState: AuthState, formData: FormData): Promise<AuthState> {
-  // Ver comentario equivalente en signup().
+  // See the equivalent comment in signup().
   if (isGoogleAuthEnabled()) {
     return { error: "manualAuthDisabled" };
   }
@@ -155,8 +156,8 @@ export async function login(_prevState: AuthState, formData: FormData): Promise<
   return { redirectTo: safeNextPath(next) };
 }
 
-// Cerrar sesión NO es un Server Action (ver app/api/auth/logout/route.ts):
-// Next siempre vuelve a pedir la pantalla actual después de cualquier
-// Server Action, y esa pantalla (Ajustes) recién se quedó sin la sesión
-// que sus propios datos asumen. Un POST normal a un Route Handler evita
-// ese refresco automático — el navegador solo sigue el redirect.
+// Logging out is NOT a Server Action (see app/api/auth/logout/route.ts):
+// Next always re-requests the current screen after any Server Action, and
+// that screen (Settings) just lost the session its own data assumes.
+// A plain POST to a Route Handler avoids that automatic refresh — the
+// browser just follows the redirect.

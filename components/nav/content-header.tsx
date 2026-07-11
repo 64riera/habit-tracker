@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils";
 import { useScrolledPastBar } from "@/lib/hooks/use-scrolled-past-bar";
 import { ThemeToggle } from "./theme-toggle";
 
-/** El idioma dejó de ser algo que se cambia sobre la marcha desde cualquier
- * pantalla: ahora es una preferencia de cuenta, elegida una vez al crear el
- * usuario (ver login/signup) y editable solo desde Ajustes. */
+/** Language is no longer something you change on the fly from any screen:
+ * it's now an account preference, chosen once when the user is created (see
+ * login/signup) and editable only from Settings. */
 function HeaderControls({ showControls }: { showControls: boolean }) {
   if (!showControls) return null;
   return (
@@ -19,25 +19,24 @@ function HeaderControls({ showControls }: { showControls: boolean }) {
   );
 }
 
-/** Vidrio esmerilado de la barra fija, al estilo iOS: opaca y a ras de la
- * página hasta que hay contenido real corriendo debajo, ahí se vuelve
- * translúcida + blur. El blur/saturación quedan siempre aplicados (inocuos
- * con el fondo opaco de reposo) — nunca se anima el propio `backdrop-filter`,
- * que sería costoso; solo transicionan `background-color` y `box-shadow`,
- * ambos baratos y sin layout.
+/** Frosted glass for the fixed bar, iOS-style: opaque and flush with the
+ * page until there's real content scrolling underneath, at which point it
+ * becomes translucent + blur. The blur/saturation are always applied
+ * (harmless against the opaque resting background) — `backdrop-filter`
+ * itself is never animated, since that would be expensive; only
+ * `background-color` and `box-shadow` transition, both cheap and layout-free.
  *
- * Debe seguir siendo opaca en reposo (no transparente): mientras el usuario
- * scrollea, el "hero" de TopLevelHeader pasa por detrás de esta barra antes
- * de que isScrolled se active (recién se activa cuando el hero quedó
- * totalmente tapado) — si la barra fuera transparente en ese tramo, el
- * título grande se vería asomando sin difuminar, sin ninguna capa que lo
- * oculte.
+ * It must stay opaque at rest (not transparent): while the user scrolls,
+ * TopLevelHeader's "hero" passes behind this bar before isScrolled
+ * activates (it only activates once the hero is fully covered) — if the bar
+ * were transparent during that stretch, the large title would show through
+ * without blurring, with no layer to hide it.
  *
- * La separación con el contenido es sombra difusa + un hairline casi
- * invisible (tokens `--header-hairline`/`--header-shadow`, ver
- * globals.css) en vez de un borde sólido — en claro la sombra hace el
- * trabajo, en oscuro pesa más el hairline, porque las sombras casi no se
- * notan sobre fondos oscuros. */
+ * The separation from the content is a soft shadow + an almost invisible
+ * hairline (tokens `--header-hairline`/`--header-shadow`, see globals.css)
+ * instead of a solid border — in light mode the shadow does the work, in
+ * dark mode the hairline carries more weight, because shadows are barely
+ * noticeable against dark backgrounds. */
 function barMaterialClass(isScrolled: boolean) {
   return cn(
     "backdrop-blur-xl backdrop-saturate-[1.2]",
@@ -48,16 +47,16 @@ function barMaterialClass(isScrolled: boolean) {
   );
 }
 
-/** Pantallas de nivel superior (Hoy, Historial, etc.): título grande que se
- * va con el scroll nativo, y una versión compacta que cruza por opacidad
- * en la barra fija una vez que el título grande queda tapado.
+/** Top-level screens (Today, History, etc.): large title that scrolls away
+ * with native scroll, and a compact version that crossfades in on the fixed
+ * bar once the large title is covered.
  *
- * `headerAccessory` (opcional, p. ej. el chip de sesión de enfoque en vivo)
- * ocupa el mismo espacio que el título compacto mientras este todavía no
- * se muestra: mientras no hay scroll el hero grande de abajo hace de
- * título, así que ese hueco a la izquierda de la barra está libre. En
- * cuanto `isScrolled` activa el título compacto, el accesorio cruza a
- * `opacity-0` en el mismo crossfade — nunca compiten por el espacio. */
+ * `headerAccessory` (optional, e.g. the live focus session chip) occupies
+ * the same space as the compact title while the latter isn't shown yet:
+ * while there's no scroll, the large hero below acts as the title, so that
+ * gap on the left of the bar is free. As soon as `isScrolled` activates the
+ * compact title, the accessory crossfades to `opacity-0` in the same
+ * transition — they never compete for space. */
 function TopLevelHeader({
   titleKey,
   subtitleKey,
@@ -75,13 +74,13 @@ function TopLevelHeader({
   return (
     <>
       {/*
-        Alto constante siempre: nada acá cambia de tamaño con el scroll, así
-        que <main> nunca ve fluctuar su scrollHeight por culpa del header —
-        eso era lo que forzaba saltos de scroll en páginas con poco
-        contenido. Solo la opacidad del título compacto (y del accesorio,
-        si hay) cruza (GPU, no dispara layout); el título grande de abajo se
-        va con el scroll nativo del documento, sin ninguna animación de
-        tamaño.
+        Always constant height: nothing here changes size with scroll, so
+        <main> never sees its scrollHeight fluctuate because of the header —
+        that was what forced scroll jumps on pages with little content.
+        Only the compact title's opacity (and the accessory's, if present)
+        crossfades (GPU, doesn't trigger layout); the large title below
+        scrolls away with the document's native scroll, with no size
+        animation.
       */}
       <div
         ref={barRef}
@@ -90,9 +89,9 @@ function TopLevelHeader({
           barMaterialClass(isScrolled)
         )}
       >
-        {/* grid (no absolute): título y accesorio se apilan en la misma
-            celda, así el contenedor mide por el más alto de los dos en vez
-            de necesitar una altura fija a mano. */}
+        {/* grid (not absolute): title and accessory stack in the same
+            cell, so the container's height is measured by the taller of
+            the two instead of needing a fixed height set by hand. */}
         <div className="grid min-w-0 flex-1 items-center">
           <div
             className={cn(
@@ -126,10 +125,9 @@ function TopLevelHeader({
   );
 }
 
-/** Subvistas (fuera de la nav principal, con flecha para volver): el título
- * vive únicamente en la barra fija, siempre visible, sin animación — no
- * necesitan el momento de título grande de las pantallas de nivel
- * superior. */
+/** Subviews (outside the main nav, with a back arrow): the title lives only
+ * in the fixed bar, always visible, no animation — they don't need the
+ * large-title moment of top-level screens. */
 function SubViewHeader({
   titleKey,
   subtitleKey,
@@ -165,11 +163,11 @@ function SubViewHeader({
         </div>
         <HeaderControls showControls={showControls} />
       </div>
-      {/* Centinela de 1px: no hay "hero" en las subvistas, así que este
-          punto marca dónde empieza el contenido real que puede quedar
-          tapado bajo la barra. Alto 0 sería ambiguo para el observer al
-          caer justo en el borde de su rootMargin; 1px lo resuelve sin
-          agregar espacio perceptible. */}
+      {/* 1px sentinel: there's no "hero" in subviews, so this point marks
+          where the actual content begins that could end up covered under
+          the bar. A height of 0 would be ambiguous for the observer since
+          it would fall right on the edge of its rootMargin; 1px resolves
+          it without adding any perceptible space. */}
       <div ref={sentinelRef} aria-hidden className="h-px" />
       <div className="pb-5 text-[12.5px] text-muted md:pb-[22px]">{t(subtitleKey)}</div>
     </>
@@ -185,13 +183,13 @@ export function ContentHeader({
 }: {
   titleKey: string;
   subtitleKey: string;
-  /** Ajustes ya muestra tema/idioma como filas propias; evita mostrarlos dos veces. */
+  /** Settings already shows theme/language as its own rows; avoids showing them twice. */
   showControls?: boolean;
-  /** Pantallas anidadas (no en la nav principal) muestran una flecha para volver al listado padre. */
+  /** Nested screens (not in the main nav) show a back arrow to return to the parent list. */
   backHref?: string;
-  /** Solo aplica a pantallas de nivel superior (sin `backHref`): en las
-   * anidadas el título y la flecha de volver siempre están visibles, así
-   * que nunca hay espacio libre en la barra donde mostrarlo. */
+  /** Only applies to top-level screens (without `backHref`): in nested ones
+   * the title and back arrow are always visible, so there's never free
+   * space in the bar to show it. */
   headerAccessory?: React.ReactNode;
 }) {
   return backHref ? (

@@ -78,7 +78,7 @@ describe("reconcileFocusSession — countdown completion", () => {
 describe("reconcileFocusSession — stopwatch hard cap", () => {
   it("auto-completes at the 2h cap even if the tab was closed for days", () => {
     const session = makeSession({ mode: "stopwatch", plannedDurationSeconds: null });
-    const farFuture = new Date(iso(3 * 24 * 60 * 60)); // 3 días después
+    const farFuture = new Date(iso(3 * 24 * 60 * 60)); // 3 days later
     const { changed, session: result } = reconcileFocusSession(session, farFuture);
     expect(changed).toBe(true);
     expect(result.status).toBe("completed");
@@ -130,23 +130,23 @@ describe("reconcileFocusSession — single active-break cycle", () => {
 describe("reconcileFocusSession — multi-hop reconciliation after a long absence", () => {
   it("walks through several break cycles and lands on the final cap in a single call", () => {
     const session = makeSession({
-      plannedDurationSeconds: 4 * 60 * 60, // 4h, el tope máximo permitido
+      plannedDurationSeconds: 4 * 60 * 60, // 4h, the maximum allowed cap
       breaksEnabled: true,
       breakIntervalMinutes: 60,
       breakDurationMinutes: 10,
     });
 
-    // Se cierra el navegador desde el minuto 0 y se vuelve 6 horas después.
+    // The browser closes at minute 0 and reopens 6 hours later.
     const { changed, session: result } = reconcileFocusSession(session, new Date(iso(6 * 60 * 60)));
 
     expect(changed).toBe(true);
     expect(result.status).toBe("completed");
     expect(result.autoCompleted).toBe(true);
     expect(result.accumulatedActiveSeconds).toBe(4 * 60 * 60);
-    // 3 pausas activas (a los 60/120/180 min de foco activo); la 4ª coincide con
-    // el tope de 4h y la sesión se cierra ahí en vez de abrir una pausa más.
+    // 3 active breaks (at 60/120/180 min of active focus); the 4th coincides
+    // with the 4h cap and the session closes there instead of opening another break.
     expect(result.breaksTakenCount).toBe(3);
-    // 4h de foco + 3 pausas de 10 min = 4h30min de reloj real hasta completarse.
+    // 4h of focus + 3 breaks of 10 min = 4h30min of real clock time until completion.
     expect(result.completedAt).toBe(iso(4 * 60 * 60 + 3 * 10 * 60));
   });
 });
@@ -163,22 +163,22 @@ describe("reconcileFocusSession — break duration of 0 minutes is reminder-only
     const { changed, session: result } = reconcileFocusSession(session, new Date(iso(45 * 60)));
     expect(changed).toBe(true);
     expect(result.status).toBe("running");
-    expect(result.breaksTakenCount).toBe(2); // umbrales de 20 y 40 min ya cruzados
+    expect(result.breaksTakenCount).toBe(2); // 20 and 40 min thresholds already crossed
     expect(result.breakStartedAt).toBeNull();
 
     const state = computeFocusState(result, new Date(iso(45 * 60)));
-    expect(state.activeSeconds).toBe(45 * 60); // el reloj nunca se detuvo
+    expect(state.activeSeconds).toBe(45 * 60); // the clock never stopped
   });
 });
 
-describe("reconcileFocusSession — cruce de medianoche/cutoff de día", () => {
+describe("reconcileFocusSession — crossing midnight/day cutoff", () => {
   it("computes elapsed seconds from pure timestamps, unaffected by the calendar day or the day-cutoff", () => {
     const lateNightStart = new Date("2026-07-09T23:50:00.000Z");
     const session = makeSession({
       plannedDurationSeconds: 40 * 60,
       startedAt: lateNightStart.toISOString(),
       lastResumedAt: lateNightStart.toISOString(),
-      date: "2026-07-09", // fijado al iniciar; compute.ts nunca lo toca ni lo recalcula
+      date: "2026-07-09", // fixed at start; compute.ts never touches or recomputes it
     });
 
     const afterMidnight = new Date(lateNightStart.getTime() + 30 * 60 * 1000);

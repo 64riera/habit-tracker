@@ -23,20 +23,20 @@ export default async function DashboardLayout({
   const shouldOfferInstall = habitCount === 1 && !installPromptSeen;
 
   return (
-    // Shell fijo al viewport (h-dvh + overflow-hidden): el header y el bottom
-    // nav quedan estructuralmente fuera del área que scrollea, en vez de
-    // depender de position:fixed/sticky sobre el scroll del documento, que
-    // es poco confiable en navegadores móviles reales. <main> es el único
-    // contenedor con scroll interno.
+    // Shell fixed to the viewport (h-dvh + overflow-hidden): the header and
+    // bottom nav stay structurally outside the scrolling area, instead of
+    // relying on position:fixed/sticky over the document scroll, which is
+    // unreliable on real mobile browsers. <main> is the only container with
+    // internal scroll.
     <div className="flex h-dvh flex-col overflow-hidden md:flex-row">
       <Sidebar streakMax={streakMax} />
       {/*
-        overflow-anchor:none evita que el "scroll anchoring" del navegador
-        (activado por default) pelee con el header sticky que cambia de
-        alto al engancharse arriba: sin esto, el navegador intenta
-        compensar ese cambio de tamaño reajustando el scroll el mismo
-        frame, y con scroll lento esa compensación gana y el scroll se
-        resetea en un loop visible como glitch.
+        overflow-anchor:none prevents the browser's "scroll anchoring"
+        (enabled by default) from fighting with the sticky header that
+        changes height when it docks at the top: without this, the browser
+        tries to compensate for that size change by readjusting the scroll
+        on the same frame, and with slow scrolling that compensation wins
+        and the scroll resets in a loop visible as a glitch.
       */}
       <main className="mx-auto w-full min-w-0 max-w-5xl flex-1 overflow-y-auto px-5 pb-6 [overflow-anchor:none] md:px-10 md:pb-9">
         {children}

@@ -11,10 +11,11 @@ import { computeNewAchievements, type AchievementType } from "./compute";
 export type { AchievementType };
 
 /**
- * Revisa condiciones de desbloqueo tras un check-in y devuelve los logros nuevos.
- * Utilidad de recómputo standalone (varios round-trips propios); el camino de
- * escritura de check-ins (`lib/actions/logs.ts`) usa `computeNewAchievements`
- * directamente sobre datos ya cargados en batch, para no pagar esos round-trips.
+ * Checks unlock conditions after a check-in and returns any new
+ * achievements. Standalone recompute utility (does its own round-trips);
+ * the check-in write path (`lib/actions/logs.ts`) uses
+ * `computeNewAchievements` directly on data already loaded in a batch, to
+ * avoid paying for those round-trips.
  */
 export async function maybeUnlockAchievements(habitId: string): Promise<AchievementType[]> {
   const userId = await getCurrentUserId();

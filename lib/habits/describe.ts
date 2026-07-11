@@ -40,8 +40,8 @@ export function categoryDisplayName(
   return locale === "es" ? category.nameEs : category.nameEn;
 }
 
-/** Ícono de la categoría si el hábito tiene una asignada, si no la inicial
- * del nombre — mismo glifo para el avatar en Hoy y en la lista de Hábitos. */
+/** Category icon if the habit has one assigned, otherwise the first letter
+ * of the name — same glyph used for the avatar in Today and in the Habits list. */
 export function habitAvatarGlyph(habit: {
   name: string;
   category?: { icon: string } | null;

@@ -10,13 +10,13 @@ import { formatClock } from "@/lib/focus/format";
 import { LIVE_STATUSES, type FocusSessionRow } from "@/lib/focus/compute";
 
 /**
- * Chip de sesión de enfoque en vivo, para el slot `headerAccessory` de
- * `ContentHeader` en Hoy. Solo existe mientras hay una sesión en curso — sin
- * sesión no hay nada que mostrar ahí (para eso ya está la pestaña "Enfoque"
- * de la nav). Reemplaza al `MiniFocusIndicator` flotante mientras se está en
- * Hoy (ver el `pathname === "/"` en ese componente) — nunca están montados
- * los dos a la vez, así que el ticking/alertas de sonido y título viven acá
- * sin riesgo de duplicarse.
+ * Live focus session chip, for the `headerAccessory` slot of `ContentHeader`
+ * on Today. Only exists while a session is in progress — with no session
+ * there's nothing to show there (that's what the "Focus" nav tab is for).
+ * Replaces the floating `MiniFocusIndicator` while on Today (see the
+ * `pathname === "/"` check in that component) — the two are never mounted
+ * at the same time, so the ticking/sound and title alerts live here without
+ * risk of duplication.
  */
 export function FocusHeaderChip({
   session,

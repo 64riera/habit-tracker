@@ -11,14 +11,14 @@ export function Heatmap({ cells }: { cells: DayCell[] }) {
 
   return (
     <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-      {/* .heatmap-grid (globals.css) fija el tamaño de celda: fluido en
-          mobile para ocupar todo el ancho disponible en vez de quedar
-          apretado a la izquierda, fijo desde md con scroll horizontal si el
-          rango no cabe (365 días). El número de columnas (una por semana)
-          solo se conoce en runtime, así que va en `style`, no en una clase
-          de Tailwind — un valor arbitrario con una variable interpolada no
-          se puede generar en build time. Sin ancho/alto fijo por celda: el
-          grid item se estira solo al tamaño de su track. */}
+      {/* .heatmap-grid (globals.css) fixes the cell size: fluid on mobile to
+          use up all the available width instead of being cramped to the
+          left, fixed from md up with horizontal scroll if the range doesn't
+          fit (365 days). The number of columns (one per week) is only known
+          at runtime, so it goes in `style`, not a Tailwind class — an
+          arbitrary value with an interpolated variable can't be generated
+          at build time. No fixed width/height per cell: the grid item just
+          stretches to the size of its track. */}
       <div className="w-full overflow-x-auto md:w-auto">
         <div
           className="heatmap-grid grid w-full gap-1 md:w-max md:gap-1"

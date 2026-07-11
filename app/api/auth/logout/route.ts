@@ -2,13 +2,13 @@ import { redirect } from "next/navigation";
 import { destroySessionCookie } from "@/lib/auth/session";
 
 /**
- * Route Handler en vez de Server Action: cerrar sesión desde una pantalla
- * autenticada (Ajustes) y luego volver a pedirle a esa misma pantalla que
- * se re-renderice —el refresco automático que Next hace después de toda
- * Server Action— rompe, porque sus datos ya asumen una sesión que se
- * acaba de borrar. Un POST normal a este endpoint no pasa por esa
- * maquinaria: el navegador solo sigue el redirect, sin que React intente
- * reconciliar la pantalla vieja con la cuenta ya cerrada.
+ * Route Handler instead of Server Action: logging out from an
+ * authenticated screen (Settings) and then asking that same screen to
+ * re-render — the automatic refresh Next does after every Server Action —
+ * breaks, because its data already assumes a session that was just
+ * deleted. A plain POST to this endpoint skips that machinery: the
+ * browser just follows the redirect, without React trying to reconcile
+ * the old screen against the now-closed account.
  */
 export async function POST(request: Request) {
   await destroySessionCookie();

@@ -1,13 +1,14 @@
 /**
- * Rutas de nivel superior (`ContentHeader` sin `backHref`) que muestran el
- * chip de enfoque en su propio header vía `headerAccessory` cuando hay una
- * sesión en curso. `MiniFocusIndicator` usa esta misma lista para ocultarse
- * ahí y no duplicar el chip — un solo lugar decide "dónde vive el estado en
- * vivo", en vez de repetir la condición en cada componente.
+ * Top-level routes (`ContentHeader` with no `backHref`) that show the
+ * focus chip in their own header via `headerAccessory` when there's a
+ * session in progress. `MiniFocusIndicator` uses this same list to hide
+ * itself there and avoid duplicating the chip — a single place decides
+ * "where the live state lives", instead of repeating the condition in
+ * every component.
  *
- * /focus queda afuera a propósito: ahí ya se ve la sesión completa, así
- * que un chip resumen sería redundante. Las pantallas anidadas (con flecha
- * de volver) tampoco entran: su header nunca tiene espacio libre.
+ * /focus is left out on purpose: the full session is already visible
+ * there, so a summary chip would be redundant. Nested screens (with a
+ * back arrow) don't qualify either: their header never has free space.
  */
 export const FOCUS_HEADER_SLOT_ROUTES = ["/", "/history", "/stats", "/habits", "/settings"] as const;
 

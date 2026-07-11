@@ -3,7 +3,7 @@
 import { RefreshCw } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 
-/** Indicador visual de "aún no sincronizado" — solo ícono, sin texto acompañante. */
+/** Visual indicator of "not yet synced" — icon only, no accompanying text. */
 export function PendingSyncBadge() {
   const { t } = useI18n();
   return (

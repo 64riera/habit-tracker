@@ -5,8 +5,9 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
-  // La migracion en instrumentation.ts lee drizzle/*.sql + drizzle/meta en
-  // runtime via fs, no via import: el tracer de Vercel no lo detecta solo.
+  // The migration in instrumentation.ts reads drizzle/*.sql + drizzle/meta
+  // at runtime via fs, not via import, so Vercel's tracer can't detect it
+  // on its own.
   outputFileTracingIncludes: {
     "/*": ["./drizzle/**/*"],
   },

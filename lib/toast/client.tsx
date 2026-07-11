@@ -47,11 +47,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
 export function useToast() {
   const ctx = useContext(ToastContext);
-  if (!ctx) throw new Error("useToast debe usarse dentro de <ToastProvider>");
+  if (!ctx) throw new Error("useToast must be used inside a <ToastProvider>");
   return ctx;
 }
 
-/** Notifica logros recién desbloqueados (respuesta de `logHabit`) como toasts. */
+/** Notifies newly unlocked achievements (response from `logHabit`) as toasts. */
 export function useAchievementToast() {
   const { push } = useToast();
   const { t } = useI18n();
@@ -65,7 +65,7 @@ export function useAchievementToast() {
   );
 }
 
-/** Notifica tiers de recompensa de enfoque recién desbloqueados (árbol/bosque). */
+/** Notifies newly unlocked focus reward tiers (tree/forest). */
 export function useFocusRewardToast() {
   const { push } = useToast();
   const { t } = useI18n();

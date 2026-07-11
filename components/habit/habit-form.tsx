@@ -62,12 +62,12 @@ export function HabitForm({ categories, habit }: Props) {
         </div>
       )}
 
-      {/* Grid de 2 columnas en desktop: los campos cortos (frecuencia +
-          recordatorio, fecha de inicio + destacar, etc.) comparten fila en
-          vez de apilarse uno debajo del otro, así que el formulario
-          aprovecha el ancho disponible y cabe sin scroll en la mayoría de
-          pantallas. Los campos que necesitan todo el ancho (nombre,
-          categoría, frecuencia con sus subcontroles) usan md:col-span-2. */}
+      {/* 2-column grid on desktop: short fields (frequency + reminder, start
+          date + pin, etc.) share a row instead of stacking one below the
+          other, so the form makes use of the available width and fits
+          without scrolling on most screens. Fields that need the full
+          width (name, category, frequency with its sub-controls) use
+          md:col-span-2. */}
       <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
         <Field label={t("habit.fieldName")} className="md:col-span-2">
           <input
@@ -215,9 +215,9 @@ export function HabitForm({ categories, habit }: Props) {
             defaultValue={
               habit?.reminders ? (JSON.parse(habit.reminders) as string[])[0] : ""
             }
-            // Pedir el permiso de notificaciones acá, no antes: es el momento
-            // en que el usuario expresa que quiere que le avisen, así que el
-            // pedido llega con contexto en vez de a ciegas al abrir la app.
+            // Ask for notification permission here, not earlier: this is the
+            // moment the user expresses they want to be notified, so the
+            // request arrives with context instead of blindly on app open.
             onChange={(e) => {
               if (e.target.value && !subscribed) subscribe();
             }}
@@ -248,14 +248,15 @@ export function HabitForm({ categories, habit }: Props) {
         </Field>
       </div>
 
-      {/* hardMode se preserva sin exponer control: hoy no cambia ningún cálculo
-          (racha, comodines, días libres), así que un interruptor sin efecto
-          real solo genera confusión — ver discusión con el usuario. */}
+      {/* hardMode is preserved without exposing a control: today it doesn't
+          change any calculation (streak, freezes, free days), so a toggle
+          with no real effect would only cause confusion — see discussion
+          with the user. */}
       <input type="hidden" name="hardMode" value={habit?.hardMode ? "on" : ""} />
-      {/* isPinned se preserva sin exponer control en el form: se destaca
-          desde el gesto de swipe en la lista de hábitos (ver
-          habitos-client.tsx), así que acá solo evitamos pisar el valor
-          existente al guardar. */}
+      {/* isPinned is preserved without exposing a control in the form: it's
+          pinned via the swipe gesture in the habit list (see
+          habitos-client.tsx), so here we just avoid overwriting the
+          existing value on save. */}
       <input type="hidden" name="isPinned" value={habit?.isPinned ? "on" : ""} />
 
       <div className="mt-auto flex items-center gap-2.5 pt-6">
@@ -279,9 +280,9 @@ function SaveButton({ label, loadingLabel }: { label: string; loadingLabel: stri
 }
 
 /**
- * En la página de detalle: archiva (si el hábito está activo) o restaura (si ya
- * está archivado). Es el único punto de restauración fuera del swipe de la lista,
- * así que cubre a quien no puede o no sabe usar el gesto.
+ * On the detail page: archives (if the habit is active) or restores (if it's
+ * already archived). It's the only restore entry point outside the list's
+ * swipe gesture, so it covers users who can't or don't know how to use it.
  */
 export function ArchiveHabitButton({ habitId, status }: { habitId: string; status: string }) {
   const { t } = useI18n();

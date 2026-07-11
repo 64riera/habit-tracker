@@ -101,7 +101,7 @@ export type BestMonthCheck = { currentPct: number; monthStart: string; isBestSoF
 
 const MIN_DAYS_ELAPSED_TO_COMPARE = 5;
 
-/** ¿El mes en curso (a la fecha) es el de mejor cumplimiento del hábito hasta ahora? */
+/** Is the current month (so far) the habit's best completion month yet? */
 export async function getBestMonthCheck(habitId: string, today: string): Promise<BestMonthCheck> {
   const userId = await getCurrentUserId();
   const [habit] = await db

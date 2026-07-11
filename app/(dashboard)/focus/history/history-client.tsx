@@ -43,11 +43,11 @@ export function FocusHistorialClient({
   const [entries, setEntries] = useState(sessions);
   const [loadingMore, setLoadingMore] = useState(false);
   const [exhausted, setExhausted] = useState(sessions.length < PAGE_SIZE);
-  // Los filtros navegan a una nueva URL, pero React puede conservar esta
-  // misma instancia del componente (mismo bug de fondo que el
-  // I18nProvider: `useState` solo mira su valor inicial en el primer mount,
-  // no en cada cambio de props) — se reconcilia comparando contra los
-  // filtros anteriores y resembrando el estado durante el render.
+  // Filters navigate to a new URL, but React may keep this same component
+  // instance (same underlying bug as I18nProvider: `useState` only looks at
+  // its initial value on first mount, not on every props change) —
+  // reconciled by comparing against the previous filters and reseeding the
+  // state during render.
   const filterKey = `${selectedHabit}|${selectedCategory}`;
   const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
   if (filterKey !== prevFilterKey) {
@@ -150,9 +150,9 @@ export function FocusHistorialClient({
                 <div className="flex flex-col">
                   {group.items.map((session) => {
                     const habitName = session.habitId ? habitNameById.get(session.habitId) : undefined;
-                    // Solo se muestra la categoría si NO hay hábito vinculado:
-                    // con hábito, su nombre ya deja clara la categoría
-                    // implícita, mostrar ambos sería redundante.
+                    // The category is only shown if there's NO linked habit:
+                    // with a habit, its name already makes the implicit
+                    // category clear, so showing both would be redundant.
                     const category = !session.habitId && session.categoryId
                       ? categoryById.get(session.categoryId)
                       : undefined;

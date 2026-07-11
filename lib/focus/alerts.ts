@@ -1,7 +1,7 @@
 /**
- * Chime sintetizado con Web Audio (sin asset binario que empaquetar): un
- * tono corto y suave, no una alarma estridente — acorde al tono editorial
- * calmado del resto de la app.
+ * Chime synthesized with Web Audio (no binary asset to bundle): a short,
+ * soft tone, not a shrill alarm — in keeping with the calm editorial tone
+ * of the rest of the app.
  */
 export function playChime() {
   try {
@@ -21,15 +21,15 @@ export function playChime() {
     osc.stop(ctx.currentTime + 0.6);
     osc.onended = () => ctx.close();
   } catch {
-    // Web Audio no disponible/soportado — silencioso, no bloquea nada.
+    // Web Audio unavailable/unsupported — silent, doesn't block anything.
   }
 }
 
 const FLASH_INTERVAL_MS = 1000;
 const FLASH_DURATION_MS = 8000;
 
-/** Alterna el título de la pestaña con `message` — pero solo si la pestaña
- * está en segundo plano; si está a la vista, la UI ya avisa por sí sola. */
+/** Alternates the tab title with `message` — but only if the tab is in
+ * the background; if it's visible, the UI already notifies on its own. */
 export function flashTitle(message: string) {
   if (typeof document === "undefined" || document.visibilityState !== "hidden") return;
 

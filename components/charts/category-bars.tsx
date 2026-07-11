@@ -3,10 +3,10 @@
 export type BarItem = { key: string; label: string; value: number; color: string };
 
 /**
- * Barras horizontales genéricas — {label, value, color} ya resueltos por el
- * caller (sin asumir un `nameEs`/`nameEn` de categoría ni que `value` venga
- * en 0–100), para poder reutilizarlas también en el desglose de enfoque por
- * hábito y por franja horaria.
+ * Generic horizontal bars — {label, value, color} already resolved by the
+ * caller (without assuming a category `nameEs`/`nameEn` or that `value`
+ * comes in 0–100), so they can also be reused for the focus breakdown by
+ * habit and by time slot.
  */
 export function CategoryBars({
   items,

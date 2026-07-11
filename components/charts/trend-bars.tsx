@@ -3,10 +3,10 @@
 export type TrendBarPoint = { date: string; value: number };
 
 /**
- * Barras de tendencia genéricas — valor crudo + `maxValue` opcional (si no
- * se pasa, se usa el máximo del propio dataset), en vez de asumir que
- * `value` ya viene en 0–100. Así sirve tanto para % de cumplimiento de
- * hábitos como para minutos de enfoque, sin clonar el componente.
+ * Generic trend bars — raw value + optional `maxValue` (if not passed, the
+ * dataset's own max is used), instead of assuming `value` already comes in
+ * 0–100. This way it works both for habit completion % and for focus
+ * minutes, without cloning the component.
  */
 export function TrendBars({
   points,

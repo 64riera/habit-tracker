@@ -14,10 +14,10 @@ export type StreakComputation = {
 };
 
 /**
- * Cómputo puro (sin I/O) de racha actual/máxima y comodines disponibles a partir
- * de los logs ya cargados. `null` si el hábito todavía no ha empezado — en ese
- * caso no hay nada que persistir en habit_streaks (igual que el comportamiento
- * original de recalcStreakForHabit).
+ * Pure computation (no I/O) of the current/longest streak and available
+ * freezes from the already-loaded logs. `null` if the habit hasn't started
+ * yet — in that case there's nothing to persist in habit_streaks (same as
+ * the original behavior of recalcStreakForHabit).
  */
 export function computeStreak(
   habit: HabitRow,
@@ -41,7 +41,7 @@ export function computeStreak(
       running += 1;
       longest = Math.max(longest, running);
     } else if (!status && isToday) {
-      // Hoy aún no se registra: no rompe la racha, pero tampoco suma todavía.
+      // Today hasn't been logged yet: doesn't break the streak, but doesn't count yet either.
     } else {
       running = 0;
     }

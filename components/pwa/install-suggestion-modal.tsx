@@ -8,22 +8,22 @@ import { setInstallPromptSeen } from "@/lib/actions/preferences";
 import { APP_NAME } from "@/lib/branding";
 
 /**
- * Sugerencia de instalar la PWA, una sola vez, justo después de crear el
- * primer hábito — `shouldOffer` viene calculado en el servidor
- * (`habitCount === 1 && !installPromptSeen`, ver app/(dashboard)/layout.tsx).
- * Solo cuenta como "mostrado" (y se guarda en la cuenta) si el navegador
- * realmente tiene algo para ofrecer: si `beforeinstallprompt` todavía no
- * disparó y tampoco es iOS, no se le "gasta" la única oportunidad — queda
- * abierta para una visita futura en la que sí se pueda ofrecer.
+ * PWA install suggestion, shown once, right after creating the first habit —
+ * `shouldOffer` is computed on the server
+ * (`habitCount === 1 && !installPromptSeen`, see app/(dashboard)/layout.tsx).
+ * It only counts as "shown" (and gets saved to the account) if the browser
+ * actually has something to offer: if `beforeinstallprompt` hasn't fired yet
+ * and it's not iOS either, the single opportunity isn't "spent" — it stays
+ * open for a future visit where it can actually be offered.
  */
 export function InstallSuggestionModal({ shouldOffer }: { shouldOffer: boolean }) {
   const { t } = useI18n();
   const { canInstall, isIOSManual, promptInstall } = useInstallPrompt();
-  // `shouldOffer` es una prop server-computed: no cambia sola cuando se
-  // decide algo en el modal (Server Components no se re-renderizan solos).
-  // El dismiss local es lo que efectivamente cierra el diálogo en esta
-  // sesión; `setInstallPromptSeen()` persiste la decisión para que no
-  // vuelva a ofrecerse en una visita futura.
+  // `shouldOffer` is a server-computed prop: it doesn't change on its own
+  // when something is decided in the modal (Server Components don't
+  // re-render on their own). The local dismiss is what actually closes the
+  // dialog in this session; `setInstallPromptSeen()` persists the decision
+  // so it doesn't get offered again on a future visit.
   const [dismissed, setDismissed] = useState(false);
 
   const open = !dismissed && shouldOffer && (canInstall || isIOSManual);

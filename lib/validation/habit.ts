@@ -20,7 +20,7 @@ export const habitFormSchema = z.object({
 
 export type HabitFormValues = z.infer<typeof habitFormSchema>;
 
-/** Extrae los campos crudos del formulario de hábito, listos para `habitFormSchema.safeParse`. */
+/** Extracts the raw fields from the habit form, ready for `habitFormSchema.safeParse`. */
 export function extractHabitFields(formData: FormData): unknown {
   const weekdays = formData.getAll("weekdays").map(Number);
   return {

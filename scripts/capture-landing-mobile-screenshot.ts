@@ -1,13 +1,13 @@
 /**
- * Captura una screenshot de la landing (/welcome) en viewport mobile,
- * usada como base para la og-image de app/welcome.
+ * Captures a screenshot of the landing page (/welcome) in a mobile
+ * viewport, used as the base for the og-image in app/welcome.
  *
- * Corre contra un build de producción (`npm run build && npm run start`),
- * no contra `npm run dev`: el dev server superpone un indicador de Next.js
- * Dev Tools que quedaría metido en la captura.
+ * Runs against a production build (`npm run build && npm run start`),
+ * not `npm run dev`: the dev server overlays a Next.js Dev Tools
+ * indicator that would end up baked into the capture.
  *
- * Uso: npm run og:capture
- * Para apuntar a otra URL (p. ej. la de producción ya desplegada):
+ * Usage: npm run og:capture
+ * To target another URL (e.g. the already-deployed production one):
  *   OG_CAPTURE_URL=https://justgo.srivera.xyz npm run og:capture
  */
 import { chromium, devices } from "playwright";
@@ -22,7 +22,7 @@ async function main() {
   const reachable = await fetch(BASE_URL).catch(() => null);
   if (!reachable) {
     console.error(
-      `No se pudo conectar a ${BASE_URL}. Corré "npm run build && npm run start" en otra terminal y volvé a intentar.`
+      `Could not connect to ${BASE_URL}. Run "npm run build && npm run start" in another terminal and try again.`
     );
     process.exit(1);
   }
@@ -41,7 +41,7 @@ async function main() {
   await writeFile(OUTPUT_PATH, screenshot);
 
   await browser.close();
-  console.log(`Screenshot guardada en ${OUTPUT_PATH}`);
+  console.log(`Screenshot saved to ${OUTPUT_PATH}`);
 }
 
 main().catch((error) => {

@@ -36,31 +36,34 @@ function isStaticAsset(url) {
   );
 }
 
-// Las transiciones cliente del App Router (clic en <Link>, prefetch al entrar en
-// viewport) no son navegaciones "navigate": son fetches GET al mismo pathname con
-// cabecera `RSC` que devuelven el payload de React Server Components, no HTML. Sin
-// interceptarlos, cualquier navegación dentro de la app a una ruta no recargada como
-// documento completo esta sesión fallaba en seco al perder la conexión.
+// The App Router's client-side transitions (clicking a <Link>, prefetch on
+// entering the viewport) are not "navigate" navigations: they're GET
+// fetches to the same pathname with an `RSC` header that return a React
+// Server Components payload, not HTML. Without intercepting them, any
+// in-app navigation to a route that wasn't reloaded as a full document
+// this session would fail outright once offline.
 function isFlightRequest(request) {
   return request.headers.has("rsc");
 }
 
-// La URL real incluye `?_rsc=<hash>` (cache-busting propio de Next, cambia según el
-// estado del router). Se ignora la query al cachear/leer para que cualquier fetch de
-// esa misma ruta reutilice el último payload conocido, aunque el hash no coincida.
+// The real URL includes `?_rsc=<hash>` (Next's own cache-busting, changes
+// with router state). The query is ignored when caching/reading so any
+// fetch for that same route reuses the last known payload, even if the
+// hash doesn't match.
 function flightCacheKey(url) {
   const key = new URL(url);
   key.search = "";
   return key.toString();
 }
 
-// El App Router casi nunca vuelve a emitir un fetch "navigate" real tras la carga
-// inicial (todo son transiciones cliente), así que PAGES_CACHE quedaría vacío para
-// cualquier ruta visitada solo por navegación blanda. Si React decide igualmente
-// caer a una navegación MPA completa (p. ej. el payload en caché no encaja con el
-// árbol de router actual), esa recarga necesita un documento HTML en PAGES_CACHE.
-// Por eso, cada vez que cacheamos un payload de flight exitoso, precalentamos también
-// el documento completo de esa misma ruta — best-effort, en segundo plano.
+// The App Router almost never issues a real "navigate" fetch again after
+// the initial load (everything after that is a client-side transition),
+// so PAGES_CACHE would stay empty for any route only ever visited via a
+// soft navigation. If React still falls back to a full MPA navigation
+// (e.g. the cached payload doesn't match the current router tree), that
+// reload needs an HTML document in PAGES_CACHE. That's why, every time we
+// cache a successful flight payload, we also warm the full document cache
+// for that same route — best-effort, in the background.
 function warmPagesCache(pathnameUrl) {
   caches.open(PAGES_CACHE).then((cache) =>
     cache.match(pathnameUrl).then((existing) => {
@@ -81,10 +84,11 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Cache-first para assets estáticos: no cambian de contenido bajo la misma URL.
-  // Se busca en STATIC_CACHE específicamente: `caches.match` global busca en todas
-  // las cachés y podría devolver la entrada equivocada si otra caché tuviera una URL
-  // coincidente (ver el mismo razonamiento en flight/páginas más abajo).
+  // Cache-first for static assets: their content never changes under the
+  // same URL. Looked up in STATIC_CACHE specifically: a global
+  // `caches.match` searches every cache and could return the wrong entry
+  // if another cache had a matching URL (same reasoning applies to
+  // flight/pages below).
   if (isStaticAsset(url)) {
     event.respondWith(
       caches.open(STATIC_CACHE).then((cache) =>
@@ -100,7 +104,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Network-first con fallback a cache para transiciones cliente entre páginas de la app.
+  // Network-first with cache fallback for client-side transitions between app pages.
   if (isFlightRequest(request)) {
     const cacheKey = flightCacheKey(request.url);
     event.respondWith(
@@ -119,10 +123,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Network-first con fallback a cache para navegación (páginas de la app).
-  // Importante: se lee de PAGES_CACHE explícitamente, nunca de `caches.match` global —
-  // FLIGHT_CACHE puede tener una entrada para el mismo pathname (payload RSC, no HTML)
-  // y `caches.match` global la devolvería igual de "válida", rompiendo el documento.
+  // Network-first with cache fallback for navigation (app pages).
+  // Important: reads from PAGES_CACHE explicitly, never from a global
+  // `caches.match` — FLIGHT_CACHE can have an entry for the same pathname
+  // (an RSC payload, not HTML), and a global `caches.match` would return it
+  // just as "valid", breaking the document.
   if (request.mode === "navigate") {
     event.respondWith(
       caches.open(PAGES_CACHE).then((cache) =>
@@ -141,10 +146,10 @@ self.addEventListener("fetch", (event) => {
   }
 });
 
-// Mejora progresiva (Background Sync, no soportado en Safari/iOS): el SW no puede
-// re-ejecutar Server Actions directamente (su protocolo de invocación es interno de
-// cada build de Next), así que solo avisa a las pestañas abiertas para que ellas,
-// que sí tienen las referencias reales a las funciones, hagan el replay.
+// Progressive enhancement (Background Sync, unsupported in Safari/iOS):
+// the SW can't re-run Server Actions directly (their invocation protocol
+// is internal to each Next build), so it just notifies open tabs so they
+// — which do have the real references to the functions — can replay them.
 self.addEventListener("sync", (event) => {
   if (event.tag === "sync-mutations") {
     event.waitUntil(notifyClientsToDrain());
@@ -156,7 +161,7 @@ async function notifyClientsToDrain() {
   for (const client of clients) client.postMessage({ type: "drain-queue" });
 }
 
-// Recordatorios de hábitos: el payload lo arma app/api/cron/reminders/route.ts.
+// Habit reminders: the payload is built by app/api/cron/reminders/route.ts.
 self.addEventListener("push", (event) => {
   if (!event.data) return;
   const data = event.data.json();

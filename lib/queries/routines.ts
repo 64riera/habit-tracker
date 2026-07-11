@@ -63,7 +63,7 @@ export async function getRoutines(): Promise<RoutineWithHabits[]> {
 
 export type RoutineToday = RoutineWithHabits & { doneToday: number; totalToday: number };
 
-/** Rutinas con hábitos vigentes y cuántos ya se marcaron hoy, para el tap rápido en Home. */
+/** Routines with active habits and how many are already checked today, for the quick tap on Home. */
 export async function getRoutinesForToday(date: string): Promise<RoutineToday[]> {
   const base = (await getRoutines()).filter((r) => r.habits.length > 0);
   if (base.length === 0) return [];
@@ -87,7 +87,7 @@ export async function getRoutinesForToday(date: string): Promise<RoutineToday[]>
 
 export type RoutineWithStats = RoutineWithHabits & { completionPct30: number };
 
-/** Cumplimiento de la rutina como conjunto: % de días (últimos 30) en que TODOS sus hábitos se mantuvieron. */
+/** Routine completion as a whole: % of days (last 30) where ALL of its habits were kept. */
 export async function getRoutinesWithStats(today: string): Promise<RoutineWithStats[]> {
   const base = await getRoutines();
   if (base.length === 0) return [];

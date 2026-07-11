@@ -6,9 +6,9 @@ const EVENING_START_HOUR = 18;
 const NIGHT_START_HOUR = 22;
 
 /**
- * Franja del día para una hora local (0-23). Los cortes son: noche [22-4],
- * mañana [5-11], tarde [12-17], noche temprana/atardecer [18-21] — mismo
- * criterio de sentido común que usan las apps de clima/calendario.
+ * Time-of-day bucket for a local hour (0-23). The cutoffs are: night
+ * [22-4], morning [5-11], afternoon [12-17], early evening/dusk [18-21] —
+ * the same common-sense criteria used by weather/calendar apps.
  */
 export function bucketHourOfDay(hour: number): TimeOfDayBucket {
   if (hour >= NIGHT_START_HOUR || hour < MORNING_START_HOUR) return "night";

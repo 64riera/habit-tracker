@@ -32,11 +32,11 @@ async function getFocusRewardLifetimeTotals(userId: string): Promise<{ totalSeco
 }
 
 /**
- * Revisa y desbloquea tiers de recompensa nuevos. Se llama solo justo
- * después de que una sesión pasa a "completed" (nunca "cancelled" — esas no
- * cuentan), desde los dos caminos que pueden dejarla así: la reconciliación
- * automática (`reconcileAndPersist` acá abajo) y el botón manual "Terminar"
- * (`transition()` en `lib/actions/focus.ts`).
+ * Checks and unlocks new reward tiers. Called only right after a session
+ * transitions to "completed" (never "cancelled" — those don't count), from
+ * the two paths that can leave it in that state: automatic reconciliation
+ * (`reconcileAndPersist` below) and the manual "Finish" button
+ * (`transition()` in `lib/actions/focus.ts`).
  */
 export async function checkAndUnlockFocusRewards(userId: string): Promise<FocusRewardTier[]> {
   const [{ totalSeconds, count }, unlockedRows] = await Promise.all([
@@ -56,8 +56,8 @@ export async function checkAndUnlockFocusRewards(userId: string): Promise<FocusR
   return newTiers;
 }
 
-/** Persiste el resultado de reconciliar contra `now`, si hubo cambios, y devuelve la fila ya al día
- * junto con cualquier recompensa recién desbloqueada por esa reconciliación. */
+/** Persists the result of reconciling against `now`, if there were changes, and returns the
+ * now-up-to-date row along with any reward newly unlocked by that reconciliation. */
 export async function reconcileAndPersist(
   row: FocusSessionRow,
   now: Date
@@ -84,12 +84,12 @@ export async function reconcileAndPersist(
 }
 
 /**
- * Único punto de entrada para leer "la sesión activa" del usuario junto con
- * cualquier recompensa que se haya desbloqueado en esta misma llamada: si
- * existe, la reconcilia contra el instante actual antes de devolverla, así
- * que puede volver ya con status "completed" si el tope o una pausa activa
- * se venció mientras nadie miraba. Este es el chokepoint que hace que el
- * enfoque "siga corriendo" aunque el navegador haya estado cerrado.
+ * Single entry point for reading the user's "active session" along with
+ * any reward unlocked within this same call: if it exists, it's reconciled
+ * against the current instant before being returned, so it can already
+ * come back with status "completed" if the time cap or an active pause
+ * expired while nobody was watching. This is the chokepoint that makes
+ * focus "keep running" even if the browser was closed.
  */
 export async function getActiveFocusSessionWithRewards(): Promise<{
   session: FocusSessionRow;
@@ -111,11 +111,11 @@ export async function getActiveFocusSession(): Promise<FocusSessionRow | null> {
 }
 
 /**
- * Datos mínimos que necesita cualquier pantalla para mostrar el estado de
- * enfoque en curso — vía `FocusHeaderChip` (header) o `MiniFocusIndicator`
- * (flotante). Único punto de lectura para ambos en vez de repetir el mismo
- * `Promise.all([getActiveFocusSession(), getFocusSettings()])` en cada
- * layout/página que lo necesita.
+ * Minimal data any screen needs to display the ongoing focus state — via
+ * `FocusHeaderChip` (header) or `MiniFocusIndicator` (floating). Single
+ * read point for both instead of repeating the same
+ * `Promise.all([getActiveFocusSession(), getFocusSettings()])` in every
+ * layout/page that needs it.
  */
 export type FocusHeaderData = { session: FocusSessionRow | null; soundEnabled: boolean };
 
@@ -151,13 +151,13 @@ export async function getFocusHistory(params: {
 }
 
 /**
- * Progreso del objetivo diario. Recibe la sesión activa ya resuelta por el
- * caller (en vez de releerla) porque `/focus` ya la obtuvo vía
- * `getActiveFocusSession()` para decidir qué UI mostrar — evitar una segunda
- * consulta+reconciliación del mismo row. Si esa sesión pertenece al día
- * consultado, su tiempo activo en curso (calculado en el momento, no
- * persistido) se suma al total ya completado, para que el objetivo de hoy
- * avance en vivo mientras la sesión sigue corriendo.
+ * Daily goal progress. Receives the active session already resolved by the
+ * caller (instead of re-reading it) because `/focus` already fetched it via
+ * `getActiveFocusSession()` to decide which UI to show — avoiding a second
+ * query+reconciliation of the same row. If that session belongs to the
+ * queried day, its in-progress active time (computed on the fly, not
+ * persisted) is added to the already-completed total, so today's goal
+ * advances live while the session keeps running.
  */
 export async function getTodayFocusProgress(
   date: string,
@@ -187,7 +187,7 @@ export type FocusRewardProgress = {
   unlockedTiers: FocusRewardTier[];
 };
 
-/** Para la pantalla /focus/forest: totales de por vida + qué tiers ya se desbloquearon. */
+/** For the /focus/forest screen: lifetime totals + which tiers are already unlocked. */
 export async function getFocusRewardProgress(): Promise<FocusRewardProgress> {
   const userId = await getCurrentUserId();
   const [{ totalSeconds, count }, unlockedRows] = await Promise.all([

@@ -11,10 +11,10 @@ export type HistoryFilters = { habitId?: string; categoryId?: string };
 
 export type DayCell = {
   date: string;
-  /** 0 (sin datos) a 4 (cumplimiento total) */
+  /** 0 (no data) to 4 (full completion) */
   level: 0 | 1 | 2 | 3 | 4;
   status?: string;
-  /** true si todo lo cumplido ese día fue justified/skipped/frozen (nada realmente "done") */
+  /** true if everything completed that day was justified/skipped/frozen (nothing actually "done") */
   allJustified: boolean;
 };
 
@@ -28,7 +28,7 @@ async function getApplicableHabits(filters: HistoryFilters) {
   });
 }
 
-/** Genera niveles de cumplimiento por día para el heatmap, opcionalmente filtrado. */
+/** Generates per-day completion levels for the heatmap, optionally filtered. */
 export async function getHeatmapRange(
   from: string,
   to: string,

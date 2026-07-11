@@ -4,21 +4,21 @@ import { jwtVerify } from "jose";
 import { APP_CANONICAL_HOST } from "@/lib/branding";
 
 const SESSION_COOKIE = "justgo_session";
-// /api/cron/reminders no tiene sesión de usuario (lo llama un cron externo,
-// ver .github/workflows/push-reminders.yml) — se autentica con su propio
-// secreto compartido (CRON_SECRET) dentro del route handler, no con cookie.
+// /api/cron/reminders has no user session (it's called by an external
+// cron, see .github/workflows/push-reminders.yml) — it authenticates with
+// its own shared secret (CRON_SECRET) inside the route handler, not a cookie.
 const PUBLIC_PATHS = ["/login", "/signup", "/welcome", "/manifest.webmanifest", "/api/auth/google", "/api/cron/reminders"];
 
-// Dominio viejo (antes del rebrand a "Just Go"): redirige de forma
-// permanente en vez de servir la app ahí, para no romper accesos directos
-// ni la PWA ya instalada de quien tenía habits.srivera.xyz.
+// Old domain (before the rebrand to "Just Go"): redirect permanently
+// instead of serving the app there, so we don't break direct links or the
+// PWA already installed by anyone who had habits.srivera.xyz.
 const LEGACY_HOSTS = new Set(["habits.srivera.xyz", "www.habits.srivera.xyz"]);
 
-// Rutas viejas en español (antes de que todo el código base pasara a
-// inglés): redirige a la ruta nueva en vez de 404, para no romper
-// bookmarks ni accesos directos ya instalados. Orden importa — los
-// prefijos más específicos van primero, si no "/habitos/rutinas" caería
-// en la regla genérica de "/habitos" antes de llegar a la suya.
+// Old Spanish routes (before the whole codebase moved to English):
+// redirect to the new route instead of 404ing, so we don't break
+// bookmarks or already-installed shortcuts. Order matters — the most
+// specific prefixes go first, otherwise "/habitos/rutinas" would fall
+// into the generic "/habitos" rule before reaching its own.
 const LEGACY_PATH_REWRITES: [RegExp, string][] = [
   [/^\/habitos\/rutinas/, "/habits/routines"],
   [/^\/habitos\/categorias/, "/habits/categories"],
@@ -83,9 +83,9 @@ export async function proxy(request: NextRequest) {
   const authenticated = await hasValidSession(request);
 
   if (!authenticated) {
-    // La raíz no tiene su propia página pública: un visitante sin sesión
-    // que pide "/" va a la landing (/welcome) en vez de directo al
-    // formulario de login, sin tocar la ruta del dashboard.
+    // The root has no public page of its own: a visitor without a
+    // session requesting "/" goes to the landing page (/welcome) instead
+    // of straight to the login form, without touching the dashboard route.
     const destination = pathname === "/" ? "/welcome" : "/login";
     const redirectUrl = new URL(destination, request.url);
     if (destination === "/login") redirectUrl.searchParams.set("next", pathname);

@@ -3,19 +3,19 @@
 export type MetricSummaryCardProps = {
   title: string;
   value: string;
-  /** Delta vs. el período anterior — ya formateado por el caller (p. ej. "+12%" o "+18 min"). */
+  /** Delta vs. the previous period — already formatted by the caller (e.g. "+12%" or "+18 min"). */
   delta?: { text: string; positive: boolean };
   secondaryStats?: { label: string; value: string }[];
 };
 
 /**
- * Tarjeta de resumen de período genérica: valor + unidad ya formateados,
- * delta opcional, hasta un par de stats secundarios. Hermana de
- * `PeriodSummaryCard` pero sin acoplarse a `PeriodSummary` (que trae campos
- * fijos de hábitos como `completed`/`missed`/`bestStreak` y un `%`
- * hardcodeado) — se creó aparte en vez de generalizar ese componente porque
- * ya está en producción y el riesgo de tocarlo no se justifica para esta
- * reutilización puntual. La usa solo Enfoque por ahora.
+ * Generic period summary card: value + unit already formatted, optional
+ * delta, up to a couple of secondary stats. Sibling of `PeriodSummaryCard`
+ * but without coupling to `PeriodSummary` (which brings fixed habit fields
+ * like `completed`/`missed`/`bestStreak` and a hardcoded `%`) — it was
+ * created separately instead of generalizing that component because it's
+ * already in production and the risk of touching it isn't justified for
+ * this one-off reuse. Only Focus uses it for now.
  */
 export function MetricSummaryCard({ title, value, delta, secondaryStats }: MetricSummaryCardProps) {
   return (

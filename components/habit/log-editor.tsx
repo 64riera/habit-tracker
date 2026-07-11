@@ -13,12 +13,12 @@ const MOODS = [1, 2, 3, 4, 5] as const;
 const MOOD_EMOJI: Record<number, string> = { 1: "😞", 2: "🙁", 3: "😐", 4: "🙂", 5: "😄" };
 
 /**
- * Sin botones de guardar/cancelar/quitar: cada interacción persiste de
- * inmediato (igual que el botón de check de la fila y RoutineQuickActions),
- * así que no hay un estado "sin guardar" que confirmar o descartar. Volver
- * a tocar la razón ya activa quita el registro — reemplaza al botón
- * "Quitar registro de hoy" con el mismo gesto de alternar que ya usa el
- * botón de check principal para "done".
+ * No save/cancel/remove buttons: every interaction persists immediately
+ * (same as the row's check button and RoutineQuickActions), so there's no
+ * "unsaved" state to confirm or discard. Tapping the already-active reason
+ * again removes the log entry — this replaces a "Remove today's entry"
+ * button with the same toggle gesture the main check button already uses
+ * for "done".
  */
 export function LogEditor({
   habit,
@@ -94,9 +94,9 @@ export function LogEditor({
   }
 
   function handleUseFreeze() {
-    // Optimista, igual que persist: si el cupo ya se agotó al sincronizar
-    // (otro congelado se aplicó primero), el aviso llega vía el toast
-    // centralizado de la cola offline, no aquí.
+    // Optimistic, same as persist: if the quota already ran out by the time
+    // it syncs (another freeze got applied first), the notice arrives via
+    // the offline queue's centralized toast, not here.
     setStatus("frozen");
     onChange("frozen");
     push(t("checkin.freezeUsed"));
