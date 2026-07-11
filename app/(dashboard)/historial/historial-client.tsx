@@ -13,7 +13,7 @@ import { Select } from "@/components/ui/select";
 import { StatusGlyph } from "@/components/habit/status-glyph";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName } from "@/lib/habits/describe";
-import { addDays, groupByDate, parseISODate } from "@/lib/date";
+import { addDays, formatTimeOfDay, groupByDate, parseISODate } from "@/lib/date";
 import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
 import type { CalendarCell, DayCell, LogEntry } from "@/lib/queries/history";
 import type { FocusHeaderData } from "@/lib/queries/focus";
@@ -62,11 +62,6 @@ export function HistorialClient({
     day: "numeric",
     month: "long",
   });
-  const timeFormatter = new Intl.DateTimeFormat(locale === "es" ? "es-ES" : "en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
   function formatDayHeader(date: string) {
     if (date === today) return t("checkin.today");
     if (date === yesterday) return t("history.yesterday");
@@ -229,7 +224,7 @@ export function HistorialClient({
                             </span>
                             {entry.status === "done" && entry.completedAt && (
                               <span className="shrink-0 text-[11px] text-muted">
-                                {timeFormatter.format(new Date(entry.completedAt))}
+                                {formatTimeOfDay(new Date(entry.completedAt), locale)}
                               </span>
                             )}
                             {entry.mood && (

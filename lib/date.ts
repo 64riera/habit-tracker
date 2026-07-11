@@ -58,6 +58,25 @@ export function monthKey(value: string): string {
   return value.slice(0, 7); // YYYY-MM
 }
 
+/** Hora del día en formato 12h con am/pm — la app entera usa 12h para
+ * cualquier hora mostrada al usuario, sin importar el idioma (a diferencia
+ * de es-ES, cuyo default de Intl es 24h).
+ *
+ * El `.replace(/\s+/g, " ")` no es cosmético: el ICU de Node (SSR) y el
+ * del navegador (hidratación) no siempre coinciden en qué caracter de
+ * espacio meten dentro de "p. m." en es-ES (uno usa un espacio normal,
+ * otro un NBSP/narrow-NBSP) — mismo texto visible, bytes distintos, y
+ * React lo trata como mismatch de hidratación. Normalizar todo espacio a
+ * uno común deja el string byte-idéntico en ambos lados. */
+export function formatTimeOfDay(date: Date, locale: "es" | "en"): string {
+  const formatted = new Intl.DateTimeFormat(locale === "es" ? "es-ES" : "en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
+  return formatted.replace(/\s+/g, " ");
+}
+
 /** Agrupa una lista ya ordenada por fecha desc en bloques por día consecutivos. */
 export function groupByDate<T extends { date: string }>(entries: T[]): { date: string; items: T[] }[] {
   const groups: { date: string; items: T[] }[] = [];

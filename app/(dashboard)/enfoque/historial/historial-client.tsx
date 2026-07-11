@@ -7,7 +7,7 @@ import { ContentHeader } from "@/components/nav/content-header";
 import { SegmentedRouteTabs } from "@/components/nav/segmented-route-tabs";
 import { Select } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n/client";
-import { addDays, groupByDate, parseISODate } from "@/lib/date";
+import { addDays, formatTimeOfDay, groupByDate, parseISODate } from "@/lib/date";
 import { formatClock, formatMinutesShort } from "@/lib/focus/format";
 import type { FocusSessionRow } from "@/lib/queries/focus";
 import type { FocusHistorySummary } from "@/lib/queries/focus-stats";
@@ -58,11 +58,6 @@ export function FocusHistorialClient({
     day: "numeric",
     month: "long",
   });
-  const timeFormatter = new Intl.DateTimeFormat(locale === "es" ? "es-ES" : "en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
   function formatDayHeader(date: string) {
     if (date === today) return t("checkin.today");
     if (date === yesterday) return t("history.yesterday");
@@ -159,7 +154,7 @@ export function FocusHistorialClient({
                           </span>
                         )}
                         <span className="ml-auto shrink-0 text-[10.5px] text-muted">
-                          {timeFormatter.format(new Date(session.startedAt))}
+                          {formatTimeOfDay(new Date(session.startedAt), locale)}
                         </span>
                       </div>
                     );
