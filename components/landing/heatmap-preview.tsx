@@ -46,5 +46,5 @@ function buildDemoCells(): DayCell[] {
 const DEMO_CELLS = buildDemoCells();
 
 export function HeatmapPreview() {
-  return <Heatmap cells={DEMO_CELLS} />;
+  return <Heatmap cells={DEMO_CELLS} animateIn />;
 }

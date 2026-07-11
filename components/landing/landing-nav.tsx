@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useI18n } from "@/lib/i18n/client";
 import { useScrolledPastBar } from "@/lib/hooks/use-scrolled-past-bar";
 import { LangToggle } from "@/components/nav/lang-toggle";
 import { ThemeToggle } from "@/components/nav/theme-toggle";
+import { CtaButton } from "@/components/landing/cta-button";
 import { cn } from "@/lib/utils";
 import { APP_NAME } from "@/lib/branding";
 
@@ -31,12 +31,9 @@ export function LandingNav() {
               <LangToggle />
             </div>
             <ThemeToggle />
-            <Link
-              href="/signup"
-              className="rounded-lg bg-text px-4 py-2 text-[13px] font-semibold text-surface transition-transform active:translate-y-px active:scale-[0.98]"
-            >
+            <CtaButton href="/signup" size="sm">
               {t("auth.signupSubmit")}
-            </Link>
+            </CtaButton>
           </div>
         </div>
       </div>

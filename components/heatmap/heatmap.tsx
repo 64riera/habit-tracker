@@ -1,11 +1,17 @@
 "use client";
 
 import { useI18n } from "@/lib/i18n/client";
+import { cn } from "@/lib/utils";
 import type { DayCell } from "@/lib/queries/history";
 
 export const LEVEL_ALPHA = [0, 18, 38, 62, 90];
 
-export function Heatmap({ cells }: { cells: DayCell[] }) {
+/** `animateIn`: sweeps the grid in column-by-column (one week per step) on
+ * mount instead of appearing flat. Off by default (the real Historial
+ * screen shouldn't replay this every visit) — only the landing preview
+ * opts in, as an on-load moment that shows off the actual product
+ * visualization instead of a static screenshot. */
+export function Heatmap({ cells, animateIn = false }: { cells: DayCell[]; animateIn?: boolean }) {
   const { t } = useI18n();
   const weeks = Math.ceil(cells.length / 7);
 
@@ -28,19 +34,21 @@ export function Heatmap({ cells }: { cells: DayCell[] }) {
             gridTemplateRows: "repeat(7, var(--heatmap-row))",
           }}
         >
-          {cells.map((cell) => {
+          {cells.map((cell, i) => {
             const shade = `color-mix(in srgb, var(--color-text) ${LEVEL_ALPHA[cell.level]}%, transparent)`;
             const hollow = cell.level > 0 && cell.allJustified;
+            const column = Math.floor(i / 7);
             return (
               <div
                 key={cell.date}
                 title={cell.date}
                 role="img"
                 aria-label={t("history.cellLevel", { date: cell.date, level: cell.level })}
-                className="rounded-[4px] box-border"
+                className={cn("rounded-[4px] box-border", animateIn && "animate-heatmap-cell-in")}
                 style={{
                   background: cell.level === 0 ? "var(--color-border)" : hollow ? "transparent" : shade,
                   border: hollow ? `1.5px solid ${shade}` : "none",
+                  animationDelay: animateIn ? `${column * 16}ms` : undefined,
                 }}
               />
             );
