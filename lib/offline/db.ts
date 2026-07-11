@@ -2,7 +2,6 @@
 
 import type { LogInput } from "@/lib/actions/logs";
 import type { HabitFormValues } from "@/lib/validation/habit";
-import type { CategoryFormValues } from "@/lib/validation/category";
 import type { RoutineFormValues } from "@/lib/validation/routine";
 
 export type QueuedMutation =
@@ -15,9 +14,7 @@ export type QueuedMutation =
   | { type: "restoreHabit"; habitId: string }
   | { type: "togglePinHabit"; habitId: string; pinned: boolean }
   | { type: "reorderHabits"; orderedIds: string[] }
-  | { type: "createCategory"; id: string; values: CategoryFormValues }
-  | { type: "updateCategory"; categoryId: string; values: CategoryFormValues }
-  | { type: "deleteCategory"; categoryId: string }
+  | { type: "setCategoryHidden"; categoryId: string; hidden: boolean }
   | { type: "createRoutine"; id: string; values: RoutineFormValues }
   | { type: "updateRoutine"; routineId: string; values: RoutineFormValues }
   | { type: "deleteRoutine"; routineId: string };

@@ -1,107 +1,78 @@
 "use client";
 
-import { useMemo, useTransition } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
-import { SwipeableRow, SwipeableListProvider } from "@/components/ui/swipeable-row";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { useOffline } from "@/lib/offline/client";
+import { cn } from "@/lib/utils";
 import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
-import {
-  pendingCategoryCreates,
-  pendingCategoryUpdates,
-  pendingCategoryDeleteIds,
-  buildGhostCategory,
-} from "@/lib/offline/pending-selectors";
+import { pendingCategoryHiddenOverrides } from "@/lib/offline/pending-selectors";
 import type { CategoryRow } from "@/lib/queries/habits";
 
+/** Categories are a fixed set (see lib/habits/canonical-categories.ts): no
+ * more create/edit/delete here, only hiding the ones a user doesn't care
+ * about — same optimistic-update + offline-queue pattern as pinning a
+ * habit (see handleTogglePin in habits-client.tsx). */
 export function CategoriasClient({ categories }: { categories: CategoryRow[] }) {
   const { t, locale } = useI18n();
-  const router = useRouter();
   const { pendingMutations, runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
+  const [hiddenOverrides, setHiddenOverrides] = useState<Record<string, boolean>>({});
 
-  const pendingNew = pendingCategoryCreates(pendingMutations);
-  const pendingEdits = pendingCategoryUpdates(pendingMutations);
-  const pendingDeleteIds = pendingCategoryDeleteIds(pendingMutations);
-  const pendingIds = useMemo(
-    () => new Set([...pendingNew.map((m) => m.id), ...pendingEdits.keys()]),
-    [pendingNew, pendingEdits]
+  const pendingHidden = pendingCategoryHiddenOverrides(pendingMutations);
+
+  const displayCategories = useMemo(
+    () =>
+      categories.map((c) => ({
+        ...c,
+        hidden: hiddenOverrides[c.id] ?? pendingHidden.get(c.id) ?? c.hidden,
+        isPending: hiddenOverrides[c.id] !== undefined || pendingHidden.has(c.id),
+      })),
+    [categories, hiddenOverrides, pendingHidden]
   );
 
-  const displayCategories = useMemo(() => {
-    const overlaid = categories
-      .filter((c) => !pendingDeleteIds.has(c.id))
-      .map((c) => (pendingEdits.has(c.id) ? { ...c, ...pendingEdits.get(c.id)! } : c));
-    const ghosts = pendingNew.map((m) => buildGhostCategory(m.id, m.values));
-    return [...overlaid, ...ghosts];
-  }, [categories, pendingEdits, pendingDeleteIds, pendingNew]);
-
-  function handleDelete(categoryId: string) {
-    if (!confirm(t("categories.confirmDelete"))) return;
+  function handleToggleHidden(categoryId: string, hidden: boolean) {
+    setHiddenOverrides((prev) => ({ ...prev, [categoryId]: hidden }));
     startTransition(async () => {
-      await runOrQueue({ type: "deleteCategory", categoryId });
-      router.refresh();
+      await runOrQueue({ type: "setCategoryHidden", categoryId, hidden });
     });
   }
 
   return (
     <div>
       <ContentHeader titleKey="categories.manage" subtitleKey="categories.subtitle" backHref="/habits" />
-      <div className="mb-3 flex justify-end">
-        <a
-          href="#crear-categoria"
-          className="flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1.5 text-[11px] text-muted"
-        >
-          <Plus size={13} strokeWidth={2} aria-hidden />
-          {t("categories.newCategory")}
-        </a>
+      <div className="flex flex-col gap-0.5">
+        {displayCategories.map((c) => (
+          <div key={c.id} className="flex items-center gap-3 border-b border-border py-3">
+            <span
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs"
+              style={{ background: `color-mix(in oklch, ${c.color} 20%, transparent)`, color: c.color }}
+            >
+              {c.icon}
+            </span>
+            <span className="flex min-w-0 flex-1 items-center gap-1.5 text-[13px] font-semibold">
+              <span className={cn("truncate", c.hidden && "text-muted line-through")}>
+                {categoryDisplayName(c, locale)}
+              </span>
+              {c.isPending && <PendingSyncBadge />}
+            </span>
+            <button
+              type="button"
+              onClick={() => handleToggleHidden(c.id, !c.hidden)}
+              aria-label={c.hidden ? t("categories.show") : t("categories.hide")}
+              title={c.hidden ? t("categories.show") : t("categories.hide")}
+              className="-m-2 flex shrink-0 items-center gap-1.5 p-2 text-[11px] text-muted"
+            >
+              {c.hidden ? <EyeOff size={15} strokeWidth={2} aria-hidden /> : <Eye size={15} strokeWidth={2} aria-hidden />}
+            </button>
+          </div>
+        ))}
+        {displayCategories.length === 0 && (
+          <p className="py-2 text-sm text-muted">{t("categories.empty")}</p>
+        )}
       </div>
-      <SwipeableListProvider>
-        <div className="flex flex-col gap-0.5">
-          {displayCategories.map((c) => {
-            const isPending = pendingIds.has(c.id);
-            return (
-              <SwipeableRow
-                key={c.id}
-                id={c.id}
-                trailingActions={[
-                  {
-                    key: "delete",
-                    label: t("common.delete"),
-                    icon: <Trash2 size={16} strokeWidth={2} aria-hidden />,
-                    background: "var(--color-cat-fitness)",
-                    onAction: () => handleDelete(c.id),
-                  },
-                ]}
-              >
-                <Link
-                  href={`/habits/categories/${c.id}`}
-                  className="flex items-center gap-3 border-b border-border py-3"
-                  style={isPending ? { opacity: 0.6 } : undefined}
-                >
-                  <span
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs"
-                    style={{ background: `color-mix(in oklch, ${c.color} 20%, transparent)`, color: c.color }}
-                  >
-                    {c.icon}
-                  </span>
-                  <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-semibold">
-                    <span className="truncate">{categoryDisplayName(c, locale)}</span>
-                    {isPending && <PendingSyncBadge />}
-                  </span>
-                </Link>
-              </SwipeableRow>
-            );
-          })}
-          {displayCategories.length === 0 && (
-            <p className="py-2 text-sm text-muted">{t("categories.empty")}</p>
-          )}
-        </div>
-      </SwipeableListProvider>
     </div>
   );
 }

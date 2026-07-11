@@ -71,6 +71,13 @@
       "when": 1783784693951,
       "tag": "0009_large_beast",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1783788336246,
+      "tag": "0010_yellow_betty_brant",
+      "breakpoints": true
     }
   ]
 }

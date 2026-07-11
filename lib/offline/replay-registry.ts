@@ -10,7 +10,7 @@ import {
   togglePinHabit,
   reorderHabits,
 } from "@/lib/actions/habits";
-import { createCategoryCore, updateCategoryCore, deleteCategoryCore } from "@/lib/actions/categories";
+import { setCategoryHidden } from "@/lib/actions/categories";
 import { createRoutineCore, updateRoutineCore, deleteRoutineCore } from "@/lib/actions/routines";
 import type { AchievementType } from "@/lib/achievements";
 
@@ -43,13 +43,7 @@ const registry: Registry = {
   restoreHabit: (m) => restoreHabit(m.habitId),
   togglePinHabit: (m) => togglePinHabit(m.habitId, m.pinned),
   reorderHabits: (m) => reorderHabits(m.orderedIds),
-  createCategory: async (m) => {
-    await createCategoryCore(m.id, m.values);
-  },
-  updateCategory: async (m) => {
-    await updateCategoryCore(m.categoryId, m.values);
-  },
-  deleteCategory: (m) => deleteCategoryCore(m.categoryId),
+  setCategoryHidden: (m) => setCategoryHidden(m.categoryId, m.hidden),
   createRoutine: async (m) => {
     await createRoutineCore(m.id, m.values);
   },

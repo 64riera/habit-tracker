@@ -40,7 +40,11 @@ export function FocusStartForm({ settings, habitOptions, categories, defaultHabi
   const [mode, setMode] = useState<(typeof MODES)[number]>(settings.defaultMode);
   const [breaksEnabled, setBreaksEnabled] = useState(settings.breaksEnabled);
   const [habitId, setHabitId] = useState(defaultHabitId || NONE);
-  const [categoryId, setCategoryId] = useState(NONE);
+  // Defaults to "General" (falls back to the first visible category if
+  // General was hidden) — same "always exactly one selected" chip pattern
+  // as the category picker in habit-form.tsx, no separate "none" pill.
+  const generalCategory = categories.find((c) => c.nameEs === "General");
+  const [categoryId, setCategoryId] = useState(generalCategory?.id ?? categories[0]?.id ?? "");
 
   const habitSelectOptions = [
     { value: NONE, label: t("focus.habit.none") },
@@ -57,13 +61,7 @@ export function FocusStartForm({ settings, habitOptions, categories, defaultHabi
   const linkedCategory = linkedHabit?.categoryId
     ? categories.find((c) => c.id === linkedHabit.categoryId)
     : undefined;
-  const manualCategoryId = categoryId === NONE ? "" : categoryId;
-  const effectiveCategoryId = linkedHabit ? (linkedCategory?.id ?? "") : manualCategoryId;
-
-  const categorySelectOptions = [
-    { value: NONE, label: t("focus.category.none") },
-    ...categories.map((c) => ({ value: c.id, label: categoryDisplayName(c, locale) })),
-  ];
+  const effectiveCategoryId = linkedHabit ? (linkedCategory?.id ?? "") : categoryId;
 
   return (
     <form action={formAction} className="flex flex-1 flex-col min-w-0">
@@ -188,13 +186,26 @@ export function FocusStartForm({ settings, habitOptions, categories, defaultHabi
                 </span>
               </div>
             ) : (
-              <Select
-                variant="field"
-                className="md:w-64"
-                value={categoryId}
-                onValueChange={setCategoryId}
-                options={categorySelectOptions}
-              />
+              <div className="flex flex-wrap gap-1.5">
+                {categories.map((c) => {
+                  const active = categoryId === c.id;
+                  return (
+                    <button
+                      type="button"
+                      key={c.id}
+                      onClick={() => setCategoryId(c.id)}
+                      className="rounded-full border px-3 py-1.5 text-[11px] font-medium"
+                      style={{
+                        background: active ? "var(--color-text)" : "transparent",
+                        color: active ? "var(--color-surface)" : "var(--color-muted)",
+                        borderColor: active ? "var(--color-text)" : "var(--color-border)",
+                      }}
+                    >
+                      {categoryDisplayName(c, locale)}
+                    </button>
+                  );
+                })}
+              </div>
             )}
             {linkedHabit && <p className="text-[11px] text-muted">{t("focus.category.fromHabit")}</p>}
             <input type="hidden" name="categoryId" value={effectiveCategoryId} />

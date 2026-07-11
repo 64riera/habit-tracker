@@ -1,6 +1,5 @@
 import type { QueuedRecord } from "@/lib/offline/db";
 import type { HabitFormValues } from "@/lib/validation/habit";
-import type { CategoryFormValues } from "@/lib/validation/category";
 import type { RoutineFormValues } from "@/lib/validation/routine";
 import type { HabitWithExtras, CategoryRow } from "@/lib/queries/habits";
 import type { RoutineWithStats, RoutineHabitSummary } from "@/lib/queries/routines";
@@ -89,38 +88,12 @@ export function applyPendingHabitEdit(
 
 // --- Categories ---
 
-export function pendingCategoryCreates(queue: QueuedRecord[]) {
-  return queue.filter(
-    (m): m is Extract<QueuedRecord, { type: "createCategory" }> => m.type === "createCategory"
-  );
-}
-
-export function pendingCategoryUpdates(queue: QueuedRecord[]): Map<string, CategoryFormValues> {
+export function pendingCategoryHiddenOverrides(queue: QueuedRecord[]): Map<string, boolean> {
   return new Map(
     queue
-      .filter((m): m is Extract<QueuedRecord, { type: "updateCategory" }> => m.type === "updateCategory")
-      .map((m) => [m.categoryId, m.values])
+      .filter((m): m is Extract<QueuedRecord, { type: "setCategoryHidden" }> => m.type === "setCategoryHidden")
+      .map((m) => [m.categoryId, m.hidden])
   );
-}
-
-export function pendingCategoryDeleteIds(queue: QueuedRecord[]): Set<string> {
-  return new Set(
-    queue
-      .filter((m): m is Extract<QueuedRecord, { type: "deleteCategory" }> => m.type === "deleteCategory")
-      .map((m) => m.categoryId)
-  );
-}
-
-export function buildGhostCategory(id: string, values: CategoryFormValues): CategoryRow {
-  return {
-    id,
-    userId: "",
-    nameEs: values.nameEs,
-    nameEn: values.nameEn,
-    color: values.color,
-    icon: values.icon || "●",
-    sortOrder: 0,
-  };
 }
 
 // --- Routines ---

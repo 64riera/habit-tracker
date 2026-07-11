@@ -3,6 +3,7 @@ import { categories, habits, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { toISODate } from "@/lib/date";
+import { CANONICAL_CATEGORIES } from "@/lib/habits/canonical-categories";
 
 async function main() {
   const username = process.argv[2];
@@ -24,13 +25,8 @@ async function main() {
     return;
   }
 
-  const cats = [
-    { id: nanoid(), nameEs: "Creatividad", nameEn: "Creativity", color: "var(--color-cat-creatividad)", icon: "🎨" },
-    { id: nanoid(), nameEs: "Fitness", nameEn: "Fitness", color: "var(--color-cat-fitness)", icon: "💪" },
-    { id: nanoid(), nameEs: "Aprendizaje", nameEn: "Learning", color: "var(--color-cat-aprendizaje)", icon: "🧠" },
-    { id: nanoid(), nameEs: "Estudio", nameEn: "Study", color: "var(--color-cat-estudio)", icon: "📚" },
-    { id: nanoid(), nameEs: "Bienestar", nameEn: "Wellness", color: "var(--color-cat-bienestar)", icon: "🧘" },
-  ];
+  const cats = CANONICAL_CATEGORIES.map((c) => ({ ...c, id: nanoid() }));
+  const catByName = Object.fromEntries(cats.map((c) => [c.nameEs, c]));
 
   await db.insert(categories).values(cats.map((c, i) => ({ ...c, userId, sortOrder: i })));
 
@@ -41,7 +37,7 @@ async function main() {
     {
       id: nanoid(),
       userId,
-      categoryId: cats[0].id,
+      categoryId: catByName.Creatividad.id,
       name: "Practice guitar",
       goalType: "duration",
       goalTarget: 20,
@@ -54,7 +50,7 @@ async function main() {
     {
       id: nanoid(),
       userId,
-      categoryId: cats[1].id,
+      categoryId: catByName.Fitness.id,
       name: "Strength training",
       goalType: "binary",
       frequencyType: "x_per_week",
@@ -66,7 +62,7 @@ async function main() {
     {
       id: nanoid(),
       userId,
-      categoryId: cats[2].id,
+      categoryId: catByName.Aprendizaje.id,
       name: "Practice English",
       goalType: "duration",
       goalTarget: 15,
@@ -79,7 +75,7 @@ async function main() {
     {
       id: nanoid(),
       userId,
-      categoryId: cats[3].id,
+      categoryId: catByName.Estudio.id,
       name: "Study",
       goalType: "quantitative",
       goalTarget: 20,
@@ -92,7 +88,7 @@ async function main() {
     {
       id: nanoid(),
       userId,
-      categoryId: cats[4].id,
+      categoryId: catByName.Bienestar.id,
       name: "Meditate",
       goalType: "duration",
       goalTarget: 10,

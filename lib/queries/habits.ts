@@ -1,9 +1,11 @@
 import "server-only";
 import { and, eq, inArray, sql } from "drizzle-orm";
+import { nanoid } from "nanoid";
 import { db } from "@/lib/db/client";
 import { categories, habitLogs, habitStreaks, habits } from "@/lib/db/schema";
 import { isDateApplicable } from "@/lib/habits/frequency";
 import { FREEZE_MONTHLY_ALLOWANCE } from "@/lib/habits/status";
+import { CANONICAL_CATEGORIES } from "@/lib/habits/canonical-categories";
 import { getCurrentUserId } from "@/lib/auth/session";
 
 export type CategoryRow = typeof categories.$inferSelect;
@@ -16,9 +18,36 @@ export type HabitWithExtras = HabitRow & {
   streak: { current: number; longest: number; freezesAvailable: number };
 };
 
-export async function getCategories(): Promise<CategoryRow[]> {
+/** Categories are a fixed set (see lib/habits/canonical-categories.ts):
+ * this self-heals any account that's still missing one — created before
+ * that category existed, or before the fixed-taxonomy switch — instead of
+ * requiring a one-off data migration. `includeHidden` is only for the
+ * management screen, where a user needs to see (and re-enable) categories
+ * they previously hid; everywhere else (habit form, focus category chips)
+ * should only ever offer the visible ones. */
+export async function getCategories(options: { includeHidden?: boolean } = {}): Promise<CategoryRow[]> {
   const userId = await getCurrentUserId();
-  return db.select().from(categories).where(eq(categories.userId, userId)).orderBy(categories.sortOrder);
+  let rows = await db.select().from(categories).where(eq(categories.userId, userId)).orderBy(categories.sortOrder);
+
+  const existingNames = new Set(rows.map((c) => c.nameEs));
+  const missing = CANONICAL_CATEGORIES.filter((c) => !existingNames.has(c.nameEs));
+  if (missing.length > 0) {
+    const minSortOrder = rows.reduce((min, c) => Math.min(min, c.sortOrder), 0);
+    await db.insert(categories).values(
+      missing.map((c, i) => ({
+        id: nanoid(),
+        userId,
+        nameEs: c.nameEs,
+        nameEn: c.nameEn,
+        color: c.color,
+        icon: c.icon,
+        sortOrder: minSortOrder - missing.length + i,
+      }))
+    );
+    rows = await db.select().from(categories).where(eq(categories.userId, userId)).orderBy(categories.sortOrder);
+  }
+
+  return options.includeHidden ? rows : rows.filter((c) => !c.hidden);
 }
 
 /** Total number of habits on the account (includes archived/paused: it's

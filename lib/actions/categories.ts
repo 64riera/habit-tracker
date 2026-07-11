@@ -2,100 +2,20 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
-import { categories, habits } from "@/lib/db/schema";
+import { categories } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
-import { categorySchema, extractCategoryFields } from "@/lib/validation/category";
 
-export type CategoryFormState = { error?: string };
-
-export async function createCategory(
-  _prevState: CategoryFormState,
-  formData: FormData
-): Promise<CategoryFormState> {
-  const id = String(formData.get("id") ?? "");
-  if (!id) return { error: "invalid" };
-  const result = await createCategoryCore(id, extractCategoryFields(formData));
-  if (result.error) return result;
-  redirect("/habits/categories");
-}
-
-export async function createCategoryCore(id: string, rawValues: unknown): Promise<CategoryFormState> {
-  const parsed = categorySchema.safeParse(rawValues);
-  if (!parsed.success) return { error: "invalid" };
-  const values = parsed.data;
+/** Categories are a fixed set (see lib/habits/canonical-categories.ts) —
+ * this is the only mutation left: hide/show, never create/edit/delete. */
+export async function setCategoryHidden(categoryId: string, hidden: boolean): Promise<void> {
   const userId = await getCurrentUserId();
-  const count = (await db.select().from(categories).where(eq(categories.userId, userId))).length;
-
-  // onConflictDoNothing: idempotent if the offline replay retries after a
-  // drain gets interrupted between the insert and removing the mutation from the queue.
-  await db
-    .insert(categories)
-    .values({
-      id,
-      userId,
-      nameEs: values.nameEs,
-      nameEn: values.nameEn,
-      color: values.color,
-      icon: values.icon || "●",
-      sortOrder: count,
-    })
-    .onConflictDoNothing({ target: categories.id });
-
-  revalidatePath("/habits");
-  revalidatePath("/habits/categories");
-  return {};
-}
-
-export async function updateCategory(
-  categoryId: string,
-  _prevState: CategoryFormState,
-  formData: FormData
-): Promise<CategoryFormState> {
-  const result = await updateCategoryCore(categoryId, extractCategoryFields(formData));
-  if (result.error) return result;
-  redirect("/habits/categories");
-}
-
-export async function updateCategoryCore(
-  categoryId: string,
-  rawValues: unknown
-): Promise<CategoryFormState> {
-  const parsed = categorySchema.safeParse(rawValues);
-  if (!parsed.success) return { error: "invalid" };
-  const values = parsed.data;
-  const userId = await getCurrentUserId();
-
   await db
     .update(categories)
-    .set({
-      nameEs: values.nameEs,
-      nameEn: values.nameEn,
-      color: values.color,
-      icon: values.icon || "●",
-    })
+    .set({ hidden })
     .where(and(eq(categories.id, categoryId), eq(categories.userId, userId)));
 
   revalidatePath("/habits");
   revalidatePath("/habits/categories");
-  return {};
-}
-
-/** Online path: writes via the core and redirects. The offline replay uses `deleteCategoryCore` directly. */
-export async function deleteCategory(categoryId: string): Promise<void> {
-  await deleteCategoryCore(categoryId);
-  redirect("/habits/categories");
-}
-
-export async function deleteCategoryCore(categoryId: string): Promise<void> {
-  const userId = await getCurrentUserId();
-  await db
-    .update(habits)
-    .set({ categoryId: null })
-    .where(and(eq(habits.categoryId, categoryId), eq(habits.userId, userId)));
-  await db.delete(categories).where(and(eq(categories.id, categoryId), eq(categories.userId, userId)));
-
-  revalidatePath("/habits");
-  revalidatePath("/habits/categories");
+  revalidatePath("/focus");
 }

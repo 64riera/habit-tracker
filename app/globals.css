@@ -16,6 +16,8 @@
   --header-hairline: rgba(33, 29, 24, 0.06);
   --header-shadow: rgba(33, 29, 24, 0.1);
 
+  --cat-general: oklch(0.58 0.02 90);
+  --cat-trabajo: oklch(0.55 0.1 185);
   --cat-creatividad: oklch(0.62 0.12 75);
   --cat-fitness: oklch(0.58 0.15 30);
   --cat-aprendizaje: oklch(0.58 0.09 230);
@@ -45,6 +47,8 @@
   --color-accent: var(--color-accent);
   --color-accent-contrast: var(--color-accent-contrast);
 
+  --color-cat-general: var(--cat-general);
+  --color-cat-trabajo: var(--cat-trabajo);
   --color-cat-creatividad: var(--cat-creatividad);
   --color-cat-fitness: var(--cat-fitness);
   --color-cat-aprendizaje: var(--cat-aprendizaje);

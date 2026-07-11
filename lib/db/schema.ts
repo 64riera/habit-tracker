@@ -34,6 +34,9 @@ export const categories = sqliteTable(
     color: text("color").notNull(),
     icon: text("icon").notNull(),
     sortOrder: integer("sort_order").notNull().default(0),
+    // Categories are now a fixed set (see lib/habits/canonical-categories.ts):
+    // users can only hide the ones they don't care about, not create/edit/delete.
+    hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
   },
   (t) => [index("categories_user_idx").on(t.userId)]
 );

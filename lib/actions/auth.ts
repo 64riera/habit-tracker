@@ -9,6 +9,7 @@ import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { createSessionCookie, safeNextPath } from "@/lib/auth/session";
 import { getPreAuthLocaleCookie, resolvePreAuthLocale } from "@/lib/i18n/locale";
 import { isGoogleAuthEnabled } from "@/lib/auth/google";
+import { CANONICAL_CATEGORIES } from "@/lib/habits/canonical-categories";
 
 /** `redirectTo` instead of next/navigation's `redirect()`: login/signup
  * change which account is active, and with it the language that should be
@@ -25,21 +26,13 @@ const USERNAME_PATTERN = /^[a-z0-9_.-]+$/;
 const USERNAME_MIN_LENGTH = 3;
 const USERNAME_MAX_LENGTH = 30;
 
-const DEFAULT_CATEGORIES = [
-  { nameEs: "Creatividad", nameEn: "Creativity", color: "var(--color-cat-creatividad)", icon: "🎨" },
-  { nameEs: "Fitness", nameEn: "Fitness", color: "var(--color-cat-fitness)", icon: "💪" },
-  { nameEs: "Aprendizaje", nameEn: "Learning", color: "var(--color-cat-aprendizaje)", icon: "🧠" },
-  { nameEs: "Estudio", nameEn: "Study", color: "var(--color-cat-estudio)", icon: "📚" },
-  { nameEs: "Bienestar", nameEn: "Wellness", color: "var(--color-cat-bienestar)", icon: "🧘" },
-];
-
 function normalizeUsername(raw: string): string {
   return raw.trim().toLowerCase();
 }
 
 export async function seedDefaultCategories(userId: string): Promise<void> {
   await db.insert(categories).values(
-    DEFAULT_CATEGORIES.map((c, i) => ({
+    CANONICAL_CATEGORIES.map((c, i) => ({
       id: nanoid(),
       userId,
       nameEs: c.nameEs,
