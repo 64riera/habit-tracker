@@ -266,8 +266,7 @@
     },
     "duration": {
       "label": "Duration",
-      "minutes": "min",
-      "help": "Up to {max} minutes"
+      "minutes": "min"
     },
     "stopwatchHelp": "Counts up, capped at 2 hours.",
     "breaks": {

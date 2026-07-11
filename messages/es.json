@@ -266,8 +266,7 @@
     },
     "duration": {
       "label": "Duración",
-      "minutes": "min",
-      "help": "Hasta {max} minutos"
+      "minutes": "min"
     },
     "stopwatchHelp": "Cuenta hacia arriba, con un tope de 2 horas.",
     "breaks": {

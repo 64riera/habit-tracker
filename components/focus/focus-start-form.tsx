@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { startFocusSessionForm, type StartFocusSessionFormState } from "@/lib/actions/focus";
+import { FocusDurationDial } from "@/components/focus/focus-duration-dial";
 import {
   BREAK_DURATION_MAX_MINUTES,
   BREAK_DURATION_MIN_MINUTES,
@@ -38,6 +39,7 @@ export function FocusStartForm({ settings, habitOptions, categories, defaultHabi
   const { t, locale } = useI18n();
   const [state, formAction] = useActionState(startFocusSessionForm, INITIAL_STATE);
   const [mode, setMode] = useState<(typeof MODES)[number]>(settings.defaultMode);
+  const [durationMinutes, setDurationMinutes] = useState(settings.defaultDurationMinutes);
   const [breaksEnabled, setBreaksEnabled] = useState(settings.breaksEnabled);
   const [habitId, setHabitId] = useState(defaultHabitId || NONE);
   // Defaults to "General" (falls back to the first visible category if
@@ -97,19 +99,14 @@ export function FocusStartForm({ settings, habitOptions, categories, defaultHabi
 
         {mode === "countdown" ? (
           <Field label={t("focus.duration.label")}>
-            <div className="flex items-center gap-2">
-              <input
-                name="durationMinutes"
-                type="number"
-                min={COUNTDOWN_MIN_MINUTES}
-                max={COUNTDOWN_MAX_MINUTES}
-                defaultValue={settings.defaultDurationMinutes}
-                required
-                className="w-24 rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm outline-none focus:border-text"
-              />
-              <span className="text-[11px] text-muted">{t("focus.duration.minutes")}</span>
-            </div>
-            <p className="text-[11px] text-muted">{t("focus.duration.help", { max: COUNTDOWN_MAX_MINUTES })}</p>
+            <FocusDurationDial
+              value={durationMinutes}
+              min={COUNTDOWN_MIN_MINUTES}
+              max={COUNTDOWN_MAX_MINUTES}
+              onChange={setDurationMinutes}
+              ariaLabel={t("focus.duration.label")}
+            />
+            <input type="hidden" name="durationMinutes" value={durationMinutes} />
           </Field>
         ) : (
           <p className="text-[11px] text-muted">{t("focus.stopwatchHelp")}</p>
