@@ -4,7 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db/client";
-import { focusSessions, focusSettings, habits } from "@/lib/db/schema";
+import { categories, focusSessions, focusSettings, habits } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
 import { getTodayDateString } from "@/lib/date";
@@ -35,14 +35,37 @@ function revalidateFocusPaths() {
   revalidatePath("/", "layout");
 }
 
-async function resolveHabitId(userId: string, habitId: string | undefined | null): Promise<string | null> {
+async function resolveHabit(userId: string, habitId: string | undefined | null) {
   if (!habitId) return null;
   const [habit] = await db
-    .select({ id: habits.id })
+    .select({ id: habits.id, categoryId: habits.categoryId })
     .from(habits)
     .where(and(eq(habits.id, habitId), eq(habits.userId, userId)))
     .limit(1);
-  return habit?.id ?? null;
+  return habit ?? null;
+}
+
+async function resolveCategoryId(userId: string, categoryId: string | undefined | null): Promise<string | null> {
+  if (!categoryId) return null;
+  const [category] = await db
+    .select({ id: categories.id })
+    .from(categories)
+    .where(and(eq(categories.id, categoryId), eq(categories.userId, userId)))
+    .limit(1);
+  return category?.id ?? null;
+}
+
+/** La categoría de una sesión vinculada a un hábito siempre es la del
+ * hábito (no la que mande el cliente, que en ese caso el form ni siquiera
+ * deja editar) — si no hay hábito, se usa la categoría elegida directo. */
+async function resolveFocusAttribution(
+  userId: string,
+  habitId: string | undefined | null,
+  categoryId: string | undefined | null
+): Promise<{ habitId: string | null; categoryId: string | null }> {
+  const habit = await resolveHabit(userId, habitId);
+  if (habit) return { habitId: habit.id, categoryId: habit.categoryId };
+  return { habitId: null, categoryId: await resolveCategoryId(userId, categoryId) };
 }
 
 export async function startFocusSession(input: StartFocusSessionValues): Promise<FocusSessionRow> {
@@ -58,7 +81,7 @@ export async function startFocusSession(input: StartFocusSessionValues): Promise
   const nowIso = now.toISOString();
   const cutoffHour = await getDayCutoffHour();
   const today = getTodayDateString(cutoffHour, now);
-  const habitId = await resolveHabitId(userId, values.habitId);
+  const { habitId, categoryId } = await resolveFocusAttribution(userId, values.habitId, values.categoryId);
 
   const breaksEnabled = Boolean(values.breaksEnabled);
   const breakIntervalMinutes = breaksEnabled ? values.breakIntervalMinutes ?? 25 : 25;
@@ -73,6 +96,7 @@ export async function startFocusSession(input: StartFocusSessionValues): Promise
       id,
       userId,
       habitId,
+      categoryId,
       mode: values.mode,
       plannedDurationSeconds,
       status: "running",

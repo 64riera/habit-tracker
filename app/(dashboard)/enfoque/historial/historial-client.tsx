@@ -9,8 +9,10 @@ import { Select } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n/client";
 import { addDays, formatTimeOfDay, groupByDate, parseISODate } from "@/lib/date";
 import { formatClock, formatMinutesShort } from "@/lib/focus/format";
+import { categoryDisplayName } from "@/lib/habits/describe";
 import type { FocusSessionRow } from "@/lib/queries/focus";
 import type { FocusHistorySummary } from "@/lib/queries/focus-stats";
+import type { CategoryRow } from "@/lib/queries/habits";
 
 const PAGE_SIZE = 20;
 
@@ -23,34 +25,40 @@ export function FocusHistorialClient({
   sessions,
   summary,
   habitNames,
+  categories,
   today,
   selectedHabit,
+  selectedCategory,
 }: {
   sessions: FocusSessionRow[];
   summary: FocusHistorySummary;
   habitNames: { id: string; name: string }[];
+  categories: CategoryRow[];
   today: string;
   selectedHabit: string;
+  selectedCategory: string;
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
   const [entries, setEntries] = useState(sessions);
   const [loadingMore, setLoadingMore] = useState(false);
   const [exhausted, setExhausted] = useState(sessions.length < PAGE_SIZE);
-  // El filtro por hábito navega a una nueva URL, pero React puede conservar
-  // esta misma instancia del componente (mismo bug de fondo que el
+  // Los filtros navegan a una nueva URL, pero React puede conservar esta
+  // misma instancia del componente (mismo bug de fondo que el
   // I18nProvider: `useState` solo mira su valor inicial en el primer mount,
-  // no en cada cambio de props) — se reconcilia comparando contra el
-  // filtro anterior y resembrando el estado durante el render.
-  const [prevHabitFilter, setPrevHabitFilter] = useState(selectedHabit);
-  if (selectedHabit !== prevHabitFilter) {
-    setPrevHabitFilter(selectedHabit);
+  // no en cada cambio de props) — se reconcilia comparando contra los
+  // filtros anteriores y resembrando el estado durante el render.
+  const filterKey = `${selectedHabit}|${selectedCategory}`;
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+  if (filterKey !== prevFilterKey) {
+    setPrevFilterKey(filterKey);
     setEntries(sessions);
     setExhausted(sessions.length < PAGE_SIZE);
   }
 
   const groups = useMemo(() => groupByDate(entries), [entries]);
   const habitNameById = useMemo(() => new Map(habitNames.map((h) => [h.id, h.name])), [habitNames]);
+  const categoryById = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
   const yesterday = addDays(today, -1);
 
   const dayHeaderFormatter = new Intl.DateTimeFormat(locale === "es" ? "es-ES" : "en-US", {
@@ -64,9 +72,12 @@ export function FocusHistorialClient({
     return dayHeaderFormatter.format(parseISODate(date));
   }
 
-  function onHabitChange(habitId: string) {
+  function updateFilters(next: { habit?: string; category?: string }) {
+    const habit = next.habit ?? selectedHabit;
+    const category = next.category ?? selectedCategory;
     const params = new URLSearchParams();
-    if (habitId) params.set("habit", habitId);
+    if (habit) params.set("habit", habit);
+    if (category) params.set("category", category);
     const qs = params.toString();
     router.push(qs ? `/enfoque/historial?${qs}` : "/enfoque/historial");
   }
@@ -75,6 +86,7 @@ export function FocusHistorialClient({
     setLoadingMore(true);
     const params = new URLSearchParams({ offset: String(entries.length) });
     if (selectedHabit) params.set("habit", selectedHabit);
+    if (selectedCategory) params.set("category", selectedCategory);
     const res = await fetch(`/api/focus-history?${params.toString()}`);
     const data = await res.json();
     setEntries((prev) => [...prev, ...data.sessions]);
@@ -93,16 +105,27 @@ export function FocusHistorialClient({
       <ContentHeader titleKey="focus.history.title" subtitleKey="screens.enfoque.subtitle" backHref="/enfoque" />
       <SegmentedRouteTabs tabs={FOCUS_TABS} />
 
-      <div className="mb-5">
+      <div className="mb-5 flex flex-wrap gap-2">
         <Select
           variant="pill"
           value={selectedHabit}
-          onValueChange={onHabitChange}
+          onValueChange={(v) => updateFilters({ habit: v })}
           ariaLabel={t("history.filterHabit")}
           placeholder={t("history.filterHabit")}
           options={[
             { value: "", label: t("history.filterHabit") },
             ...habitNames.map((h) => ({ value: h.id, label: h.name })),
+          ]}
+        />
+        <Select
+          variant="pill"
+          value={selectedCategory}
+          onValueChange={(v) => updateFilters({ category: v })}
+          ariaLabel={t("history.filterCategory")}
+          placeholder={t("history.filterCategory")}
+          options={[
+            { value: "", label: t("history.filterCategory") },
+            ...categories.map((c) => ({ value: c.id, label: categoryDisplayName(c, locale) })),
           ]}
         />
       </div>
@@ -127,6 +150,12 @@ export function FocusHistorialClient({
                 <div className="flex flex-col">
                   {group.items.map((session) => {
                     const habitName = session.habitId ? habitNameById.get(session.habitId) : undefined;
+                    // Solo se muestra la categoría si NO hay hábito vinculado:
+                    // con hábito, su nombre ya deja clara la categoría
+                    // implícita, mostrar ambos sería redundante.
+                    const category = !session.habitId && session.categoryId
+                      ? categoryById.get(session.categoryId)
+                      : undefined;
                     const isCancelled = session.status === "cancelled";
                     return (
                       <div
@@ -147,6 +176,16 @@ export function FocusHistorialClient({
                           <span className="shrink-0 text-[11px] text-muted">{t("focus.status.cancelled")}</span>
                         )}
                         {habitName && <span className="min-w-0 truncate text-[11px] text-muted">· {habitName}</span>}
+                        {category && (
+                          <span className="flex min-w-0 shrink-0 items-center gap-1.5 text-[11px] text-muted">
+                            <span
+                              className="h-1.5 w-1.5 shrink-0 rounded-full"
+                              style={{ background: category.color }}
+                              aria-hidden
+                            />
+                            <span className="truncate">{categoryDisplayName(category, locale)}</span>
+                          </span>
+                        )}
                         {session.breaksTakenCount > 0 && (
                           <span className="flex shrink-0 items-center gap-1 text-[10.5px] text-muted">
                             <Coffee size={11} strokeWidth={2} aria-hidden />

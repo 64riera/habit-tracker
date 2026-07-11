@@ -140,6 +140,10 @@ export const focusSessions = sqliteTable(
     id: text("id").primaryKey(),
     userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     habitId: text("habit_id").references(() => habits.id, { onDelete: "set null" }),
+    // Independiente de habitId: si la sesión está vinculada a un hábito, la
+    // categoría se deriva de ese hábito (ver resolveFocusAttribution en
+    // lib/actions/focus.ts); si no, el usuario puede elegir una directamente.
+    categoryId: text("category_id").references(() => categories.id, { onDelete: "set null" }),
     mode: text("mode", { enum: ["countdown", "stopwatch"] }).notNull(),
     plannedDurationSeconds: integer("planned_duration_seconds"), // solo countdown
     status: text("status", {
@@ -166,6 +170,7 @@ export const focusSessions = sqliteTable(
     index("focus_sessions_user_status_idx").on(t.userId, t.status),
     index("focus_sessions_date_idx").on(t.date),
     index("focus_sessions_habit_idx").on(t.habitId),
+    index("focus_sessions_category_idx").on(t.categoryId),
   ]
 );
 

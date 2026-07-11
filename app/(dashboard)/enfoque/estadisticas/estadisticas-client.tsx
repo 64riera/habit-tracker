@@ -8,8 +8,10 @@ import { CategoryBars } from "@/components/charts/category-bars";
 import { MetricSummaryCard } from "@/components/stats/metric-summary-card";
 import { useI18n } from "@/lib/i18n/client";
 import { formatMinutesShort } from "@/lib/focus/format";
+import { categoryDisplayName } from "@/lib/habits/describe";
 import { bucketHourOfDay, TIME_OF_DAY_ORDER } from "@/lib/focus/time-of-day";
 import type {
+  FocusCategoryStat,
   FocusHabitStat,
   FocusOverallTotals,
   FocusPeriodComparison,
@@ -33,6 +35,7 @@ export function FocusEstadisticasClient({
   weekSummary,
   monthSummary,
   habitBreakdown,
+  categoryBreakdown,
   timeOfDaySamples,
   streak,
 }: {
@@ -41,10 +44,11 @@ export function FocusEstadisticasClient({
   weekSummary: FocusPeriodComparison;
   monthSummary: FocusPeriodComparison;
   habitBreakdown: FocusHabitStat[];
+  categoryBreakdown: FocusCategoryStat[];
   timeOfDaySamples: FocusTimeOfDaySample[];
   streak: { current: number; longest: number };
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const hasAnyData = overall.minutes90 > 0;
 
   // Bucketizado en el cliente (no en el servidor): la franja horaria de
@@ -148,6 +152,23 @@ export function FocusEstadisticasClient({
                     key: h.habitId,
                     label: h.habitName,
                     value: h.totalMinutes,
+                    color: BAR_COLOR,
+                  }))}
+                  formatValue={formatMinutesShort}
+                />
+              </div>
+            )}
+
+            {categoryBreakdown.length > 0 && (
+              <div>
+                <div className="mb-2.5 text-[10px] tracking-wide text-muted uppercase">
+                  {t("focus.stats.byCategory")}
+                </div>
+                <CategoryBars
+                  items={categoryBreakdown.map((c) => ({
+                    key: c.categoryId,
+                    label: categoryDisplayName(c, locale),
+                    value: c.totalMinutes,
                     color: BAR_COLOR,
                   }))}
                   formatValue={formatMinutesShort}

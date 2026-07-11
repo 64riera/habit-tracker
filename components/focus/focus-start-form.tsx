@@ -6,6 +6,7 @@ import { Play } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
+import { categoryDisplayName } from "@/lib/habits/describe";
 import { startFocusSessionForm, type StartFocusSessionFormState } from "@/lib/actions/focus";
 import {
   BREAK_DURATION_MAX_MINUTES,
@@ -16,26 +17,52 @@ import {
   COUNTDOWN_MIN_MINUTES,
 } from "@/lib/focus/compute";
 import type { FocusSettingsRow } from "@/lib/queries/focus";
+import type { CategoryRow } from "@/lib/queries/habits";
 
 type Props = {
   settings: FocusSettingsRow;
-  habitOptions: { id: string; name: string }[];
+  habitOptions: { id: string; name: string; categoryId: string | null }[];
+  categories: CategoryRow[];
   defaultHabitId?: string;
 };
 
 const INITIAL_STATE: StartFocusSessionFormState = {};
 const MODES = ["countdown", "stopwatch"] as const;
+// Radix Select no permite un <Select.Item value=""> (ese valor está
+// reservado para "sin selección" a nivel interno y rompe el texto
+// mostrado en el trigger) — un sentinel no vacío evita el bug; nunca sale
+// de este componente, se traduce de vuelta a "" antes de mandarlo al form.
+const NONE = "__none__";
 
-export function FocusStartForm({ settings, habitOptions, defaultHabitId }: Props) {
-  const { t } = useI18n();
+export function FocusStartForm({ settings, habitOptions, categories, defaultHabitId }: Props) {
+  const { t, locale } = useI18n();
   const [state, formAction] = useActionState(startFocusSessionForm, INITIAL_STATE);
   const [mode, setMode] = useState<(typeof MODES)[number]>(settings.defaultMode);
   const [breaksEnabled, setBreaksEnabled] = useState(settings.breaksEnabled);
-  const [habitId, setHabitId] = useState(defaultHabitId ?? "");
+  const [habitId, setHabitId] = useState(defaultHabitId || NONE);
+  const [categoryId, setCategoryId] = useState(NONE);
 
   const habitSelectOptions = [
-    { value: "", label: t("focus.habit.none") },
+    { value: NONE, label: t("focus.habit.none") },
     ...habitOptions.map((h) => ({ value: h.id, label: h.name })),
+  ];
+  const submittedHabitId = habitId === NONE ? "" : habitId;
+
+  // Vincular a un hábito ya implica una categoría (la del hábito): en vez de
+  // pedirla dos veces (y arriesgar que no coincidan), el picker manual de
+  // categoría se reemplaza por un indicador de solo lectura mientras haya
+  // un hábito elegido. Ver resolveFocusAttribution en lib/actions/focus.ts,
+  // que además vuelve a derivarla en el servidor sin confiar en el cliente.
+  const linkedHabit = submittedHabitId ? habitOptions.find((h) => h.id === submittedHabitId) : undefined;
+  const linkedCategory = linkedHabit?.categoryId
+    ? categories.find((c) => c.id === linkedHabit.categoryId)
+    : undefined;
+  const manualCategoryId = categoryId === NONE ? "" : categoryId;
+  const effectiveCategoryId = linkedHabit ? (linkedCategory?.id ?? "") : manualCategoryId;
+
+  const categorySelectOptions = [
+    { value: NONE, label: t("focus.category.none") },
+    ...categories.map((c) => ({ value: c.id, label: categoryDisplayName(c, locale) })),
   ];
 
   return (
@@ -143,7 +170,34 @@ export function FocusStartForm({ settings, habitOptions, defaultHabitId }: Props
               onValueChange={setHabitId}
               options={habitSelectOptions}
             />
-            <input type="hidden" name="habitId" value={habitId} />
+            <input type="hidden" name="habitId" value={submittedHabitId} />
+          </Field>
+        )}
+
+        {categories.length > 0 && (
+          <Field label={t("focus.category.label")}>
+            {linkedHabit ? (
+              <div className="flex w-full items-center gap-2 rounded-lg border border-border px-3.5 py-2.5 text-sm md:w-64">
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{ background: linkedCategory?.color ?? "var(--color-muted)" }}
+                  aria-hidden
+                />
+                <span className="truncate text-muted">
+                  {linkedCategory ? categoryDisplayName(linkedCategory, locale) : t("focus.category.none")}
+                </span>
+              </div>
+            ) : (
+              <Select
+                variant="field"
+                className="md:w-64"
+                value={categoryId}
+                onValueChange={setCategoryId}
+                options={categorySelectOptions}
+              />
+            )}
+            {linkedHabit && <p className="text-[11px] text-muted">{t("focus.category.fromHabit")}</p>}
+            <input type="hidden" name="categoryId" value={effectiveCategoryId} />
           </Field>
         )}
       </div>

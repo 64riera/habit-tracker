@@ -31,10 +31,10 @@ export async function getHabitCount(): Promise<number> {
   return Number(row?.count ?? 0);
 }
 
-export async function getHabitNames(): Promise<{ id: string; name: string }[]> {
+export async function getHabitNames(): Promise<{ id: string; name: string; categoryId: string | null }[]> {
   const userId = await getCurrentUserId();
   return db
-    .select({ id: habits.id, name: habits.name })
+    .select({ id: habits.id, name: habits.name, categoryId: habits.categoryId })
     .from(habits)
     .where(eq(habits.userId, userId))
     .orderBy(habits.sortOrder);

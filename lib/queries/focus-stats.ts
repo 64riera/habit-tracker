@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq, gte, inArray, isNotNull, lte, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { focusSessions, habits } from "@/lib/db/schema";
+import { categories, focusSessions, habits } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { addDays, dateRange, startOfMonth, startOfWeek } from "@/lib/date";
 import { computeFocusStreak } from "@/lib/focus/streak";
@@ -188,6 +188,66 @@ export async function getFocusHabitBreakdown(today: string, days = 30): Promise<
     .sort((a, b) => b.totalMinutes - a.totalMinutes);
 }
 
+export type FocusCategoryStat = {
+  categoryId: string;
+  nameEs: string;
+  nameEn: string;
+  color: string;
+  totalMinutes: number;
+  sessionCount: number;
+};
+
+/** Mismo patrón de dos pasos que getFocusHabitBreakdown: agrega en memoria
+ * por categoryId y después resuelve nombre/color en una sola query aparte,
+ * en vez de un join — así el agregado no necesita traer una fila por
+ * categoría por cada sesión. */
+export async function getFocusCategoryBreakdown(today: string, days = 30): Promise<FocusCategoryStat[]> {
+  const userId = await getCurrentUserId();
+  const from = addDays(today, -(days - 1));
+  const rows = await db
+    .select({ categoryId: focusSessions.categoryId, accumulatedActiveSeconds: focusSessions.accumulatedActiveSeconds })
+    .from(focusSessions)
+    .where(
+      and(
+        eq(focusSessions.userId, userId),
+        gte(focusSessions.date, from),
+        lte(focusSessions.date, today),
+        eq(focusSessions.status, "completed"),
+        isNotNull(focusSessions.categoryId)
+      )
+    );
+
+  const byCategory = new Map<string, { totalSeconds: number; sessionCount: number }>();
+  for (const r of rows) {
+    const categoryId = r.categoryId!;
+    const entry = byCategory.get(categoryId) ?? { totalSeconds: 0, sessionCount: 0 };
+    entry.totalSeconds += r.accumulatedActiveSeconds;
+    entry.sessionCount += 1;
+    byCategory.set(categoryId, entry);
+  }
+  if (byCategory.size === 0) return [];
+
+  const categoryRows = await db
+    .select({ id: categories.id, nameEs: categories.nameEs, nameEn: categories.nameEn, color: categories.color })
+    .from(categories)
+    .where(inArray(categories.id, [...byCategory.keys()]));
+  const byId = new Map(categoryRows.map((c) => [c.id, c]));
+
+  return [...byCategory.entries()]
+    .map(([categoryId, v]) => {
+      const cat = byId.get(categoryId);
+      return {
+        categoryId,
+        nameEs: cat?.nameEs ?? categoryId,
+        nameEn: cat?.nameEn ?? categoryId,
+        color: cat?.color ?? "var(--color-muted)",
+        totalMinutes: Math.round(v.totalSeconds / 60),
+        sessionCount: v.sessionCount,
+      };
+    })
+    .sort((a, b) => b.totalMinutes - a.totalMinutes);
+}
+
 export type FocusTimeOfDaySample = { startedAt: string; minutes: number };
 
 /**
@@ -223,10 +283,11 @@ export type FocusHistorySummary = { totalMinutes: number; sessionCount: number; 
  * (sin acotar por fecha, solo por el filtro de hábito si hay uno) — una
  * sola query agregada en SQL en vez de traer todas las filas, porque acá sí
  * puede crecer sin el tope de 90 días que usan las demás consultas. */
-export async function getFocusHistorySummary(habitId?: string): Promise<FocusHistorySummary> {
+export async function getFocusHistorySummary(habitId?: string, categoryId?: string): Promise<FocusHistorySummary> {
   const userId = await getCurrentUserId();
   const conditions = [eq(focusSessions.userId, userId), inArray(focusSessions.status, ["completed", "cancelled"])];
   if (habitId) conditions.push(eq(focusSessions.habitId, habitId));
+  if (categoryId) conditions.push(eq(focusSessions.categoryId, categoryId));
 
   const [row] = await db
     .select({

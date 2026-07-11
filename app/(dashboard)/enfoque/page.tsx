@@ -1,5 +1,5 @@
 import { getActiveFocusSession, getFocusSettings, getTodayFocusProgress } from "@/lib/queries/focus";
-import { getHabitNames } from "@/lib/queries/habits";
+import { getCategories, getHabitNames } from "@/lib/queries/habits";
 import { LIVE_STATUSES } from "@/lib/focus/compute";
 import { getTodayDateString } from "@/lib/date";
 import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
@@ -21,9 +21,10 @@ export default async function EnfoquePage({
   const today = getTodayDateString(cutoffHour);
 
   const session = await getActiveFocusSession();
-  const [settings, habitOptions, progress] = await Promise.all([
+  const [settings, habitOptions, categories, progress] = await Promise.all([
     getFocusSettings(),
     getHabitNames(),
+    getCategories(),
     getTodayFocusProgress(today, session),
   ]);
   const isLive = session !== null && LIVE_STATUSES.includes(session.status);
@@ -44,7 +45,12 @@ export default async function EnfoquePage({
             <FocusGoalControl goalMinutes={settings.dailyGoalMinutes} />
             <FocusSoundToggle enabled={settings.soundEnabled} />
           </div>
-          <FocusStartForm settings={settings} habitOptions={habitOptions} defaultHabitId={habitId} />
+          <FocusStartForm
+            settings={settings}
+            habitOptions={habitOptions}
+            categories={categories}
+            defaultHabitId={habitId}
+          />
           <FocusSecondaryLinks />
         </>
       )}

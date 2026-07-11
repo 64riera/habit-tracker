@@ -16,6 +16,7 @@ export const startFocusSessionSchema = z
     breakIntervalMinutes: z.coerce.number().min(BREAK_INTERVAL_MIN_MINUTES).max(BREAK_INTERVAL_MAX_MINUTES).optional(),
     breakDurationMinutes: z.coerce.number().min(BREAK_DURATION_MIN_MINUTES).max(BREAK_DURATION_MAX_MINUTES).optional(),
     habitId: z.string().trim().optional().or(z.literal("")),
+    categoryId: z.string().trim().optional().or(z.literal("")),
   })
   .refine((v) => v.mode !== "countdown" || v.durationMinutes !== undefined, {
     message: "La cuenta regresiva necesita una duración",
@@ -41,6 +42,7 @@ export function extractStartFocusSessionFields(formData: FormData): unknown {
     breakIntervalMinutes: formData.get("breakIntervalMinutes") || undefined,
     breakDurationMinutes: formData.get("breakDurationMinutes") || undefined,
     habitId: formData.get("habitId") ?? "",
+    categoryId: formData.get("categoryId") ?? "",
   };
 }
 

@@ -132,13 +132,15 @@ export async function getFocusSettings(): Promise<FocusSettingsRow> {
 
 export async function getFocusHistory(params: {
   habitId?: string;
+  categoryId?: string;
   limit?: number;
   offset?: number;
 } = {}): Promise<FocusSessionRow[]> {
-  const { habitId, limit = 30, offset = 0 } = params;
+  const { habitId, categoryId, limit = 30, offset = 0 } = params;
   const userId = await getCurrentUserId();
   const conditions = [eq(focusSessions.userId, userId), inArray(focusSessions.status, ["completed", "cancelled"])];
   if (habitId) conditions.push(eq(focusSessions.habitId, habitId));
+  if (categoryId) conditions.push(eq(focusSessions.categoryId, categoryId));
   return db
     .select()
     .from(focusSessions)

@@ -285,6 +285,11 @@
       "label": "Link to a habit",
       "none": "Not linked"
     },
+    "category": {
+      "label": "Category",
+      "none": "No category",
+      "fromHabit": "Taken from the linked habit"
+    },
     "status": {
       "running": "Focusing",
       "on_break": "On a break",
@@ -325,6 +330,7 @@
       "title": "Focus stats",
       "totalTime": "Total time",
       "byHabit": "By habit",
+      "byCategory": "By category",
       "byTimeOfDay": "By time of day",
       "timeOfDay": {
         "morning": "Morning",

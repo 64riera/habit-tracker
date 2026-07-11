@@ -285,6 +285,11 @@
       "label": "Vincular a un hábito",
       "none": "Sin vincular"
     },
+    "category": {
+      "label": "Categoría",
+      "none": "Sin categoría",
+      "fromHabit": "Se toma del hábito vinculado"
+    },
     "status": {
       "running": "Enfoque",
       "on_break": "Pausa activa",
@@ -325,6 +330,7 @@
       "title": "Estadísticas de enfoque",
       "totalTime": "Tiempo total",
       "byHabit": "Por hábito",
+      "byCategory": "Por categoría",
       "byTimeOfDay": "Por franja horaria",
       "timeOfDay": {
         "morning": "Mañana",
