@@ -27,9 +27,9 @@ import {
   type StartFocusSessionValues,
 } from "@/lib/validation/focus";
 
-/** Invalida todo el layout de (dashboard), no solo "/enfoque" — el indicador
+/** Invalida todo el layout de (dashboard), no solo "/focus" — el indicador
  * flotante de sesión activa vive en el layout compartido, así que una
- * mutación de enfoque hecha estando en /enfoque debe reflejarse también en
+ * mutación de enfoque hecha estando en /focus debe reflejarse también en
  * cualquier otra ruta a la que el usuario navegue después. */
 function revalidateFocusPaths() {
   revalidatePath("/", "layout");

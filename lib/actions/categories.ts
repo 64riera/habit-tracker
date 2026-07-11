@@ -18,7 +18,7 @@ export async function createCategory(
   if (!id) return { error: "invalid" };
   const result = await createCategoryCore(id, extractCategoryFields(formData));
   if (result.error) return result;
-  redirect("/habitos/categorias");
+  redirect("/habits/categories");
 }
 
 export async function createCategoryCore(id: string, rawValues: unknown): Promise<CategoryFormState> {
@@ -43,8 +43,8 @@ export async function createCategoryCore(id: string, rawValues: unknown): Promis
     })
     .onConflictDoNothing({ target: categories.id });
 
-  revalidatePath("/habitos");
-  revalidatePath("/habitos/categorias");
+  revalidatePath("/habits");
+  revalidatePath("/habits/categories");
   return {};
 }
 
@@ -55,7 +55,7 @@ export async function updateCategory(
 ): Promise<CategoryFormState> {
   const result = await updateCategoryCore(categoryId, extractCategoryFields(formData));
   if (result.error) return result;
-  redirect("/habitos/categorias");
+  redirect("/habits/categories");
 }
 
 export async function updateCategoryCore(
@@ -77,15 +77,15 @@ export async function updateCategoryCore(
     })
     .where(and(eq(categories.id, categoryId), eq(categories.userId, userId)));
 
-  revalidatePath("/habitos");
-  revalidatePath("/habitos/categorias");
+  revalidatePath("/habits");
+  revalidatePath("/habits/categories");
   return {};
 }
 
 /** Ruta online: escribe vía el core y redirige. El replay offline usa `deleteCategoryCore` directo. */
 export async function deleteCategory(categoryId: string): Promise<void> {
   await deleteCategoryCore(categoryId);
-  redirect("/habitos/categorias");
+  redirect("/habits/categories");
 }
 
 export async function deleteCategoryCore(categoryId: string): Promise<void> {
@@ -96,6 +96,6 @@ export async function deleteCategoryCore(categoryId: string): Promise<void> {
     .where(and(eq(habits.categoryId, categoryId), eq(habits.userId, userId)));
   await db.delete(categories).where(and(eq(categories.id, categoryId), eq(categories.userId, userId)));
 
-  revalidatePath("/habitos");
-  revalidatePath("/habitos/categorias");
+  revalidatePath("/habits");
+  revalidatePath("/habits/categories");
 }

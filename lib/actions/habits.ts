@@ -24,7 +24,7 @@ export async function createHabit(
   if (!id) return { error: "invalid" };
   const result = await createHabitCore(id, extractHabitFields(formData));
   if (result.error) return result;
-  redirect("/habitos");
+  redirect("/habits");
 }
 
 /**
@@ -61,7 +61,7 @@ export async function createHabitCore(id: string, rawValues: unknown): Promise<H
   }).onConflictDoNothing({ target: habits.id });
 
   revalidatePath("/");
-  revalidatePath("/habitos");
+  revalidatePath("/habits");
   return {};
 }
 
@@ -72,7 +72,7 @@ export async function updateHabit(
 ): Promise<HabitFormState> {
   const result = await updateHabitCore(habitId, extractHabitFields(formData));
   if (result.error) return result;
-  redirect("/habitos");
+  redirect("/habits");
 }
 
 export async function updateHabitCore(habitId: string, rawValues: unknown): Promise<HabitFormState> {
@@ -102,15 +102,15 @@ export async function updateHabitCore(habitId: string, rawValues: unknown): Prom
     .where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
 
   revalidatePath("/");
-  revalidatePath("/habitos");
-  revalidatePath(`/habitos/${habitId}`);
+  revalidatePath("/habits");
+  revalidatePath(`/habits/${habitId}`);
   return {};
 }
 
 /** Ruta online: escribe vía el core y redirige. El replay offline usa `archiveHabitCore` directo. */
 export async function archiveHabit(habitId: string): Promise<void> {
   await archiveHabitCore(habitId);
-  redirect("/habitos");
+  redirect("/habits");
 }
 
 export async function archiveHabitCore(habitId: string): Promise<void> {
@@ -120,7 +120,7 @@ export async function archiveHabitCore(habitId: string): Promise<void> {
     .set({ status: "archived" })
     .where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
   revalidatePath("/");
-  revalidatePath("/habitos");
+  revalidatePath("/habits");
 }
 
 export async function restoreHabit(habitId: string) {
@@ -130,7 +130,7 @@ export async function restoreHabit(habitId: string) {
     .set({ status: "active" })
     .where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
   revalidatePath("/");
-  revalidatePath("/habitos");
+  revalidatePath("/habits");
 }
 
 export async function togglePinHabit(habitId: string, pinned: boolean) {
@@ -140,7 +140,7 @@ export async function togglePinHabit(habitId: string, pinned: boolean) {
     .set({ isPinned: pinned })
     .where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
   revalidatePath("/");
-  revalidatePath("/habitos");
+  revalidatePath("/habits");
 }
 
 export async function reorderHabits(orderedIds: string[]) {
@@ -154,5 +154,5 @@ export async function reorderHabits(orderedIds: string[]) {
     )
   );
   revalidatePath("/");
-  revalidatePath("/habitos");
+  revalidatePath("/habits");
 }

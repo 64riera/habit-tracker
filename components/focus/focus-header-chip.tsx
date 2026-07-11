@@ -47,7 +47,7 @@ function ActiveChip({
 
   return (
     <Link
-      href="/enfoque"
+      href="/focus"
       className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-[11.5px] font-medium tabular-nums transition-colors"
     >
       <span className="relative flex size-1.5 shrink-0" aria-hidden>

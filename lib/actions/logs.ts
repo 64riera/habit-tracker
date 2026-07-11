@@ -56,9 +56,9 @@ function achievementInsertStatements(userId: string, habitId: string, unlocked: 
 
 function revalidateCheckinPaths() {
   revalidatePath("/");
-  revalidatePath("/historial");
-  revalidatePath("/estadisticas");
-  revalidatePath("/habitos");
+  revalidatePath("/history");
+  revalidatePath("/stats");
+  revalidatePath("/habits");
 }
 
 export async function logHabit(input: LogInput) {
@@ -188,6 +188,6 @@ export async function deleteLog(habitId: string, date: string) {
   ]);
 
   revalidatePath("/");
-  revalidatePath("/historial");
-  revalidatePath("/estadisticas");
+  revalidatePath("/history");
+  revalidatePath("/stats");
 }

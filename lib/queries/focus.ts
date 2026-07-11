@@ -152,7 +152,7 @@ export async function getFocusHistory(params: {
 
 /**
  * Progreso del objetivo diario. Recibe la sesión activa ya resuelta por el
- * caller (en vez de releerla) porque `/enfoque` ya la obtuvo vía
+ * caller (en vez de releerla) porque `/focus` ya la obtuvo vía
  * `getActiveFocusSession()` para decidir qué UI mostrar — evitar una segunda
  * consulta+reconciliación del mismo row. Si esa sesión pertenece al día
  * consultado, su tiempo activo en curso (calculado en el momento, no
@@ -187,7 +187,7 @@ export type FocusRewardProgress = {
   unlockedTiers: FocusRewardTier[];
 };
 
-/** Para la pantalla /enfoque/bosque: totales de por vida + qué tiers ya se desbloquearon. */
+/** Para la pantalla /focus/forest: totales de por vida + qué tiers ya se desbloquearon. */
 export async function getFocusRewardProgress(): Promise<FocusRewardProgress> {
   const userId = await getCurrentUserId();
   const [{ totalSeconds, count }, unlockedRows] = await Promise.all([

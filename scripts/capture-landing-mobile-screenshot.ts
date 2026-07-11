@@ -1,6 +1,6 @@
 /**
- * Captura una screenshot de la landing (/bienvenida) en viewport mobile,
- * usada como base para la og-image de app/bienvenida.
+ * Captura una screenshot de la landing (/welcome) en viewport mobile,
+ * usada como base para la og-image de app/welcome.
  *
  * Corre contra un build de producción (`npm run build && npm run start`),
  * no contra `npm run dev`: el dev server superpone un indicador de Next.js
@@ -15,8 +15,8 @@ import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const BASE_URL = process.env.OG_CAPTURE_URL ?? "http://localhost:3000";
-const LANDING_PATH = "/bienvenida";
-const OUTPUT_PATH = join(process.cwd(), "app/bienvenida/_assets/mobile-screenshot.png");
+const LANDING_PATH = "/welcome";
+const OUTPUT_PATH = join(process.cwd(), "app/welcome/_assets/mobile-screenshot.png");
 
 async function main() {
   const reachable = await fetch(BASE_URL).catch(() => null);

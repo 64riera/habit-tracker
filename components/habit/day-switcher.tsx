@@ -56,7 +56,7 @@ export function DaySwitcher({ date, today }: { date: string; today: string }) {
     // que el área de layout de las flechas (que usan -m-2/p-2 para ampliar
     // el hit target sin sumar alto), así que sin un alto reservado la fila
     // crece al aparecer la píldora y empuja hacia abajo el % y la racha de
-    // HoySummaryDisplay, que van justo debajo.
+    // TodaySummaryDisplay, que van justo debajo.
     <div className="mb-4 flex h-7 items-center gap-1 md:mb-5">
       <Link
         href={`/?fecha=${prev}`}

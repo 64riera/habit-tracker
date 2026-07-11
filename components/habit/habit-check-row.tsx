@@ -111,7 +111,7 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
     <div className={cn(isPendingSync && "opacity-70")}>
       <div className="flex items-center gap-4 border-b border-border py-3.5">
         <Link
-          href={`/habitos/${habit.id}`}
+          href={`/habits/${habit.id}`}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-serif-italic text-[15px] font-semibold md:h-[42px] md:w-[42px] md:text-[17px]"
           style={{ background: `color-mix(in oklch, ${color} 16%, transparent)`, color }}
         >

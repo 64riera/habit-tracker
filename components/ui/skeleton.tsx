@@ -69,7 +69,7 @@ export function SkeletonHabitCheckRow() {
  * hábito) — usado solo por app/(dashboard)/loading.tsx, el fallback de
  * arranque en frío de toda la página (nada renderizó todavía, ni siquiera
  * el header). Para el cambio de día dentro de Hoy ya no aplica: el resumen
- * vive fuera del <Suspense> por fecha (ver HoySummaryDisplay) para poder
+ * vive fuera del <Suspense> por fecha (ver TodaySummaryDisplay) para poder
  * animar la transición en vez de mostrarse en skeleton — ver
  * SkeletonHoyRows para ese caso. */
 export function SkeletonHoyList() {
@@ -99,7 +99,7 @@ export function SkeletonHoyRows() {
   );
 }
 
-/** Espejo de la fila inline de HabitosClient (app/(dashboard)/habitos/habitos-client.tsx):
+/** Espejo de la fila inline de HabitosClient (app/(dashboard)/habits/habits-client.tsx):
  * asa de arrastre, avatar más chico que el de Hoy, nombre/subtítulo y estado
  * a la derecha — mismo gap-2.5/py-3, deliberadamente distinta de
  * SkeletonHabitCheckRow porque la fila real también lo es. */

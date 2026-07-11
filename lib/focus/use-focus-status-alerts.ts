@@ -11,7 +11,7 @@ import { APP_NAME } from "@/lib/branding";
  * detecta la transición (compara contra el status anterior), no el estado
  * actual, para no repetir la alerta en cada re-render mientras el status no
  * cambia. Compartido entre `FocusTimerDisplay` y `MiniFocusIndicator`: nunca
- * están montados los dos a la vez (el indicador se oculta en /enfoque), así
+ * están montados los dos a la vez (el indicador se oculta en /focus), así
  * que no hay riesgo de disparar la alerta dos veces para la misma sesión.
  */
 export function useFocusStatusAlerts(session: FocusSessionRow | null, soundEnabled: boolean) {

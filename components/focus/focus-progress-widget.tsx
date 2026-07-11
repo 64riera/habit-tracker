@@ -3,7 +3,7 @@
 import { useI18n } from "@/lib/i18n/client";
 import { useTextScramble } from "@/lib/hooks/use-text-scramble";
 
-/** Espejo visual de HoySummaryDisplay (% grande con scramble + barra fina),
+/** Espejo visual de TodaySummaryDisplay (% grande con scramble + barra fina),
  * pero con datos propios del módulo de enfoque en vez de reutilizar aquel
  * componente, que está atado a la forma de datos de hábitos (total/done/
  * inProgress/bestStreak). */

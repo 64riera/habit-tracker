@@ -103,7 +103,7 @@ export async function POST(request: Request) {
     const payload = JSON.stringify({
       title: habit.habitName,
       body: `${REMINDER_PREFIX[habit.locale]}${habit.habitName}`,
-      url: `/habitos/${habit.habitId}`,
+      url: `/habits/${habit.habitId}`,
     });
     for (const sub of userSubscriptions) {
       try {

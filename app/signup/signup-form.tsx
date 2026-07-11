@@ -40,7 +40,7 @@ export function SignupForm({
         <LangToggle />
       </div>
       <div className="text-center">
-        <Link href="/bienvenida" className="inline-block">
+        <Link href="/welcome" className="inline-block">
           <div className="font-serif-italic text-[28px] leading-[1.1] font-semibold tracking-tight">
             {APP_NAME}
           </div>

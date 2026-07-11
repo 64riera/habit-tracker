@@ -13,7 +13,7 @@ import { LIVE_STATUSES, type FocusSessionRow } from "@/lib/focus/compute";
 import { hasFocusHeaderSlot } from "@/lib/focus/header-slot";
 
 /**
- * Pastilla flotante visible en cualquier ruta del dashboard salvo /enfoque
+ * Pastilla flotante visible en cualquier ruta del dashboard salvo /focus
  * (ahí ya se ve la sesión completa) y las de `hasFocusHeaderSlot` (esas
  * pantallas muestran el mismo estado como `FocusHeaderChip` en su propio
  * header, que además es quien dispara ahí las alertas de sonido/título —
@@ -47,13 +47,13 @@ function MiniFocusIndicatorActive({
   useFocusStatusAlerts(session, soundEnabled);
 
   if (!session || !state || !LIVE_STATUSES.includes(session.status)) return null;
-  if (pathname.startsWith("/enfoque") || hasFocusHeaderSlot(pathname)) return null;
+  if (pathname.startsWith("/focus") || hasFocusHeaderSlot(pathname)) return null;
 
   const bigValueSeconds = session.mode === "countdown" ? state.remainingSeconds ?? 0 : state.activeSeconds;
 
   return (
     <Link
-      href="/enfoque"
+      href="/focus"
       className="fixed right-4 bottom-20 z-40 flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-2 text-[12px] shadow-[0_10px_24px_-14px_var(--header-shadow)] md:right-6 md:bottom-6"
     >
       <Timer size={13} strokeWidth={2} className="text-muted" aria-hidden />

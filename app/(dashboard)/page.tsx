@@ -1,14 +1,14 @@
 import { Suspense } from "react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { DaySwitcher } from "@/components/habit/day-switcher";
-import { HoySummaryProvider } from "@/components/habit/hoy-summary-context";
-import { HoySummaryDisplay } from "@/components/habit/hoy-summary";
+import { TodaySummaryProvider } from "@/components/habit/today-summary-context";
+import { TodaySummaryDisplay } from "@/components/habit/today-summary";
 import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
 import { SkeletonHoyRows } from "@/components/ui/skeleton";
 import { getTodayDateString } from "@/lib/date";
 import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
 import { getFocusHeaderData } from "@/lib/queries/focus";
-import { HoyHabits } from "./hoy-habits";
+import { TodayHabits } from "./today-habits";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -20,7 +20,7 @@ function resolveViewedDate(requested: string | undefined, today: string): string
   return today;
 }
 
-export default async function HoyPage({
+export default async function TodayPage({
   searchParams,
 }: {
   searchParams: Promise<{ fecha?: string }>;
@@ -32,7 +32,7 @@ export default async function HoyPage({
   const focusHeader = await getFocusHeaderData();
 
   return (
-    <HoySummaryProvider>
+    <TodaySummaryProvider>
       <div>
         <ContentHeader
           titleKey="screens.hoy.title"
@@ -40,18 +40,18 @@ export default async function HoyPage({
           headerAccessory={<FocusHeaderChip session={focusHeader.session} soundEnabled={focusHeader.soundEnabled} />}
         />
         <DaySwitcher date={date} today={today} />
-        {/* HoySummaryDisplay vive fuera del <Suspense>: al cambiar de día no
+        {/* TodaySummaryDisplay vive fuera del <Suspense>: al cambiar de día no
             se remonta, así que el % y la racha no cargan de nuevo — se
             quedan mostrando el valor del día anterior y transicionan al
-            nuevo con scramble de texto una vez que HoyHabits los reporta. */}
-        <HoySummaryDisplay />
+            nuevo con scramble de texto una vez que TodayHabits los reporta. */}
+        <TodaySummaryDisplay />
         {/* key={date}: fuerza un límite de Suspense nuevo por cada fecha para
             que la lista de hábitos muestre el skeleton mientras carga en vez
             de dejar el contenido del día anterior congelado en pantalla. */}
         <Suspense key={date} fallback={<SkeletonHoyRows />}>
-          <HoyHabits date={date} today={today} />
+          <TodayHabits date={date} today={today} />
         </Suspense>
       </div>
-    </HoySummaryProvider>
+    </TodaySummaryProvider>
   );
 }

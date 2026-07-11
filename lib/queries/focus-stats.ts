@@ -279,7 +279,7 @@ export async function getFocusTimeOfDaySamples(today: string, days = 30): Promis
 
 export type FocusHistorySummary = { totalMinutes: number; sessionCount: number; completionRatePct: number };
 
-/** Tira de resumen de /enfoque/historial: totales sobre todo el historial
+/** Tira de resumen de /focus/history: totales sobre todo el historial
  * (sin acotar por fecha, solo por el filtro de hábito si hay uno) — una
  * sola query agregada en SQL en vez de traer todas las filas, porque acá sí
  * puede crecer sin el tope de 90 días que usan las demás consultas. */

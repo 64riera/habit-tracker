@@ -18,7 +18,7 @@ export async function createRoutine(
   if (!id) return { error: "invalid" };
   const result = await createRoutineCore(id, extractRoutineFields(formData));
   if (result.error) return result;
-  redirect("/habitos/rutinas");
+  redirect("/habits/routines");
 }
 
 export async function createRoutineCore(id: string, rawValues: unknown): Promise<RoutineFormState> {
@@ -42,7 +42,7 @@ export async function createRoutineCore(id: string, rawValues: unknown): Promise
     .onConflictDoNothing({ target: routines.id });
 
   revalidatePath("/");
-  revalidatePath("/habitos/rutinas");
+  revalidatePath("/habits/routines");
   return {};
 }
 
@@ -53,7 +53,7 @@ export async function updateRoutine(
 ): Promise<RoutineFormState> {
   const result = await updateRoutineCore(routineId, extractRoutineFields(formData));
   if (result.error) return result;
-  redirect("/habitos/rutinas");
+  redirect("/habits/routines");
 }
 
 export async function updateRoutineCore(
@@ -71,14 +71,14 @@ export async function updateRoutineCore(
     .where(and(eq(routines.id, routineId), eq(routines.userId, userId)));
 
   revalidatePath("/");
-  revalidatePath("/habitos/rutinas");
+  revalidatePath("/habits/routines");
   return {};
 }
 
 /** Ruta online: escribe vía el core y redirige. El replay offline usa `deleteRoutineCore` directo. */
 export async function deleteRoutine(routineId: string): Promise<void> {
   await deleteRoutineCore(routineId);
-  redirect("/habitos/rutinas");
+  redirect("/habits/routines");
 }
 
 export async function deleteRoutineCore(routineId: string): Promise<void> {
@@ -86,5 +86,5 @@ export async function deleteRoutineCore(routineId: string): Promise<void> {
   await db.delete(routines).where(and(eq(routines.id, routineId), eq(routines.userId, userId)));
 
   revalidatePath("/");
-  revalidatePath("/habitos/rutinas");
+  revalidatePath("/habits/routines");
 }
