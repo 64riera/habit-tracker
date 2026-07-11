@@ -4,10 +4,10 @@ import { jwtVerify } from "jose";
 import { APP_CANONICAL_HOST } from "@/lib/branding";
 
 const SESSION_COOKIE = "justgo_session";
-// /api/cron/reminders has no user session (it's called by an external
-// cron, see .github/workflows/push-reminders.yml) — it authenticates with
+// /api/cron/* routes have no user session (they're called by an external
+// cron, see .github/workflows/push-reminders.yml) — each authenticates with
 // its own shared secret (CRON_SECRET) inside the route handler, not a cookie.
-const PUBLIC_PATHS = ["/login", "/signup", "/welcome", "/manifest.webmanifest", "/api/auth/google", "/api/cron/reminders"];
+const PUBLIC_PATHS = ["/login", "/signup", "/welcome", "/manifest.webmanifest", "/api/auth/google", "/api/cron/"];
 
 // Old domain (before the rebrand to "Just Go"): redirect permanently
 // instead of serving the app there, so we don't break direct links or the

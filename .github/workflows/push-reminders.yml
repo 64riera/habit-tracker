@@ -1,8 +1,8 @@
 name: Push reminders
 
-# Triggers app/api/cron/reminders/route.ts every 15 min — replaces Vercel
-# Cron (limited to 1x/day on the Hobby plan) at no cost, see the push
-# reminders implementation plan.
+# Triggers app/api/cron/reminders/route.ts and app/api/cron/focus-timeout/route.ts
+# every 15 min — replaces Vercel Cron (limited to 1x/day on the Hobby plan)
+# at no cost, see the push reminders implementation plan.
 on:
   schedule:
     - cron: "*/15 * * * *"
@@ -15,4 +15,8 @@ jobs:
       - name: Trigger reminder check
         run: |
           curl -fsS -X POST "https://justgo.srivera.xyz/api/cron/reminders" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+      - name: Force-finish overdue focus sessions
+        run: |
+          curl -fsS -X POST "https://justgo.srivera.xyz/api/cron/focus-timeout" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
