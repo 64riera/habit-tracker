@@ -13,11 +13,20 @@ import { reconcileAndPersist } from "@/lib/queries/focus";
  * "running" in the database forever if the user never reopens the app —
  * no completion, no streak/reward unlock, stats never see it.
  *
+ * reconcileAndPersist also carries a second, independent check on every
+ * call: if the session is linked to a habit and enough active time has
+ * gone in, it marks that habit "done" for the day (see
+ * autoCompleteLinkedHabitIfDue in lib/queries/focus.ts) — this is what
+ * catches that case too when nobody has the app open, since a habit's
+ * threshold is usually well under the session's own cap.
+ *
  * Triggered by the same external cron as reminders (no user session here,
  * see .github/workflows/push-reminders.yml), authenticated with the same
- * shared CRON_SECRET. reconcileAndPersist is a no-op (no write) for any
- * session that isn't actually over its cap yet, so scanning every live
- * session on each tick is cheap.
+ * shared CRON_SECRET. Scanning every live session on each tick is cheap:
+ * reconcileAndPersist skips the session-status write entirely when there's
+ * nothing to change, and the habit check is a couple of indexed reads that
+ * short-circuit as soon as either the threshold isn't met or the habit is
+ * already logged done.
  */
 export async function POST(request: Request) {
   const expected = process.env.CRON_SECRET;

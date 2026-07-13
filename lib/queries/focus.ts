@@ -2,10 +2,12 @@ import "server-only";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db/client";
-import { focusRewardTiers, focusSessions, focusSettings } from "@/lib/db/schema";
+import { focusRewardTiers, focusSessions, focusSettings, habitLogs, habits } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { LIVE_STATUSES, computeFocusState, reconcileFocusSession, type FocusSessionRow } from "@/lib/focus/compute";
+import { shouldAutoCompleteHabit } from "@/lib/focus/habit-autocomplete";
 import { computeNewRewardTiers, type FocusRewardTier } from "@/lib/focus/rewards";
+import { writeHabitLog } from "@/lib/habits/log-write";
 
 export type { FocusSessionRow };
 export type FocusSettingsRow = typeof focusSettings.$inferSelect;
@@ -56,30 +58,71 @@ export async function checkAndUnlockFocusRewards(userId: string): Promise<FocusR
   return newTiers;
 }
 
-/** Persists the result of reconciling against `now`, if there were changes, and returns the
- * now-up-to-date row along with any reward newly unlocked by that reconciliation. */
+/**
+ * A focus session linked to a habit marks that habit "done" for its day as
+ * soon as enough active time has gone in — independent of the session's own
+ * cap or manual finish (a 90-minute stopwatch tied to a 20-minute binary
+ * habit shouldn't have to run the full 90 minutes). See
+ * habitAutoCompleteThresholdSeconds for the per-goal-type rule; quantitative
+ * habits have no rule and are left alone. Checking the day's existing log
+ * first keeps this idempotent across repeated reconciliations and avoids
+ * re-forcing "done" back on if the user manually unmarks it later in the
+ * same session.
+ */
+async function autoCompleteLinkedHabitIfDue(session: FocusSessionRow, now: Date): Promise<void> {
+  const habitId = session.habitId;
+  if (!habitId) return;
+
+  const [habit] = await db
+    .select({ goalType: habits.goalType, goalTarget: habits.goalTarget })
+    .from(habits)
+    .where(eq(habits.id, habitId))
+    .limit(1);
+  if (!habit) return;
+
+  const activeSeconds = computeFocusState(session, now).activeSeconds;
+  if (!shouldAutoCompleteHabit(activeSeconds, habit)) return;
+
+  const [existingLog] = await db
+    .select({ status: habitLogs.status })
+    .from(habitLogs)
+    .where(and(eq(habitLogs.habitId, habitId), eq(habitLogs.date, session.date)))
+    .limit(1);
+  if (existingLog?.status === "done") return;
+
+  await writeHabitLog(session.userId, { habitId, date: session.date, status: "done" });
+}
+
+/** Persists the result of reconciling against `now` (if there were changes) and applies the
+ * linked-habit auto-completion check, returning the now-up-to-date row along with any reward
+ * newly unlocked by that reconciliation. */
 export async function reconcileAndPersist(
   row: FocusSessionRow,
   now: Date
 ): Promise<{ session: FocusSessionRow; unlockedTiers: FocusRewardTier[] }> {
   const { changed, session } = reconcileFocusSession(row, now);
-  if (!changed) return { session, unlockedTiers: [] };
 
-  await db
-    .update(focusSessions)
-    .set({
-      status: session.status,
-      accumulatedActiveSeconds: session.accumulatedActiveSeconds,
-      lastResumedAt: session.lastResumedAt,
-      breakStartedAt: session.breakStartedAt,
-      breaksTakenCount: session.breaksTakenCount,
-      pausedAt: session.pausedAt,
-      completedAt: session.completedAt,
-      autoCompleted: session.autoCompleted,
-    })
-    .where(eq(focusSessions.id, session.id));
+  if (changed) {
+    await db
+      .update(focusSessions)
+      .set({
+        status: session.status,
+        accumulatedActiveSeconds: session.accumulatedActiveSeconds,
+        lastResumedAt: session.lastResumedAt,
+        breakStartedAt: session.breakStartedAt,
+        breaksTakenCount: session.breaksTakenCount,
+        pausedAt: session.pausedAt,
+        completedAt: session.completedAt,
+        autoCompleted: session.autoCompleted,
+      })
+      .where(eq(focusSessions.id, session.id));
+  }
 
-  const unlockedTiers = session.status === "completed" ? await checkAndUnlockFocusRewards(session.userId) : [];
+  if (session.habitId) {
+    await autoCompleteLinkedHabitIfDue(session, now);
+  }
+
+  const unlockedTiers = changed && session.status === "completed" ? await checkAndUnlockFocusRewards(session.userId) : [];
   return { session, unlockedTiers };
 }
 
