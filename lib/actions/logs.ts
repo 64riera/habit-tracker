@@ -18,8 +18,6 @@ import {
   type LogInput,
 } from "@/lib/habits/log-write";
 
-export type { LogInput };
-
 function revalidateCheckinPaths() {
   revalidatePath("/");
   revalidatePath("/history");

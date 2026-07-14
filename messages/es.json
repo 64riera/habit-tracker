@@ -8,6 +8,7 @@
     "estadisticas": "Estadísticas",
     "enfoque": "Enfoque",
     "habitos": "Hábitos",
+    "tareas": "Tareas",
     "ajustes": "Ajustes"
   },
   "screens": {
@@ -17,7 +18,8 @@
     "habitos": { "title": "Hábitos", "subtitle": "Gestiona y personaliza" },
     "habitoDetalle": { "title": "Editar hábito", "subtitle": "Ajusta los detalles de tu hábito" },
     "ajustes": { "title": "Ajustes", "subtitle": "Apariencia, idioma y datos" },
-    "enfoque": { "title": "Enfoque", "subtitle": "Sesiones de concentración" }
+    "enfoque": { "title": "Enfoque", "subtitle": "Sesiones de concentración" },
+    "tareas": { "title": "Tareas", "subtitle": "Pendientes que se repiten solos" }
   },
   "common": {
     "save": "Guardar cambios",
@@ -206,6 +208,55 @@
     "empty": "Aún no tienes rutinas.",
     "completion": "Cumplimiento de la rutina",
     "completionPct": "Cumplimiento 30d: {pct}%"
+  },
+  "tasks": {
+    "title": "Tareas",
+    "subtitle": "Pendientes que se repiten solos",
+    "newTask": "Nueva tarea",
+    "fieldTitle": "Título",
+    "fieldRecurrence": "Se repite",
+    "recurrence": {
+      "daily": "Cada día",
+      "weekly": "Cada semana",
+      "monthly": "Cada mes",
+      "yearly": "Cada año",
+      "custom": "Personalizada"
+    },
+    "customMode": {
+      "interval": "Cada N días",
+      "weekdays": "Días específicos"
+    },
+    "fieldDayOfMonth": "Día del mes",
+    "fieldMonth": "Mes",
+    "fieldDay": "Día",
+    "fieldIntervalDays": "Repetir cada (días)",
+    "fieldWeekdays": "Días de la semana",
+    "formError": "Revisa los campos: falta el título o algún valor no es válido.",
+    "confirmDelete": "¿Eliminar esta tarea?",
+    "empty": "Aún no tienes tareas. Crea la primera.",
+    "markDone": "Marcar hecha",
+    "unmark": "Quitar marca de hecha",
+    "freqShort": {
+      "daily": "Cada día",
+      "weekly": "Cada semana",
+      "monthlyOnDay": "El día {day} de cada mes",
+      "yearlyOnDate": "Cada {day} de {month}",
+      "everyNDays": "Cada {n} días"
+    },
+    "monthLong": {
+      "1": "enero",
+      "2": "febrero",
+      "3": "marzo",
+      "4": "abril",
+      "5": "mayo",
+      "6": "junio",
+      "7": "julio",
+      "8": "agosto",
+      "9": "septiembre",
+      "10": "octubre",
+      "11": "noviembre",
+      "12": "diciembre"
+    }
   },
   "achievements": {
     "title": "Logros",

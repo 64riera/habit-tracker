@@ -12,6 +12,7 @@ import {
 } from "@/lib/actions/habits";
 import { setCategoryHidden } from "@/lib/actions/categories";
 import { createRoutineCore, updateRoutineCore, deleteRoutineCore } from "@/lib/actions/routines";
+import { createTaskCore, updateTaskCore, deleteTaskCore, toggleTaskCore } from "@/lib/actions/tasks";
 import type { AchievementType } from "@/lib/achievements";
 
 export type ReplayResult = { unlocked?: AchievementType[]; freezeQuotaExhausted?: boolean } | void;
@@ -51,6 +52,14 @@ const registry: Registry = {
     await updateRoutineCore(m.routineId, m.values);
   },
   deleteRoutine: (m) => deleteRoutineCore(m.routineId),
+  createTask: async (m) => {
+    await createTaskCore(m.id, m.values);
+  },
+  updateTask: async (m) => {
+    await updateTaskCore(m.taskId, m.values);
+  },
+  deleteTask: (m) => deleteTaskCore(m.taskId),
+  toggleTask: (m) => toggleTaskCore(m.taskId, m.periodKey, m.done),
 };
 
 export async function replay(mutation: QueuedMutation): Promise<ReplayResult> {

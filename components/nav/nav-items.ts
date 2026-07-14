@@ -1,4 +1,4 @@
-import { Home, History, Timer, ListChecks, Settings } from "lucide-react";
+import { Home, History, Timer, ListChecks, ListTodo, Settings } from "lucide-react";
 
 export const NAV_ITEMS = [
   { key: "hoy", href: "/", dictKey: "nav.hoy", icon: Home, activeWhen: (p: string) => p === "/" },
@@ -14,5 +14,6 @@ export const NAV_ITEMS = [
   },
   { key: "enfoque", href: "/focus", dictKey: "nav.enfoque", icon: Timer, activeWhen: (p: string) => p.startsWith("/focus") },
   { key: "habitos", href: "/habits", dictKey: "nav.habitos", icon: ListChecks, activeWhen: (p: string) => p.startsWith("/habits") },
+  { key: "tareas", href: "/tasks", dictKey: "nav.tareas", icon: ListTodo, activeWhen: (p: string) => p.startsWith("/tasks") },
   { key: "ajustes", href: "/settings", dictKey: "nav.ajustes", icon: Settings, activeWhen: (p: string) => p.startsWith("/settings") },
 ] as const;

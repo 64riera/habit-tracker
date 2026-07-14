@@ -132,6 +132,44 @@ export const routines = sqliteTable(
   (t) => [index("routines_user_idx").on(t.userId)]
 );
 
+export const tasks = sqliteTable(
+  "tasks",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    recurrenceType: text("recurrence_type", {
+      enum: ["daily", "weekly", "monthly", "yearly", "custom_interval", "custom_weekdays"],
+    }).notNull(),
+    recurrenceConfig: text("recurrence_config"), // JSON, shape depends on recurrenceType — see lib/tasks/recurrence.ts
+    // Creation date (cutoff-aware). Only custom_interval uses it, as the phase
+    // reference for "every N days" — harmless/unused for the other types.
+    startDate: text("start_date").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [index("tasks_user_idx").on(t.userId)]
+);
+
+// No "reset" row/job: whether a task is done for its current period is
+// decided at read time by checking whether a completion exists whose
+// periodKey matches the period currently in effect (see
+// lib/tasks/recurrence.ts::currentPeriodKey) — same principle habitLogs
+// already uses for habits, just keyed by period instead of by calendar date.
+export const taskCompletions = sqliteTable(
+  "task_completions",
+  {
+    id: text("id").primaryKey(), // `${taskId}:${periodKey}`, deterministic — mirrors habitLogs' `${habitId}:${date}`
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    taskId: text("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+    periodKey: text("period_key").notNull(),
+    completedAt: text("completed_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    uniqueIndex("task_completions_task_period_idx").on(t.taskId, t.periodKey),
+    index("task_completions_user_idx").on(t.userId),
+  ]
+);
+
 export const settings = sqliteTable("settings", {
   key: text("key").primaryKey(),
   value: text("value"),

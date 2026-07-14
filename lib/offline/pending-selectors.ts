@@ -1,10 +1,13 @@
 import type { QueuedRecord } from "@/lib/offline/db";
 import type { HabitFormValues } from "@/lib/validation/habit";
 import type { RoutineFormValues } from "@/lib/validation/routine";
+import type { TaskFormValues } from "@/lib/validation/task";
 import type { HabitWithExtras, CategoryRow } from "@/lib/queries/habits";
 import type { RoutineWithStats, RoutineHabitSummary } from "@/lib/queries/routines";
+import type { TaskWithStatus } from "@/lib/queries/tasks";
 import { buildFrequencyConfig } from "@/lib/habits/frequency";
 import { FREEZE_MONTHLY_ALLOWANCE } from "@/lib/habits/status";
+import { buildTaskRecurrenceConfig, currentPeriodKey } from "@/lib/tasks/recurrence";
 
 // --- Habits ---
 
@@ -156,4 +159,58 @@ export function applyPendingRoutineEdit(
   habitNames: { id: string; name: string }[]
 ): RoutineWithStats {
   return { ...routine, ...routineEditableFields(values, habitNames) };
+}
+
+// --- Tasks ---
+
+export function pendingTaskCreates(queue: QueuedRecord[]) {
+  return queue.filter((m): m is Extract<QueuedRecord, { type: "createTask" }> => m.type === "createTask");
+}
+
+export function pendingTaskUpdates(queue: QueuedRecord[]): Map<string, TaskFormValues> {
+  return new Map(
+    queue
+      .filter((m): m is Extract<QueuedRecord, { type: "updateTask" }> => m.type === "updateTask")
+      .map((m) => [m.taskId, m.values])
+  );
+}
+
+export function pendingTaskDeleteIds(queue: QueuedRecord[]): Set<string> {
+  return new Set(
+    queue.filter((m): m is Extract<QueuedRecord, { type: "deleteTask" }> => m.type === "deleteTask").map((m) => m.taskId)
+  );
+}
+
+/** Editable task fields derived from the form values — reused by the creation ghost and the edit overlay. */
+function taskEditableFields(values: TaskFormValues) {
+  return {
+    title: values.title,
+    recurrenceType: values.recurrenceType,
+    recurrenceConfig: JSON.stringify(buildTaskRecurrenceConfig(values)),
+  };
+}
+
+/** Builds a "good enough" `TaskWithStatus` to display a task created offline
+ * that hasn't synced yet — always shown as not done for its own (freshly
+ * computed) current period, since it can't have any completion yet. */
+export function buildGhostTask(id: string, values: TaskFormValues, today: string): TaskWithStatus {
+  const { recurrenceType, recurrenceConfig } = taskEditableFields(values);
+  return {
+    id,
+    userId: "",
+    title: values.title,
+    recurrenceType,
+    recurrenceConfig,
+    startDate: today,
+    createdAt: new Date().toISOString(),
+    isDone: false,
+    periodKey: currentPeriodKey({ recurrenceType, recurrenceConfig, startDate: today }, today),
+  };
+}
+
+/** Overlays an offline edit not yet synced on top of the already-loaded real task.
+ * Leaves `isDone`/`periodKey` as already computed for the real row — an unsynced
+ * recurrence change shouldn't retroactively reinterpret today's completion state. */
+export function applyPendingTaskEdit(task: TaskWithStatus, values: TaskFormValues): TaskWithStatus {
+  return { ...task, ...taskEditableFields(values) };
 }

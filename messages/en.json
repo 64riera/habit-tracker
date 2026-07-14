@@ -8,6 +8,7 @@
     "estadisticas": "Stats",
     "enfoque": "Focus",
     "habitos": "Habits",
+    "tareas": "Tasks",
     "ajustes": "Settings"
   },
   "screens": {
@@ -17,7 +18,8 @@
     "habitos": { "title": "Habits", "subtitle": "Manage and personalize" },
     "habitoDetalle": { "title": "Edit habit", "subtitle": "Adjust your habit's details" },
     "ajustes": { "title": "Settings", "subtitle": "Appearance, language and data" },
-    "enfoque": { "title": "Focus", "subtitle": "Concentration sessions with tracking" }
+    "enfoque": { "title": "Focus", "subtitle": "Concentration sessions with tracking" },
+    "tareas": { "title": "Tasks", "subtitle": "Recurring to-dos that reset on their own" }
   },
   "common": {
     "save": "Save changes",
@@ -206,6 +208,55 @@
     "empty": "You don't have any routines yet.",
     "completion": "Routine completion",
     "completionPct": "30d completion: {pct}%"
+  },
+  "tasks": {
+    "title": "Tasks",
+    "subtitle": "Recurring to-dos that reset on their own",
+    "newTask": "New task",
+    "fieldTitle": "Title",
+    "fieldRecurrence": "Repeats",
+    "recurrence": {
+      "daily": "Every day",
+      "weekly": "Every week",
+      "monthly": "Every month",
+      "yearly": "Every year",
+      "custom": "Custom"
+    },
+    "customMode": {
+      "interval": "Every N days",
+      "weekdays": "Specific days"
+    },
+    "fieldDayOfMonth": "Day of month",
+    "fieldMonth": "Month",
+    "fieldDay": "Day",
+    "fieldIntervalDays": "Repeat every (days)",
+    "fieldWeekdays": "Days of the week",
+    "formError": "Check the fields: the title is missing or a value isn't valid.",
+    "confirmDelete": "Delete this task?",
+    "empty": "You don't have any tasks yet. Create the first one.",
+    "markDone": "Mark done",
+    "unmark": "Undo mark done",
+    "freqShort": {
+      "daily": "Every day",
+      "weekly": "Every week",
+      "monthlyOnDay": "Day {day} of every month",
+      "yearlyOnDate": "Every {month} {day}",
+      "everyNDays": "Every {n} days"
+    },
+    "monthLong": {
+      "1": "January",
+      "2": "February",
+      "3": "March",
+      "4": "April",
+      "5": "May",
+      "6": "June",
+      "7": "July",
+      "8": "August",
+      "9": "September",
+      "10": "October",
+      "11": "November",
+      "12": "December"
+    }
   },
   "achievements": {
     "title": "Achievements",

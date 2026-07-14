@@ -1,8 +1,9 @@
 "use client";
 
-import type { LogInput } from "@/lib/actions/logs";
+import type { LogInput } from "@/lib/habits/log-write";
 import type { HabitFormValues } from "@/lib/validation/habit";
 import type { RoutineFormValues } from "@/lib/validation/routine";
+import type { TaskFormValues } from "@/lib/validation/task";
 
 export type QueuedMutation =
   | { type: "log"; input: LogInput }
@@ -17,7 +18,11 @@ export type QueuedMutation =
   | { type: "setCategoryHidden"; categoryId: string; hidden: boolean }
   | { type: "createRoutine"; id: string; values: RoutineFormValues }
   | { type: "updateRoutine"; routineId: string; values: RoutineFormValues }
-  | { type: "deleteRoutine"; routineId: string };
+  | { type: "deleteRoutine"; routineId: string }
+  | { type: "createTask"; id: string; values: TaskFormValues }
+  | { type: "updateTask"; taskId: string; values: TaskFormValues }
+  | { type: "deleteTask"; taskId: string }
+  | { type: "toggleTask"; taskId: string; periodKey: string; done: boolean };
 
 export type QueuedRecord = QueuedMutation & { id: number; createdAt: number };
 
