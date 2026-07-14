@@ -2,14 +2,23 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { habits } from "@/lib/db/schema";
 import { habitFormSchema, extractHabitFields } from "@/lib/validation/habit";
 import { getCurrentUserId } from "@/lib/auth/session";
+import { notifyDeviceSync } from "@/lib/realtime/notify";
 import { buildFrequencyConfig } from "@/lib/habits/frequency";
 
 export type HabitFormState = { error?: string };
+
+function revalidateHabitsPaths(habitId?: string) {
+  revalidatePath("/");
+  revalidatePath("/habits");
+  if (habitId) revalidatePath(`/habits/${habitId}`);
+  after(() => notifyDeviceSync());
+}
 
 /**
  * Online path (form/`useActionState`): delegates the write to the core and
@@ -61,8 +70,7 @@ export async function createHabitCore(id: string, rawValues: unknown): Promise<H
     status: "active",
   }).onConflictDoNothing({ target: habits.id });
 
-  revalidatePath("/");
-  revalidatePath("/habits");
+  revalidateHabitsPaths();
   return {};
 }
 
@@ -102,9 +110,7 @@ export async function updateHabitCore(habitId: string, rawValues: unknown): Prom
     })
     .where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
 
-  revalidatePath("/");
-  revalidatePath("/habits");
-  revalidatePath(`/habits/${habitId}`);
+  revalidateHabitsPaths(habitId);
   return {};
 }
 
@@ -120,8 +126,7 @@ export async function archiveHabitCore(habitId: string): Promise<void> {
     .update(habits)
     .set({ status: "archived" })
     .where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
-  revalidatePath("/");
-  revalidatePath("/habits");
+  revalidateHabitsPaths();
 }
 
 export async function restoreHabit(habitId: string) {
@@ -130,8 +135,7 @@ export async function restoreHabit(habitId: string) {
     .update(habits)
     .set({ status: "active" })
     .where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
-  revalidatePath("/");
-  revalidatePath("/habits");
+  revalidateHabitsPaths();
 }
 
 export async function togglePinHabit(habitId: string, pinned: boolean) {
@@ -140,8 +144,7 @@ export async function togglePinHabit(habitId: string, pinned: boolean) {
     .update(habits)
     .set({ isPinned: pinned })
     .where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
-  revalidatePath("/");
-  revalidatePath("/habits");
+  revalidateHabitsPaths();
 }
 
 export async function reorderHabits(orderedIds: string[]) {
@@ -154,6 +157,5 @@ export async function reorderHabits(orderedIds: string[]) {
         .where(and(eq(habits.id, id), eq(habits.userId, userId)))
     )
   );
-  revalidatePath("/");
-  revalidatePath("/habits");
+  revalidateHabitsPaths();
 }

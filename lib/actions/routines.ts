@@ -2,13 +2,21 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { routines } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
+import { notifyDeviceSync } from "@/lib/realtime/notify";
 import { routineSchema, extractRoutineFields } from "@/lib/validation/routine";
 
 export type RoutineFormState = { error?: string };
+
+function revalidateRoutinesPaths() {
+  revalidatePath("/");
+  revalidatePath("/habits/routines");
+  after(() => notifyDeviceSync());
+}
 
 export async function createRoutine(
   _prevState: RoutineFormState,
@@ -41,8 +49,7 @@ export async function createRoutineCore(id: string, rawValues: unknown): Promise
     })
     .onConflictDoNothing({ target: routines.id });
 
-  revalidatePath("/");
-  revalidatePath("/habits/routines");
+  revalidateRoutinesPaths();
   return {};
 }
 
@@ -70,8 +77,7 @@ export async function updateRoutineCore(
     .set({ name: values.name, habitIds: JSON.stringify(values.habitIds) })
     .where(and(eq(routines.id, routineId), eq(routines.userId, userId)));
 
-  revalidatePath("/");
-  revalidatePath("/habits/routines");
+  revalidateRoutinesPaths();
   return {};
 }
 
@@ -85,6 +91,5 @@ export async function deleteRoutineCore(routineId: string): Promise<void> {
   const userId = await getCurrentUserId();
   await db.delete(routines).where(and(eq(routines.id, routineId), eq(routines.userId, userId)));
 
-  revalidatePath("/");
-  revalidatePath("/habits/routines");
+  revalidateRoutinesPaths();
 }

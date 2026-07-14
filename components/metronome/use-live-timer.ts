@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { getActiveTimerAction } from "@/lib/actions/metronome";
 import { remainingSeconds, isFinished, type TimerRow } from "@/lib/metronome/timer-compute";
+import { REALTIME_SYNC_EVENT } from "@/lib/realtime/client";
 
 /**
  * Displays a timer whose real state lives server-side (see
@@ -30,10 +31,14 @@ export function useLiveTimer(initialTimer: TimerRow | null) {
     }
     window.addEventListener("focus", resync);
     window.addEventListener("online", resync);
+    // Another device started/paused/cancelled the timer (see
+    // lib/realtime/client.tsx) — same resync, one more trigger source.
+    window.addEventListener(REALTIME_SYNC_EVENT, resync);
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       window.removeEventListener("focus", resync);
       window.removeEventListener("online", resync);
+      window.removeEventListener(REALTIME_SYNC_EVENT, resync);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [resync]);

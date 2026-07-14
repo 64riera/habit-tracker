@@ -2,6 +2,7 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { db } from "@/lib/db/client";
 import { habitLogs, habitStreaks } from "@/lib/db/schema";
 import { computeStreak, type HabitRow } from "@/lib/streaks/compute";
@@ -10,6 +11,7 @@ import { monthKey } from "@/lib/date";
 import { FREEZE_MONTHLY_ALLOWANCE } from "@/lib/habits/status";
 import { getServerToday } from "@/lib/settings/date-server";
 import { getCurrentUserId } from "@/lib/auth/session";
+import { notifyDeviceSync } from "@/lib/realtime/notify";
 import {
   achievementInsertStatements,
   applyLogChange,
@@ -23,6 +25,7 @@ function revalidateCheckinPaths() {
   revalidatePath("/history");
   revalidatePath("/stats");
   revalidatePath("/habits");
+  after(() => notifyDeviceSync());
 }
 
 export async function logHabit(input: LogInput) {
@@ -96,7 +99,5 @@ export async function deleteLog(habitId: string, date: string) {
       : []),
   ]);
 
-  revalidatePath("/");
-  revalidatePath("/history");
-  revalidatePath("/stats");
+  revalidateCheckinPaths();
 }

@@ -4,11 +4,13 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { I18nProvider } from "@/lib/i18n/client";
 import { ToastProvider } from "@/lib/toast/client";
 import { OfflineProvider } from "@/lib/offline/client";
+import { RealtimeProvider } from "@/lib/realtime/client";
 import { SWRConfigProvider } from "@/components/swr/swr-provider";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { getCurrentLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getThemePreference } from "@/lib/queries/user";
+import { getCurrentUserIdOrNull } from "@/lib/auth/session";
 import { APP_NAME, APP_NAME_FULL, APP_URL } from "@/lib/branding";
 import "./globals.css";
 
@@ -67,6 +69,7 @@ export default async function RootLayout({
   const locale = await getCurrentLocale();
   const dict = getDictionary(locale);
   const themePreference = await getThemePreference();
+  const userId = await getCurrentUserIdOrNull();
 
   return (
     <html
@@ -79,10 +82,12 @@ export default async function RootLayout({
           <I18nProvider locale={locale} dict={dict}>
             <ToastProvider>
               <SWRConfigProvider>
-                <OfflineProvider>
-                  <RegisterServiceWorker />
-                  {children}
-                </OfflineProvider>
+                <RealtimeProvider userId={userId}>
+                  <OfflineProvider>
+                    <RegisterServiceWorker />
+                    {children}
+                  </OfflineProvider>
+                </RealtimeProvider>
               </SWRConfigProvider>
             </ToastProvider>
           </I18nProvider>

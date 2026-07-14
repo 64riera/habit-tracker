@@ -2,10 +2,12 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { transactions } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
+import { notifyDeviceSync } from "@/lib/realtime/notify";
 import { extractTransactionFields, transactionFormSchema } from "@/lib/validation/transaction";
 
 export type TransactionFormState = { error?: string };
@@ -13,6 +15,7 @@ export type TransactionFormState = { error?: string };
 function revalidateFinancePaths() {
   revalidatePath("/");
   revalidatePath("/finance");
+  after(() => notifyDeviceSync());
 }
 
 export async function createTransaction(

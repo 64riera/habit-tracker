@@ -8,8 +8,8 @@ import type { QueuedMutation, QueuedRecord } from "@/lib/offline/db";
 import { replay } from "@/lib/offline/replay-registry";
 import { useAchievementToast, useToast } from "@/lib/toast/client";
 import { useI18n } from "@/lib/i18n/client";
-import { refreshVisitedSections } from "@/lib/swr/refresh-visited-sections";
-import { getClientToday } from "@/lib/date-client";
+import { resyncEverything } from "@/lib/swr/resync-everything";
+import { REALTIME_SYNC_EVENT } from "@/lib/realtime/client";
 
 type SyncState = "offline" | "syncing" | "synced" | "idle";
 
@@ -34,24 +34,6 @@ const OfflineContext = createContext<OfflineContextValue | null>(null);
 const SYNCED_BANNER_MS = 2500;
 const BACKGROUND_SYNC_TAG = "sync-mutations";
 const LAST_SYNCED_AT_KEY = "justgo:last-synced-at";
-
-/** Routes with an action that doesn't depend on any previously-loaded data
- * (starting a focus session, logging a transaction, adding/checking a
- * task, logging a gym session) — kept warm in the background whenever
- * online so they're usable offline even the very first time they're
- * opened, not just after a first visit. Deliberately NOT every route:
- * sections whose whole value is showing past data (History, Stats, ...)
- * have nothing useful to offer without it, so they keep the normal "must
- * visit once" rule. Don't add a route here without that same justification.
- * /more is included for a different reason: it has no data of its own, but
- * since Tasks and Gym are now only reachable through it (see
- * components/nav/nav-items.ts), it has to work offline unvisited too, or
- * their own guarantee above would be unreachable in practice. */
-const ALWAYS_WARM_ROUTES = ["/focus", "/finance", "/tasks", "/gym", "/more"];
-
-function warmAlwaysAvailableRoutes(router: ReturnType<typeof useRouter>) {
-  for (const route of ALWAYS_WARM_ROUTES) router.prefetch(route);
-}
 
 function readLastSyncedAt(): number | null {
   if (typeof window === "undefined") return null;
@@ -132,24 +114,12 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
         }
         await removeQueuedMutation(mutation.id);
       }
-      if (queued.length > 0) {
-        await refreshQueue();
-        // Revalidates every currently-mounted SWR key (cheap: only routes
-        // actually on screen refetch, see lib/swr — SWR's global mutate is
-        // a no-op for keys with no mounted hook) and still refreshes the
-        // Server Component tree for anything not yet migrated to SWR, or
-        // derived from a cookie no SWR key covers (e.g. `today`).
-        globalMutate(() => true);
-        router.refresh();
-      }
-      // Refreshes every *visited* section, not just the ones mounted right
-      // now (globalMutate above only reaches those) — otherwise a section
-      // left in the background would keep showing stale data until the
-      // user happens to revisit it. Runs on every successful drain, even
-      // with nothing queued, so simply regaining connectivity is enough to
-      // catch up on any writes made from another device meanwhile.
-      await refreshVisitedSections(cache, globalMutate, getClientToday());
-      warmAlwaysAvailableRoutes(router);
+      if (queued.length > 0) await refreshQueue();
+      // Brings this device up to date unconditionally, even with nothing
+      // queued — simply regaining connectivity is enough to catch up on
+      // writes made from another device meanwhile (same reasoning as the
+      // realtime-triggered resync below, see lib/swr/resync-everything.ts).
+      await resyncEverything({ cache, mutate: globalMutate, router });
       const syncedAt = Date.now();
       setLastSyncedAt(syncedAt);
       window.localStorage.setItem(LAST_SYNCED_AT_KEY, String(syncedAt));
@@ -191,6 +161,18 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
     }
     navigator.serviceWorker.addEventListener("message", handleMessage);
     return () => navigator.serviceWorker.removeEventListener("message", handleMessage);
+  }, []);
+
+  useEffect(() => {
+    // Another device just changed something (see lib/realtime/client.tsx) —
+    // reuses the exact same drainQueue this already runs on reconnect: it
+    // replays anything queued locally (a no-op if there's nothing) and then
+    // does the full resync, which is exactly what a remote change needs too.
+    function handleRealtimeSync() {
+      drainQueueRef.current();
+    }
+    window.addEventListener(REALTIME_SYNC_EVENT, handleRealtimeSync);
+    return () => window.removeEventListener(REALTIME_SYNC_EVENT, handleRealtimeSync);
   }, []);
 
   const runOrQueue = useCallback(
