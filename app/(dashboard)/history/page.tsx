@@ -1,7 +1,7 @@
 import { getActiveHabits, getCategories } from "@/lib/queries/habits";
 import { getCalendarMonth, getHeatmapRange, getRecentLog } from "@/lib/queries/history";
-import { addDays, getTodayDateString, startOfMonth } from "@/lib/date";
-import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { addDays, startOfMonth } from "@/lib/date";
+import { getServerToday } from "@/lib/settings/date-server";
 import { getFocusHeaderData } from "@/lib/queries/focus";
 import { HistorialClient } from "./history-client";
 
@@ -11,8 +11,7 @@ export default async function HistorialPage({
   searchParams: Promise<{ habit?: string; category?: string; range?: string }>;
 }) {
   const { habit: habitId, category: categoryId, range } = await searchParams;
-  const cutoffHour = await getDayCutoffHour();
-  const today = getTodayDateString(cutoffHour);
+  const today = await getServerToday();
   const rangeDays = range === "30" ? 30 : range === "365" ? 365 : 90;
   const filters = { habitId, categoryId };
 

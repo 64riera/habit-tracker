@@ -6,9 +6,9 @@ import { db } from "@/lib/db/client";
 import { habitLogs, habitStreaks } from "@/lib/db/schema";
 import { computeStreak, type HabitRow } from "@/lib/streaks/compute";
 import { computeNewAchievements } from "@/lib/achievements/compute";
-import { getTodayDateString, monthKey } from "@/lib/date";
+import { monthKey } from "@/lib/date";
 import { FREEZE_MONTHLY_ALLOWANCE } from "@/lib/habits/status";
-import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { getServerToday } from "@/lib/settings/date-server";
 import { getCurrentUserId } from "@/lib/auth/session";
 import {
   achievementInsertStatements,
@@ -44,8 +44,7 @@ export async function freezeHabitDay(habitId: string, date: string) {
     return { ok: false as const, unlocked: [] };
   }
 
-  const cutoffHour = await getDayCutoffHour();
-  const today = getTodayDateString(cutoffHour);
+  const today = await getServerToday();
   const updatedLogs = applyLogChange(logs, date, "frozen");
   const streak = computeStreak(habit as HabitRow, updatedLogs, today);
   const unlocked = streak
@@ -81,8 +80,7 @@ export async function deleteLog(habitId: string, date: string) {
   if (!context) return;
   const { habit, logs } = context;
 
-  const cutoffHour = await getDayCutoffHour();
-  const today = getTodayDateString(cutoffHour);
+  const today = await getServerToday();
   const updatedLogs = applyLogChange(logs, date, null);
   const streak = computeStreak(habit as HabitRow, updatedLogs, today);
 

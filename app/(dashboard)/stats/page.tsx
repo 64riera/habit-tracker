@@ -1,5 +1,4 @@
-import { getTodayDateString } from "@/lib/date";
-import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { getServerToday } from "@/lib/settings/date-server";
 import { getCategoryStats, getHabitStatCards, getOverallStats, getTrend } from "@/lib/queries/stats";
 import { getMoodCorrelation, getWorstWeekday } from "@/lib/queries/patterns";
 import { getMonthSummary, getWeekSummary } from "@/lib/queries/summary";
@@ -7,8 +6,7 @@ import { getFocusHeaderData } from "@/lib/queries/focus";
 import { EstadisticasClient } from "./stats-client";
 
 export default async function EstadisticasPage() {
-  const cutoffHour = await getDayCutoffHour();
-  const today = getTodayDateString(cutoffHour);
+  const today = await getServerToday();
 
   const [overall, trend, categories, cards, weekSummary, monthSummary, worstWeekday, moodCorrelation, focusHeader] =
     await Promise.all([

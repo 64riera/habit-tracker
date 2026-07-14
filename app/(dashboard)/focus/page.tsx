@@ -1,7 +1,6 @@
 import { getActiveFocusSession, getFocusSettings, getTodayFocusProgress } from "@/lib/queries/focus";
 import { getCategories, getHabitNames } from "@/lib/queries/habits";
-import { getTodayDateString } from "@/lib/date";
-import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { getServerToday } from "@/lib/settings/date-server";
 import { FocusClient } from "./focus-client";
 
 export default async function EnfoquePage({
@@ -10,8 +9,7 @@ export default async function EnfoquePage({
   searchParams: Promise<{ habitId?: string }>;
 }) {
   const { habitId } = await searchParams;
-  const cutoffHour = await getDayCutoffHour();
-  const today = getTodayDateString(cutoffHour);
+  const today = await getServerToday();
 
   const session = await getActiveFocusSession();
   const [settings, habitOptions, categories, progress] = await Promise.all([

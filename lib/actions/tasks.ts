@@ -6,8 +6,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { taskCompletions, tasks } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
-import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
-import { getTodayDateString } from "@/lib/date";
+import { getServerToday } from "@/lib/settings/date-server";
 import { buildTaskRecurrenceConfig } from "@/lib/tasks/recurrence";
 import { extractTaskFields, taskFormSchema } from "@/lib/validation/task";
 
@@ -31,8 +30,7 @@ export async function createTaskCore(id: string, rawValues: unknown): Promise<Ta
   if (!parsed.success) return { error: "invalid" };
   const values = parsed.data;
   const userId = await getCurrentUserId();
-  const cutoffHour = await getDayCutoffHour();
-  const today = getTodayDateString(cutoffHour);
+  const today = await getServerToday();
 
   // onConflictDoNothing: idempotent if the offline replay retries after a
   // drain gets interrupted between the insert and removing the mutation

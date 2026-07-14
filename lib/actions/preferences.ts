@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale";
 import { isLocale } from "@/lib/i18n/dictionaries";
-import { DAY_CUTOFF_COOKIE } from "@/lib/settings/day-cutoff-shared";
+import { DAY_CUTOFF_COOKIE, TIMEZONE_COOKIE } from "@/lib/settings/date-shared";
 import { db } from "@/lib/db/client";
 import { users } from "@/lib/db/schema";
 import { getCurrentUserId, getCurrentUserIdOrNull } from "@/lib/auth/session";
@@ -49,14 +49,19 @@ export async function setCurrencyPreference(currency: string) {
 }
 
 /** Saves the IANA timezone detected in the browser (see
- * `timezone-sync.tsx`) — needed to know which UTC time a reminder's local
- * time corresponds to, see `app/api/cron/reminders/route.ts`. */
+ * `timezone-sync.tsx`) — both on the account (needed to know which UTC time
+ * a reminder's local time corresponds to, see
+ * `app/api/cron/reminders/route.ts`) and in a cookie, mirroring
+ * `setDayCutoffHour`, so `getUserTimezone()` can resolve "today" for the
+ * user's actual local day on every request without a DB round trip. */
 export async function setTimezone(timezone: string) {
   try {
     new Intl.DateTimeFormat(undefined, { timeZone: timezone });
   } catch {
     return;
   }
+  const store = await cookies();
+  store.set(TIMEZONE_COOKIE, timezone, { path: "/", maxAge: YEAR_SECONDS });
   const userId = await getCurrentUserId();
   await db.update(users).set({ timezone }).where(eq(users.id, userId));
 }

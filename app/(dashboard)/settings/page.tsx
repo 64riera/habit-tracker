@@ -1,4 +1,4 @@
-import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { getDayCutoffHour } from "@/lib/settings/date-server";
 import { getFocusHeaderData } from "@/lib/queries/focus";
 import { getCurrencyPreference } from "@/lib/queries/user";
 import { AjustesClient } from "./settings-client";

@@ -1,15 +1,13 @@
 import { notFound } from "next/navigation";
 import { getTransactions, getFinanceCategories } from "@/lib/queries/finance";
-import { getTodayDateString } from "@/lib/date";
-import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { getServerToday } from "@/lib/settings/date-server";
 import { TransactionForm } from "@/components/finance/transaction-form";
 import { ContentHeader } from "@/components/nav/content-header";
 import { DeleteTransactionButton } from "./delete-transaction-button";
 
 export default async function MovimientoDetallePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const cutoffHour = await getDayCutoffHour();
-  const today = getTodayDateString(cutoffHour);
+  const today = await getServerToday();
   const categories = await getFinanceCategories();
   const transactions = await getTransactions(categories);
   const transaction = transactions.find((tx) => tx.id === id);

@@ -3,8 +3,7 @@ import { and, eq, gte } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { achievements, habitLogs, habitStreaks, habits } from "@/lib/db/schema";
 import { nanoid } from "nanoid";
-import { getTodayDateString } from "@/lib/date";
-import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { getServerToday } from "@/lib/settings/date-server";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { computeNewAchievements, type AchievementType } from "./compute";
 
@@ -34,8 +33,7 @@ export async function maybeUnlockAchievements(habitId: string): Promise<Achievem
   ]);
   if (!streakRow || !habit) return [];
 
-  const cutoffHour = await getDayCutoffHour();
-  const today = getTodayDateString(cutoffHour);
+  const today = await getServerToday();
 
   const logs = await db
     .select({ date: habitLogs.date, status: habitLogs.status })

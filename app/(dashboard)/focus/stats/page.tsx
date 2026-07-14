@@ -1,5 +1,4 @@
-import { getTodayDateString } from "@/lib/date";
-import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { getServerToday } from "@/lib/settings/date-server";
 import {
   getFocusCategoryBreakdown,
   getFocusHabitBreakdown,
@@ -13,8 +12,7 @@ import {
 import { FocusEstadisticasClient } from "./stats-client";
 
 export default async function EnfoqueEstadisticasPage() {
-  const cutoffHour = await getDayCutoffHour();
-  const today = getTodayDateString(cutoffHour);
+  const today = await getServerToday();
 
   const [overall, trend, weekSummary, monthSummary, habitBreakdown, categoryBreakdown, timeOfDaySamples, streak] =
     await Promise.all([

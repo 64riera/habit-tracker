@@ -5,8 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { categories, focusSessions, focusSettings, habits } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
-import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
-import { getTodayDateString } from "@/lib/date";
+import { getServerToday } from "@/lib/settings/date-server";
 import { checkAndUnlockFocusRewards, getActiveFocusSession, getActiveFocusSessionWithRewards } from "@/lib/queries/focus";
 import {
   applyEndBreakEarly,
@@ -86,8 +85,7 @@ export async function startFocusSessionCore(id: string, input: StartFocusSession
 
   const now = new Date();
   const nowIso = now.toISOString();
-  const cutoffHour = await getDayCutoffHour();
-  const today = getTodayDateString(cutoffHour, now);
+  const today = await getServerToday(now);
   const { habitId, categoryId } = await resolveFocusAttribution(userId, values.habitId, values.categoryId);
   const resolved = resolveStartFocusValues(values);
   // Settings remembers the duration the user actually chose, not the

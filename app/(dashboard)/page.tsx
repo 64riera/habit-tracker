@@ -5,8 +5,7 @@ import { TodaySummaryProvider } from "@/components/habit/today-summary-context";
 import { TodaySummaryDisplay } from "@/components/habit/today-summary";
 import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
 import { SkeletonHoyRows } from "@/components/ui/skeleton";
-import { getTodayDateString } from "@/lib/date";
-import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { getServerToday } from "@/lib/settings/date-server";
 import { getFocusHeaderData } from "@/lib/queries/focus";
 import { TodayHabits } from "./today-habits";
 
@@ -26,8 +25,7 @@ export default async function TodayPage({
   searchParams: Promise<{ fecha?: string }>;
 }) {
   const { fecha } = await searchParams;
-  const cutoffHour = await getDayCutoffHour();
-  const today = getTodayDateString(cutoffHour);
+  const today = await getServerToday();
   const date = resolveViewedDate(fecha, today);
   const focusHeader = await getFocusHeaderData();
 

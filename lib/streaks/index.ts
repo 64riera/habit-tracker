@@ -2,8 +2,7 @@ import "server-only";
 import { and, eq, gte } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { habitLogs, habitStreaks, habits } from "@/lib/db/schema";
-import { getTodayDateString } from "@/lib/date";
-import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { getServerToday } from "@/lib/settings/date-server";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { computeStreak } from "./compute";
 
@@ -25,8 +24,7 @@ export async function recalcStreakForHabit(habitId: string): Promise<StreakResul
     .limit(1);
   if (!habit) return { current: 0, longest: 0 };
 
-  const cutoffHour = await getDayCutoffHour();
-  const today = getTodayDateString(cutoffHour);
+  const today = await getServerToday();
 
   const logs = await db
     .select({ date: habitLogs.date, status: habitLogs.status })

@@ -6,8 +6,7 @@ import { achievements, habitLogs, habitStreaks, habits } from "@/lib/db/schema";
 import { logSchema } from "@/lib/validation/habit";
 import { computeStreak, type HabitRow, type LogStatusRow } from "@/lib/streaks/compute";
 import { computeNewAchievements, type AchievementType } from "@/lib/achievements/compute";
-import { getTodayDateString } from "@/lib/date";
-import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { getServerToday } from "@/lib/settings/date-server";
 
 export type LogInput = {
   habitId: string;
@@ -64,8 +63,7 @@ export async function writeHabitLog(userId: string, input: LogInput): Promise<{ 
   if (!context) return { unlocked: [] };
   const { habit, logs, alreadyUnlockedTypes } = context;
 
-  const cutoffHour = await getDayCutoffHour();
-  const today = getTodayDateString(cutoffHour);
+  const today = await getServerToday();
   const updatedLogs = applyLogChange(logs, values.date, values.status);
   const streak = computeStreak(habit as HabitRow, updatedLogs, today);
   const unlocked = streak

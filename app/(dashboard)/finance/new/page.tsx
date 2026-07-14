@@ -1,12 +1,10 @@
 import { getFinanceCategories } from "@/lib/queries/finance";
-import { getTodayDateString } from "@/lib/date";
-import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { getServerToday } from "@/lib/settings/date-server";
 import { TransactionForm } from "@/components/finance/transaction-form";
 import { ContentHeader } from "@/components/nav/content-header";
 
 export default async function NuevoMovimientoPage() {
-  const cutoffHour = await getDayCutoffHour();
-  const today = getTodayDateString(cutoffHour);
+  const today = await getServerToday();
   const categories = await getFinanceCategories();
 
   return (

@@ -1,10 +1,38 @@
-/** Effective "today" date in YYYY-MM-DD format, respecting the day's cutoff hour. */
-export function getTodayDateString(cutoffHour: number = 3, now: Date = new Date()): string {
-  const effective = new Date(now);
-  if (now.getHours() < cutoffHour) {
-    effective.setDate(effective.getDate() - 1);
-  }
-  return toISODate(effective);
+/**
+ * Effective "today" date in YYYY-MM-DD format, respecting the day's cutoff
+ * hour — evaluated in `timezone` (an IANA name, e.g. "America/Bogota"), not
+ * wherever this code happens to be running. `now` is a single instant in
+ * time (a UTC timestamp under the hood); asking "what day is it" without
+ * also saying *where* is meaningless — the process's own local clock (UTC
+ * on Vercel's serverless functions, the real device clock in a browser) has
+ * nothing to do with the user, so it's never implied here. Callers resolve
+ * `timezone` from the user's actual IANA zone (see
+ * `lib/settings/date-server.ts` and `lib/date-client.ts`), never from the
+ * runtime's own `Date` fields — that mismatch (server=UTC vs
+ * user=local) is exactly what used to make "today" flip hours before the
+ * user's real local midnight.
+ */
+export function getTodayDateString(cutoffHour: number, timezone: string, now: Date = new Date()): string {
+  const zoned = zonedDateParts(now, timezone);
+  const todayIso = toISO(zoned);
+  return zoned.hour < cutoffHour ? addDays(todayIso, -1) : todayIso;
+}
+
+function zonedDateParts(date: Date, timezone: string): { year: number; month: number; day: number; hour: number } {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value);
+  return { year: get("year"), month: get("month"), day: get("day"), hour: get("hour") };
+}
+
+function toISO({ year, month, day }: { year: number; month: number; day: number }): string {
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
 export function toISODate(date: Date): string {

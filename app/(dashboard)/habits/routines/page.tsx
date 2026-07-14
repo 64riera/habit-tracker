@@ -1,13 +1,11 @@
 import { getRoutinesWithStats } from "@/lib/queries/routines";
 import { getHabitNames } from "@/lib/queries/habits";
-import { getTodayDateString } from "@/lib/date";
-import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { getServerToday } from "@/lib/settings/date-server";
 import { RoutineForm } from "@/components/habit/routine-form";
 import { RutinasClient } from "./routines-client";
 
 export default async function RutinasPage() {
-  const cutoffHour = await getDayCutoffHour();
-  const today = getTodayDateString(cutoffHour);
+  const today = await getServerToday();
   const [routines, habits] = await Promise.all([getRoutinesWithStats(today), getHabitNames()]);
 
   return (

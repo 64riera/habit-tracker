@@ -1,12 +1,10 @@
 import { getAllHabitsForManagement, getCategories } from "@/lib/queries/habits";
-import { getTodayDateString } from "@/lib/date";
-import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+import { getServerToday } from "@/lib/settings/date-server";
 import { getFocusHeaderData } from "@/lib/queries/focus";
 import { HabitosClient } from "./habits-client";
 
 export default async function HabitosPage() {
-  const cutoffHour = await getDayCutoffHour();
-  const today = getTodayDateString(cutoffHour);
+  const today = await getServerToday();
   const [habits, categories, focusHeader] = await Promise.all([
     getAllHabitsForManagement(today),
     getCategories(),
