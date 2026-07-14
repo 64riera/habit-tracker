@@ -23,12 +23,20 @@ export default async function DashboardLayout({
   const shouldOfferInstall = habitCount === 1 && !installPromptSeen;
 
   return (
-    // Shell fixed to the viewport (h-dvh + overflow-hidden): the header and
-    // bottom nav stay structurally outside the scrolling area, instead of
-    // relying on position:fixed/sticky over the document scroll, which is
-    // unreliable on real mobile browsers. <main> is the only container with
-    // internal scroll.
-    <div className="flex h-dvh flex-col overflow-hidden md:flex-row">
+    // Shell pinned to the viewport itself (fixed inset-0), not just sized to
+    // match it (h-dvh): the header and bottom nav stay structurally outside
+    // the scrolling area, instead of relying on position:fixed/sticky over
+    // the document scroll, which is unreliable on real mobile browsers.
+    // `fixed` (rather than `h-dvh` alone) matters specifically offline —
+    // some mobile browsers inject their own "no connection" chrome that
+    // changes the visible viewport after paint, and a length computed from
+    // `dvh` can lag that change enough for the shell to end up taller than
+    // what's actually visible, leaking a real scrollbar onto the document
+    // and pushing the bottom nav off-screen. A `fixed` box is anchored to
+    // the browser's current viewport on every frame, not a value computed
+    // once, so it can't drift out of sync the same way. <main> is the only
+    // container with internal scroll.
+    <div className="fixed inset-0 flex flex-col overflow-hidden md:flex-row">
       <Sidebar streakMax={streakMax} />
       {/*
         overflow-anchor:none prevents the browser's "scroll anchoring"
