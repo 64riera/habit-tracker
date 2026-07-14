@@ -12,10 +12,15 @@ export function TrendBars({
   points,
   maxValue,
   formatLabel,
+  highlightColor = "var(--color-accent)",
 }: {
   points: TrendBarPoint[];
   maxValue?: number;
   formatLabel: (point: TrendBarPoint) => string;
+  /** Color of the most recent (rightmost) bar — defaults to the app-wide
+   * accent, but a section with its own identity color (e.g. Gym's
+   * --color-cat-fitness) can tie the chart back to it instead. */
+  highlightColor?: string;
 }) {
   const max = maxValue ?? Math.max(1, ...points.map((p) => p.value));
 
@@ -34,9 +39,7 @@ export function TrendBars({
               style={{
                 height: `${Math.max(heightPct, 2)}%`,
                 background:
-                  i === points.length - 1
-                    ? "var(--color-accent)"
-                    : "color-mix(in srgb, var(--color-text) 22%, transparent)",
+                  i === points.length - 1 ? highlightColor : "color-mix(in srgb, var(--color-text) 22%, transparent)",
               }}
             />
           );

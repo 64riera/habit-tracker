@@ -3,7 +3,7 @@
 import { useMemo, useTransition } from "react";
 import Link from "next/link";
 import { useSWRConfig } from "swr";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, TrendingUp } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { SwipeableRow, SwipeableListProvider } from "@/components/ui/swipeable-row";
 import { GymSessionRow } from "@/components/gym/gym-session-row";
@@ -71,7 +71,11 @@ export function GymClient({ sessions: initialSessions, today }: { sessions: GymS
     <div>
       <ContentHeader titleKey="screens.gym.title" subtitleKey="screens.gym.subtitle" />
 
-      <div className="mb-3 flex justify-end">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <Link href="/gym/stats" className="flex items-center gap-1.5 text-[12px] text-muted">
+          <TrendingUp size={13} strokeWidth={2} aria-hidden />
+          {t("gym.stats.viewLink")}
+        </Link>
         <Link
           href="/gym/new"
           className="flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1.5 text-[11px] text-muted"

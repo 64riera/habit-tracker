@@ -333,7 +333,24 @@
     "formError": "Revisa los campos: falta el nombre de algún ejercicio o alguna serie no es válida.",
     "confirmDelete": "¿Eliminar esta sesión?",
     "empty": "Aún no tienes sesiones de gym. Registra la primera.",
-    "summary": "{exercises} ejercicios · {sets} series"
+    "summary": "{exercises} ejercicios · {sets} series",
+    "stats": {
+      "title": "Estadísticas de gym",
+      "viewLink": "Ver estadísticas",
+      "empty": "Aún no hay datos suficientes para mostrar estadísticas.",
+      "sessions": "Sesiones",
+      "sets": "Series",
+      "totalVolume": "Volumen total",
+      "currentStreak": "Racha actual",
+      "longestStreak": "Mejor racha",
+      "favoriteExercise": "Ejercicio favorito",
+      "volumeTrend": "Volumen por día (30 días)",
+      "topExercises": "Ejercicios más frecuentes",
+      "personalRecords": "Mejores marcas",
+      "reps": "reps",
+      "week": "semana",
+      "weeks": "semanas"
+    }
   },
   "achievements": {
     "title": "Logros",
