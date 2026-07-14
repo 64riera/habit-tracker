@@ -16,15 +16,19 @@ import {
   applyPendingHabitEdit,
 } from "@/lib/offline/pending-selectors";
 import { isDateApplicable } from "@/lib/habits/frequency";
+import { swrKeys } from "@/lib/swr/keys";
+import { usePageData } from "@/lib/swr/use-page-data";
+import { fetchCategoriesAction } from "@/lib/actions/habits-read";
+import { fetchTodayAction } from "@/lib/actions/today-read";
 import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
 import type { RoutineToday } from "@/lib/queries/routines";
 
 export function TodayClient({
-  habits,
-  routines,
+  habits: initialHabits,
+  routines: initialRoutines,
   date,
   today,
-  categories,
+  categories: initialCategories,
 }: {
   habits: HabitWithExtras[];
   routines: RoutineToday[];
@@ -33,6 +37,17 @@ export function TodayClient({
   categories: CategoryRow[];
 }) {
   const { t } = useI18n();
+  // Memoized: usePageData compares this by reference to detect a fresh
+  // Server Component render (e.g. after a create/edit form's redirect), and
+  // a new object literal here on every render would defeat that check.
+  const initialTodayData = useMemo(
+    () => ({ habits: initialHabits, routines: initialRoutines }),
+    [initialHabits, initialRoutines]
+  );
+  const { data } = usePageData(swrKeys.todayHabits(date), () => fetchTodayAction(date), initialTodayData);
+  const { data: categories } = usePageData(swrKeys.categories(), fetchCategoriesAction, initialCategories);
+  const habits = data.habits;
+  const routines = data.routines;
   const { pendingMutations } = useOffline();
   const { setSummary } = useTodaySummary();
   const isToday = date === today;

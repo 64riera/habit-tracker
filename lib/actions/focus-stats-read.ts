@@ -1,5 +1,5 @@
-import { getTodayDateString } from "@/lib/date";
-import { getDayCutoffHour } from "@/lib/settings/day-cutoff";
+"use server";
+
 import {
   getFocusCategoryBreakdown,
   getFocusHabitBreakdown,
@@ -10,12 +10,9 @@ import {
   getFocusTrend,
   getFocusWeekSummary,
 } from "@/lib/queries/focus-stats";
-import { FocusEstadisticasClient } from "./stats-client";
 
-export default async function EnfoqueEstadisticasPage() {
-  const cutoffHour = await getDayCutoffHour();
-  const today = getTodayDateString(cutoffHour);
-
+/** Bundled to match the exact Promise.all in app/(dashboard)/focus/stats/page.tsx. */
+export async function fetchFocusStatsAction(today: string) {
   const [overall, trend, weekSummary, monthSummary, habitBreakdown, categoryBreakdown, timeOfDaySamples, streak] =
     await Promise.all([
       getFocusOverallTotals(today),
@@ -27,18 +24,5 @@ export default async function EnfoqueEstadisticasPage() {
       getFocusTimeOfDaySamples(today, 30),
       getFocusStreak(today),
     ]);
-
-  return (
-    <FocusEstadisticasClient
-      overall={overall}
-      trend={trend}
-      weekSummary={weekSummary}
-      monthSummary={monthSummary}
-      habitBreakdown={habitBreakdown}
-      categoryBreakdown={categoryBreakdown}
-      timeOfDaySamples={timeOfDaySamples}
-      streak={streak}
-      today={today}
-    />
-  );
+  return { overall, trend, weekSummary, monthSummary, habitBreakdown, categoryBreakdown, timeOfDaySamples, streak };
 }

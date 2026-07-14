@@ -4,8 +4,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { I18nProvider } from "@/lib/i18n/client";
 import { ToastProvider } from "@/lib/toast/client";
 import { OfflineProvider } from "@/lib/offline/client";
+import { SWRConfigProvider } from "@/components/swr/swr-provider";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
-import { OfflineIndicator } from "@/components/pwa/offline-indicator";
 import { getCurrentLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getThemePreference } from "@/lib/queries/user";
@@ -78,11 +78,12 @@ export default async function RootLayout({
         <ThemeProvider attribute="class" defaultTheme={themePreference} enableSystem>
           <I18nProvider locale={locale} dict={dict}>
             <ToastProvider>
-              <OfflineProvider>
-                <RegisterServiceWorker />
-                <OfflineIndicator />
-                {children}
-              </OfflineProvider>
+              <SWRConfigProvider>
+                <OfflineProvider>
+                  <RegisterServiceWorker />
+                  {children}
+                </OfflineProvider>
+              </SWRConfigProvider>
             </ToastProvider>
           </I18nProvider>
         </ThemeProvider>

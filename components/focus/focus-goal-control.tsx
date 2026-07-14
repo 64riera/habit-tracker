@@ -1,16 +1,17 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useSWRConfig } from "swr";
 import { useI18n } from "@/lib/i18n/client";
 import { Select } from "@/components/ui/select";
 import { setFocusDailyGoal } from "@/lib/actions/focus";
+import { swrKeys } from "@/lib/swr/keys";
 
 const PRESET_MINUTES = [15, 30, 45, 60, 90, 120, 180, 240];
 
-export function FocusGoalControl({ goalMinutes }: { goalMinutes: number }) {
+export function FocusGoalControl({ goalMinutes, today }: { goalMinutes: number; today: string }) {
   const { t } = useI18n();
-  const router = useRouter();
+  const { mutate } = useSWRConfig();
   const [isPending, startTransition] = useTransition();
 
   const presets = PRESET_MINUTES.includes(goalMinutes)
@@ -21,7 +22,7 @@ export function FocusGoalControl({ goalMinutes }: { goalMinutes: number }) {
   function onChange(value: string) {
     startTransition(async () => {
       await setFocusDailyGoal(Number(value));
-      router.refresh();
+      mutate(swrKeys.focusSupporting(today));
     });
   }
 

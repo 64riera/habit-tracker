@@ -11,6 +11,16 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/*": ["./drizzle/**/*"],
   },
+  experimental: {
+    // Default is 0: every soft navigation to a dynamic route re-runs its
+    // Server Component from scratch, even to a route visited seconds ago.
+    // This lets the router reuse the last-seen payload for a short window,
+    // which is what actually makes SWR's cached reads visible on click —
+    // without this, the route swap itself still blocks on the network.
+    staleTimes: {
+      dynamic: 30,
+    },
+  },
 };
 
 export default nextConfig;

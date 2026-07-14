@@ -13,5 +13,5 @@ export default async function HabitosPage() {
     getFocusHeaderData(),
   ]);
 
-  return <HabitosClient habits={habits} categories={categories} focusHeader={focusHeader} />;
+  return <HabitosClient habits={habits} categories={categories} focusHeader={focusHeader} today={today} />;
 }

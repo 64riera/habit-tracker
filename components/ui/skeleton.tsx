@@ -146,6 +146,35 @@ export function SkeletonPatternCard() {
   );
 }
 
+/** Mirror of TaskCheckRow (components/task/task-check-row.tsx): round
+ * initial avatar, title/recurrence, check button — same gap-3/py-3. */
+export function SkeletonTaskCheckRow() {
+  return (
+    <div className="flex items-center gap-3 border-b border-border py-3">
+      <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+      <div className="min-w-0 flex-1">
+        <Skeleton className="h-3.5 w-32" />
+        <Skeleton className="mt-1 h-2.5 w-20" />
+      </div>
+      <Skeleton className="h-6 w-6 shrink-0 rounded-full md:h-7 md:w-7" />
+    </div>
+  );
+}
+
+/** Mirror of TransactionRow (components/finance/transaction-row.tsx): round
+ * category avatar, label/note, amount on the right — same gap-3/py-3. */
+export function SkeletonTransactionRow() {
+  return (
+    <div className="flex items-center gap-3 border-b border-border py-3">
+      <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+      <div className="min-w-0 flex-1">
+        <Skeleton className="h-3.5 w-28" />
+      </div>
+      <Skeleton className="h-3.5 w-16 shrink-0" />
+    </div>
+  );
+}
+
 /** Mirror of a `Field` from HabitForm (components/habit/habit-form.tsx):
  * uppercase label + input, same gap-1.5. */
 function SkeletonFormField({ width = "w-full" }: { width?: string }) {

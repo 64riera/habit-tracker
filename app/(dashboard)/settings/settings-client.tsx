@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/nav/theme-toggle";
 import { LangToggle } from "@/components/nav/lang-toggle";
 import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
 import { PushToggle } from "@/components/pwa/push-toggle";
+import { SyncPanel } from "@/components/settings/sync-panel";
 import { Select } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n/client";
 import { useInstallPrompt } from "@/lib/hooks/use-install-prompt";
@@ -137,6 +138,7 @@ export function AjustesClient({
             {row.control}
           </div>
         ))}
+        <SyncPanel />
       </div>
 
       {/* Plain POST to a Route Handler (not a Server Action): see the comment

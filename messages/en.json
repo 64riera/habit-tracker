@@ -342,6 +342,11 @@
     "notificationsDenied": "Blocked in browser settings",
     "exportHistory": "Export history",
     "lastSync": "Last synced",
+    "syncSectionTitle": "Sync",
+    "syncPendingCount": "{count} changes pending",
+    "syncPendingCountSingular": "1 change pending",
+    "syncNow": "Sync now",
+    "syncNever": "Never",
     "logout": "Log out",
     "installApp": "Install app"
   },
@@ -350,7 +355,12 @@
     "syncing": "Syncing…",
     "synced": "All synced",
     "pendingItem": "Pending sync",
-    "savedOffline": "Saved offline. It will sync automatically."
+    "savedOffline": "Saved offline. It will sync automatically.",
+    "domainHabits": "Habits",
+    "domainRoutines": "Routines",
+    "domainTasks": "Tasks",
+    "domainFinance": "Finance",
+    "domainCategories": "Categories"
   },
   "pwa": {
     "installTitle": "Install {name}",

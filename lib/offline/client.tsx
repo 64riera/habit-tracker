@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
+import { useSWRConfig } from "swr";
 import { enqueueMutation, getQueuedMutations, removeQueuedMutation } from "@/lib/offline/db";
 import type { QueuedMutation, QueuedRecord } from "@/lib/offline/db";
 import { replay } from "@/lib/offline/replay-registry";
@@ -15,6 +16,13 @@ type OfflineContextValue = {
   syncState: SyncState;
   pendingCount: number;
   pendingMutations: QueuedRecord[];
+  /** Epoch ms of the last successful queue drain, or null if never (this
+   * session or any prior one) — persisted so it survives a reload. */
+  lastSyncedAt: number | null;
+  /** Replays every queued mutation now, instead of waiting for the next
+   * "online" event. Exposed for the manual "Sync now" button in Settings —
+   * already safe to call anytime, drainQueue is re-entrancy-guarded. */
+  drainQueue: () => Promise<void>;
   /** Tries to run the mutation; if it fails or there's no connection, queues it for retry on reconnect. */
   runOrQueue: (mutation: QueuedMutation) => Promise<void>;
 };
@@ -23,6 +31,13 @@ const OfflineContext = createContext<OfflineContextValue | null>(null);
 
 const SYNCED_BANNER_MS = 2500;
 const BACKGROUND_SYNC_TAG = "sync-mutations";
+const LAST_SYNCED_AT_KEY = "justgo:last-synced-at";
+
+function readLastSyncedAt(): number | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.localStorage.getItem(LAST_SYNCED_AT_KEY);
+  return raw ? Number(raw) : null;
+}
 
 function subscribeToConnectivity(callback: () => void) {
   window.addEventListener("online", callback);
@@ -63,11 +78,19 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
   const [isDraining, setIsDraining] = useState(false);
   const [justSynced, setJustSynced] = useState(false);
   const [pendingMutations, setPendingMutations] = useState<QueuedRecord[]>([]);
+  const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
   const router = useRouter();
   const { t } = useI18n();
   const { push } = useToast();
   const notifyAchievements = useAchievementToast();
+  const { mutate: globalMutate } = useSWRConfig();
   const draining = useRef(false);
+
+  useEffect(() => {
+    // Reads localStorage on mount; not derivable state during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLastSyncedAt(readLastSyncedAt());
+  }, []);
 
   const refreshQueue = useCallback(async () => {
     const queued = await getQueuedMutations();
@@ -91,7 +114,16 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
       }
       if (queued.length > 0) {
         await refreshQueue();
+        // Revalidates every currently-mounted SWR key (cheap: only routes
+        // actually on screen refetch, see lib/swr — SWR's global mutate is
+        // a no-op for keys with no mounted hook) and still refreshes the
+        // Server Component tree for anything not yet migrated to SWR, or
+        // derived from a cookie no SWR key covers (e.g. `today`).
+        globalMutate(() => true);
         router.refresh();
+        const syncedAt = Date.now();
+        setLastSyncedAt(syncedAt);
+        window.localStorage.setItem(LAST_SYNCED_AT_KEY, String(syncedAt));
         setJustSynced(true);
         setTimeout(() => setJustSynced(false), SYNCED_BANNER_MS);
       }
@@ -101,7 +133,7 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
       draining.current = false;
       setIsDraining(false);
     }
-  }, [notifyAchievements, push, refreshQueue, router, t]);
+  }, [globalMutate, notifyAchievements, push, refreshQueue, router, t]);
 
   useEffect(() => {
     // Reads the queue state (IndexedDB) on mount; it's not derivable state during render.
@@ -157,7 +189,15 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <OfflineContext.Provider
-      value={{ isOnline, syncState, pendingCount: pendingMutations.length, pendingMutations, runOrQueue }}
+      value={{
+        isOnline,
+        syncState,
+        pendingCount: pendingMutations.length,
+        pendingMutations,
+        lastSyncedAt,
+        drainQueue,
+        runOrQueue,
+      }}
     >
       {children}
     </OfflineContext.Provider>

@@ -2,7 +2,7 @@
 
 import { useMemo, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useSWRConfig } from "swr";
 import { Plus, Trash2 } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { SwipeableRow, SwipeableListProvider } from "@/components/ui/swipeable-row";
@@ -16,17 +16,25 @@ import {
   buildGhostRoutine,
   applyPendingRoutineEdit,
 } from "@/lib/offline/pending-selectors";
+import { swrKeys } from "@/lib/swr/keys";
+import { usePageData } from "@/lib/swr/use-page-data";
+import { fetchHabitNamesAction } from "@/lib/actions/habits-read";
+import { fetchRoutinesAction } from "@/lib/actions/routines-read";
 import type { RoutineWithStats } from "@/lib/queries/routines";
 
 export function RutinasClient({
-  routines,
-  habits,
+  routines: initialRoutines,
+  habits: initialHabits,
+  today,
 }: {
   routines: RoutineWithStats[];
   habits: { id: string; name: string }[];
+  today: string;
 }) {
   const { t } = useI18n();
-  const router = useRouter();
+  const { mutate } = useSWRConfig();
+  const { data: routines } = usePageData(swrKeys.routines(today), () => fetchRoutinesAction(today), initialRoutines);
+  const { data: habits } = usePageData(swrKeys.habitNames(), fetchHabitNamesAction, initialHabits);
   const { pendingMutations, runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
 
@@ -50,7 +58,7 @@ export function RutinasClient({
     if (!confirm(t("routines.confirmDelete"))) return;
     startTransition(async () => {
       await runOrQueue({ type: "deleteRoutine", routineId });
-      router.refresh();
+      mutate(swrKeys.routines(today));
     });
   }
 

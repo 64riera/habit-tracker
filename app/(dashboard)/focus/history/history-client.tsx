@@ -10,6 +10,10 @@ import { useI18n } from "@/lib/i18n/client";
 import { addDays, formatTimeOfDay, groupByDate, parseISODate } from "@/lib/date";
 import { formatClock, formatMinutesShort } from "@/lib/focus/format";
 import { categoryDisplayName } from "@/lib/habits/describe";
+import { swrKeys } from "@/lib/swr/keys";
+import { usePageData } from "@/lib/swr/use-page-data";
+import { fetchCategoriesAction, fetchHabitNamesAction } from "@/lib/actions/habits-read";
+import { fetchFocusHistoryAction } from "@/lib/actions/focus-history-read";
 import type { FocusSessionRow } from "@/lib/queries/focus";
 import type { FocusHistorySummary } from "@/lib/queries/focus-stats";
 import type { CategoryRow } from "@/lib/queries/habits";
@@ -22,10 +26,10 @@ const FOCUS_TABS = [
 ] as const;
 
 export function FocusHistorialClient({
-  sessions,
-  summary,
-  habitNames,
-  categories,
+  sessions: initialSessions,
+  summary: initialSummary,
+  habitNames: initialHabitNames,
+  categories: initialCategories,
   today,
   selectedHabit,
   selectedCategory,
@@ -40,6 +44,18 @@ export function FocusHistorialClient({
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
+  const initialFocusHistoryData = useMemo(
+    () => ({ sessions: initialSessions, summary: initialSummary }),
+    [initialSessions, initialSummary]
+  );
+  const { data } = usePageData(
+    swrKeys.focusHistoryList(selectedHabit, selectedCategory),
+    () => fetchFocusHistoryAction(selectedHabit, selectedCategory),
+    initialFocusHistoryData
+  );
+  const { data: habitNames } = usePageData(swrKeys.habitNames(), fetchHabitNamesAction, initialHabitNames);
+  const { data: categories } = usePageData(swrKeys.categories(), fetchCategoriesAction, initialCategories);
+  const { sessions, summary } = data;
   const [entries, setEntries] = useState(sessions);
   const [loadingMore, setLoadingMore] = useState(false);
   const [exhausted, setExhausted] = useState(sessions.length < PAGE_SIZE);

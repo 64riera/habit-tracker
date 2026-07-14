@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useSWRConfig } from "swr";
 import { Clock, Hash } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { useOffline } from "@/lib/offline/client";
@@ -14,6 +14,7 @@ import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
 import type { LogStatus } from "@/lib/habits/status";
 import { getStatusVisual } from "@/lib/habits/status-visual";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { swrKeys } from "@/lib/swr/keys";
 
 type Props = {
   habit: HabitWithExtras;
@@ -25,7 +26,7 @@ type Props = {
 
 export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
   const { t, dict, locale } = useI18n();
-  const router = useRouter();
+  const { mutate } = useSWRConfig();
   const { runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
   const [status, setStatus] = useState<LogStatus | null>(
@@ -53,7 +54,7 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
         type: "log",
         input: { habitId: habit.id, date, status: "done", value: doneValue },
       });
-      router.refresh();
+      mutate(swrKeys.todayHabits(date));
     });
   }
 
@@ -63,7 +64,7 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
         setStatus(null);
         startTransition(async () => {
           await runOrQueue({ type: "delete", habitId: habit.id, date });
-          router.refresh();
+          mutate(swrKeys.todayHabits(date));
         });
       } else {
         logDone();
@@ -93,7 +94,7 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
       setValue(next);
       startTransition(async () => {
         await runOrQueue({ type: "log", input: { habitId: habit.id, date, status: "partial", value: next } });
-        router.refresh();
+        mutate(swrKeys.todayHabits(date));
       });
     }
   }
@@ -103,7 +104,7 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
     setValue(0);
     startTransition(async () => {
       await runOrQueue({ type: "delete", habitId: habit.id, date });
-      router.refresh();
+      mutate(swrKeys.todayHabits(date));
     });
   }
 

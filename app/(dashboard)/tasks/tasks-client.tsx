@@ -2,7 +2,7 @@
 
 import { useMemo, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useSWRConfig } from "swr";
 import { Plus, Trash2 } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { SwipeableRow, SwipeableListProvider } from "@/components/ui/swipeable-row";
@@ -16,11 +16,15 @@ import {
   buildGhostTask,
   applyPendingTaskEdit,
 } from "@/lib/offline/pending-selectors";
+import { swrKeys } from "@/lib/swr/keys";
+import { usePageData } from "@/lib/swr/use-page-data";
+import { fetchTasksAction } from "@/lib/actions/tasks-read";
 import type { TaskWithStatus } from "@/lib/queries/tasks";
 
-export function TasksClient({ tasks, today }: { tasks: TaskWithStatus[]; today: string }) {
+export function TasksClient({ tasks: initialTasks, today }: { tasks: TaskWithStatus[]; today: string }) {
   const { t } = useI18n();
-  const router = useRouter();
+  const { mutate } = useSWRConfig();
+  const { data: tasks } = usePageData(swrKeys.tasksList(today), () => fetchTasksAction(today), initialTasks);
   const { pendingMutations, runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
 
@@ -44,7 +48,7 @@ export function TasksClient({ tasks, today }: { tasks: TaskWithStatus[]; today: 
     if (!confirm(t("tasks.confirmDelete"))) return;
     startTransition(async () => {
       await runOrQueue({ type: "deleteTask", taskId });
-      router.refresh();
+      mutate(swrKeys.tasksList(today));
     });
   }
 
@@ -76,7 +80,7 @@ export function TasksClient({ tasks, today }: { tasks: TaskWithStatus[]; today: 
                 },
               ]}
             >
-              <TaskCheckRow task={task} isPendingSync={pendingIds.has(task.id)} />
+              <TaskCheckRow task={task} today={today} isPendingSync={pendingIds.has(task.id)} />
             </SwipeableRow>
           ))}
           {displayTasks.length === 0 && <p className="py-2 text-sm text-muted">{t("tasks.empty")}</p>}

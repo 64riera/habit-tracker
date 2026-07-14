@@ -11,6 +11,9 @@ import { useI18n } from "@/lib/i18n/client";
 import { formatMinutesShort } from "@/lib/focus/format";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { bucketHourOfDay, TIME_OF_DAY_ORDER } from "@/lib/focus/time-of-day";
+import { swrKeys } from "@/lib/swr/keys";
+import { usePageData } from "@/lib/swr/use-page-data";
+import { fetchFocusStatsAction } from "@/lib/actions/focus-stats-read";
 import type {
   FocusCategoryStat,
   FocusHabitStat,
@@ -31,14 +34,15 @@ const FOCUS_TABS = [
 const BAR_COLOR = "color-mix(in srgb, var(--color-text) 65%, transparent)";
 
 export function FocusEstadisticasClient({
-  overall,
-  trend,
-  weekSummary,
-  monthSummary,
-  habitBreakdown,
-  categoryBreakdown,
-  timeOfDaySamples,
-  streak,
+  overall: initialOverall,
+  trend: initialTrend,
+  weekSummary: initialWeekSummary,
+  monthSummary: initialMonthSummary,
+  habitBreakdown: initialHabitBreakdown,
+  categoryBreakdown: initialCategoryBreakdown,
+  timeOfDaySamples: initialTimeOfDaySamples,
+  streak: initialStreak,
+  today,
 }: {
   overall: FocusOverallTotals;
   trend: FocusTrendPoint[];
@@ -48,8 +52,34 @@ export function FocusEstadisticasClient({
   categoryBreakdown: FocusCategoryStat[];
   timeOfDaySamples: FocusTimeOfDaySample[];
   streak: { current: number; longest: number };
+  today: string;
 }) {
   const { t, locale } = useI18n();
+  const initialFocusStatsData = useMemo(
+    () => ({
+      overall: initialOverall,
+      trend: initialTrend,
+      weekSummary: initialWeekSummary,
+      monthSummary: initialMonthSummary,
+      habitBreakdown: initialHabitBreakdown,
+      categoryBreakdown: initialCategoryBreakdown,
+      timeOfDaySamples: initialTimeOfDaySamples,
+      streak: initialStreak,
+    }),
+    [
+      initialOverall,
+      initialTrend,
+      initialWeekSummary,
+      initialMonthSummary,
+      initialHabitBreakdown,
+      initialCategoryBreakdown,
+      initialTimeOfDaySamples,
+      initialStreak,
+    ]
+  );
+  const { data } = usePageData(swrKeys.focusStats(today), () => fetchFocusStatsAction(today), initialFocusStatsData);
+  const { overall, trend, weekSummary, monthSummary, habitBreakdown, categoryBreakdown, timeOfDaySamples, streak } =
+    data;
   const hasAnyData = overall.minutes90 > 0;
 
   // Bucketed on the client (not on the server): each session's time-of-day

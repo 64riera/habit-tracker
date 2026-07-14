@@ -14,6 +14,10 @@ import { StatusGlyph } from "@/components/habit/status-glyph";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { addDays, formatTimeOfDay, groupByDate, parseISODate } from "@/lib/date";
+import { swrKeys } from "@/lib/swr/keys";
+import { usePageData } from "@/lib/swr/use-page-data";
+import { fetchCategoriesAction, fetchFocusHeaderAction } from "@/lib/actions/habits-read";
+import { fetchHistoryAction } from "@/lib/actions/history-read";
 import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
 import type { CalendarCell, DayCell, LogEntry } from "@/lib/queries/history";
 import type { FocusHeaderData } from "@/lib/queries/focus";
@@ -21,16 +25,16 @@ import type { FocusHeaderData } from "@/lib/queries/focus";
 const MOOD_EMOJI = ["😞", "🙁", "😐", "🙂", "😄"];
 
 export function HistorialClient({
-  habits,
-  categories,
-  heatmap,
-  calendar,
-  log,
+  habits: initialHabits,
+  categories: initialCategories,
+  heatmap: initialHeatmap,
+  calendar: initialCalendar,
+  log: initialLog,
   selectedHabit,
   selectedCategory,
   selectedRange,
   today,
-  focusHeader,
+  focusHeader: initialFocusHeader,
 }: {
   habits: HabitWithExtras[];
   categories: CategoryRow[];
@@ -45,9 +49,34 @@ export function HistorialClient({
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
+  const rangeDays = Number(selectedRange);
+  const initialHistoryData = useMemo(
+    () => ({ habits: initialHabits, heatmap: initialHeatmap, calendar: initialCalendar, log: initialLog }),
+    [initialHabits, initialHeatmap, initialCalendar, initialLog]
+  );
+  const { data } = usePageData(
+    swrKeys.history(today, selectedHabit, selectedCategory, rangeDays),
+    () => fetchHistoryAction(today, selectedHabit, selectedCategory, rangeDays),
+    initialHistoryData
+  );
+  const { data: categories } = usePageData(swrKeys.categories(), fetchCategoriesAction, initialCategories);
+  const { data: focusHeader } = usePageData(swrKeys.focusHeader(), fetchFocusHeaderAction, initialFocusHeader);
+  const { habits, heatmap, calendar, log } = data;
   const [entries, setEntries] = useState(log);
   const [loadingMore, setLoadingMore] = useState(false);
   const [exhausted, setExhausted] = useState(log.length < 20);
+  // `entries` is local paginated state (loadMore appends beyond what SWR's
+  // key covers), seeded from `log` — when the SWR key itself produces a new
+  // `log` (filters/range changed, or a revalidation refreshed today's data),
+  // reset the pagination to match instead of showing a stale mix. Adjusting
+  // state during render (React's documented pattern for this) instead of an
+  // effect avoids an extra, cascading re-render on every `log` change.
+  const [prevLog, setPrevLog] = useState(log);
+  if (log !== prevLog) {
+    setPrevLog(log);
+    setEntries(log);
+    setExhausted(log.length < 20);
+  }
 
   const groups = useMemo(() => groupByDate(entries), [entries]);
   const categoryColorByHabit = useMemo(

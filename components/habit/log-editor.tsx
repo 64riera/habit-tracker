@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useSWRConfig } from "swr";
 import { useI18n } from "@/lib/i18n/client";
 import { useToast } from "@/lib/toast/client";
 import { useOffline } from "@/lib/offline/client";
+import { swrKeys } from "@/lib/swr/keys";
 import type { HabitWithExtras } from "@/lib/queries/habits";
 import type { LogStatus } from "@/lib/habits/status";
 
@@ -32,7 +33,7 @@ export function LogEditor({
   const { t } = useI18n();
   const { push } = useToast();
   const { runOrQueue } = useOffline();
-  const router = useRouter();
+  const { mutate } = useSWRConfig();
   const [, startTransition] = useTransition();
   const [status, setStatus] = useState<LogStatus | null>((habit.todayLog?.status as LogStatus) ?? null);
   const [value, setValue] = useState(habit.todayLog?.value ?? habit.goalTarget ?? 0);
@@ -57,7 +58,7 @@ export function LogEditor({
           mood: next.mood ?? undefined,
         },
       });
-      router.refresh();
+      mutate(swrKeys.todayHabits(date));
     });
   }
 
@@ -66,7 +67,7 @@ export function LogEditor({
     onChange(null);
     startTransition(async () => {
       await runOrQueue({ type: "delete", habitId: habit.id, date });
-      router.refresh();
+      mutate(swrKeys.todayHabits(date));
     });
   }
 
@@ -102,7 +103,7 @@ export function LogEditor({
     push(t("checkin.freezeUsed"));
     startTransition(async () => {
       await runOrQueue({ type: "freeze", habitId: habit.id, date });
-      router.refresh();
+      mutate(swrKeys.todayHabits(date));
     });
   }
 

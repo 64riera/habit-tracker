@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useSWRConfig } from "swr";
 import { Check, CheckCheck } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { useOffline } from "@/lib/offline/client";
+import { swrKeys } from "@/lib/swr/keys";
 import type { RoutineToday } from "@/lib/queries/routines";
 
 export function RoutineQuickActions({ routines, date }: { routines: RoutineToday[]; date: string }) {
   const { t } = useI18n();
-  const router = useRouter();
+  const { mutate } = useSWRConfig();
   const { runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
   const [optimisticDone, setOptimisticDone] = useState<Set<string>>(new Set());
@@ -50,7 +51,7 @@ export function RoutineQuickActions({ routines, date }: { routines: RoutineToday
                       })
                     )
                   );
-                  router.refresh();
+                  mutate(swrKeys.todayHabits(date));
                 });
               }}
               className="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold disabled:opacity-60"

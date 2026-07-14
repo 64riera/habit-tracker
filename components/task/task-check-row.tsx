@@ -2,17 +2,26 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useSWRConfig } from "swr";
 import { useI18n } from "@/lib/i18n/client";
 import { useOffline } from "@/lib/offline/client";
 import { describeTaskRecurrence } from "@/lib/tasks/describe";
 import { getStatusVisual } from "@/lib/habits/status-visual";
 import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
+import { swrKeys } from "@/lib/swr/keys";
 import type { TaskWithStatus } from "@/lib/queries/tasks";
 
-export function TaskCheckRow({ task, isPendingSync }: { task: TaskWithStatus; isPendingSync?: boolean }) {
+export function TaskCheckRow({
+  task,
+  today,
+  isPendingSync,
+}: {
+  task: TaskWithStatus;
+  today: string;
+  isPendingSync?: boolean;
+}) {
   const { t, dict } = useI18n();
-  const router = useRouter();
+  const { mutate } = useSWRConfig();
   const { runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
   const [isDone, setIsDone] = useState(task.isDone);
@@ -24,7 +33,7 @@ export function TaskCheckRow({ task, isPendingSync }: { task: TaskWithStatus; is
     setIsDone(next);
     startTransition(async () => {
       await runOrQueue({ type: "toggleTask", taskId: task.id, periodKey: task.periodKey, done: next });
-      router.refresh();
+      mutate(swrKeys.tasksList(today));
     });
   }
 

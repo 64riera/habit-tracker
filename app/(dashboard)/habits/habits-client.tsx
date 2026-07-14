@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useSWRConfig } from "swr";
 import { Plus, Tags, Repeat, Trophy, RotateCcw, Archive, Star } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
@@ -20,20 +20,28 @@ import {
   buildGhostHabit,
   applyPendingHabitEdit,
 } from "@/lib/offline/pending-selectors";
+import { swrKeys } from "@/lib/swr/keys";
+import { usePageData } from "@/lib/swr/use-page-data";
+import { fetchCategoriesAction, fetchFocusHeaderAction, fetchHabitsListAction } from "@/lib/actions/habits-read";
 import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
 import type { FocusHeaderData } from "@/lib/queries/focus";
 
 export function HabitosClient({
-  habits,
-  categories,
-  focusHeader,
+  habits: initialHabits,
+  categories: initialCategories,
+  focusHeader: initialFocusHeader,
+  today,
 }: {
   habits: HabitWithExtras[];
   categories: CategoryRow[];
   focusHeader: FocusHeaderData;
+  today: string;
 }) {
   const { t, dict, locale } = useI18n();
-  const router = useRouter();
+  const { mutate } = useSWRConfig();
+  const { data: habits } = usePageData(swrKeys.habitsList(today), () => fetchHabitsListAction(today), initialHabits);
+  const { data: categories } = usePageData(swrKeys.categories(), fetchCategoriesAction, initialCategories);
+  const { data: focusHeader } = usePageData(swrKeys.focusHeader(), fetchFocusHeaderAction, initialFocusHeader);
   const { pendingMutations, runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
   const [pinnedOverrides, setPinnedOverrides] = useState<Record<string, boolean>>({});
@@ -70,7 +78,7 @@ export function HabitosClient({
   function handleReorder(orderedIds: string[]) {
     startTransition(async () => {
       await runOrQueue({ type: "reorderHabits", orderedIds });
-      router.refresh();
+      mutate(swrKeys.habitsList(today));
     });
   }
 
@@ -78,7 +86,7 @@ export function HabitosClient({
     setPinnedOverrides((prev) => ({ ...prev, [habitId]: pinned }));
     startTransition(async () => {
       await runOrQueue({ type: "togglePinHabit", habitId, pinned });
-      router.refresh();
+      mutate(swrKeys.habitsList(today));
     });
   }
 
@@ -86,7 +94,7 @@ export function HabitosClient({
     setRestoredIds((prev) => new Set(prev).add(habitId));
     startTransition(async () => {
       await runOrQueue({ type: "restoreHabit", habitId });
-      router.refresh();
+      mutate(swrKeys.habitsList(today));
     });
   }
 
@@ -95,7 +103,7 @@ export function HabitosClient({
     setArchivedOverrides((prev) => ({ ...prev, [habitId]: true }));
     startTransition(async () => {
       await runOrQueue({ type: "archiveHabit", habitId });
-      router.refresh();
+      mutate(swrKeys.habitsList(today));
     });
   }
 

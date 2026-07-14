@@ -34,6 +34,7 @@ export default async function EstadisticasPage() {
       worstWeekday={worstWeekday}
       moodCorrelation={moodCorrelation}
       focusHeader={focusHeader}
+      today={today}
     />
   );
 }

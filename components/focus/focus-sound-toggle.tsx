@@ -1,19 +1,20 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useSWRConfig } from "swr";
 import { useI18n } from "@/lib/i18n/client";
 import { setFocusSoundEnabled } from "@/lib/actions/focus";
+import { swrKeys } from "@/lib/swr/keys";
 
-export function FocusSoundToggle({ enabled }: { enabled: boolean }) {
+export function FocusSoundToggle({ enabled, today }: { enabled: boolean; today: string }) {
   const { t } = useI18n();
-  const router = useRouter();
+  const { mutate } = useSWRConfig();
   const [isPending, startTransition] = useTransition();
 
   function onChange(next: boolean) {
     startTransition(async () => {
       await setFocusSoundEnabled(next);
-      router.refresh();
+      mutate(swrKeys.focusSupporting(today));
     });
   }
 

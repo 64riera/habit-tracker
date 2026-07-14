@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useSWRConfig } from "swr";
 import { Plus, Trash2 } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { SwipeableRow, SwipeableListProvider } from "@/components/ui/swipeable-row";
@@ -37,12 +37,15 @@ import {
   weekdayExpenseBreakdown,
   type Period,
 } from "@/lib/finance/aggregate";
+import { swrKeys } from "@/lib/swr/keys";
+import { usePageData } from "@/lib/swr/use-page-data";
+import { fetchFinanceCategoriesAction, fetchTransactionsAction } from "@/lib/actions/finance-read";
 import type { FinanceCategoryRow, TransactionWithCategory } from "@/lib/queries/finance";
 import type { Currency } from "@/lib/finance/format";
 
 export function FinanceClient({
-  transactions,
-  categories,
+  transactions: initialTransactions,
+  categories: initialCategories,
   currency,
   today,
 }: {
@@ -52,7 +55,9 @@ export function FinanceClient({
   today: string;
 }) {
   const { t, locale } = useI18n();
-  const router = useRouter();
+  const { mutate } = useSWRConfig();
+  const { data: transactions } = usePageData(swrKeys.financeTransactions(), fetchTransactionsAction, initialTransactions);
+  const { data: categories } = usePageData(swrKeys.financeCategories(), fetchFinanceCategoriesAction, initialCategories);
   const { pendingMutations, runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
 
@@ -116,7 +121,7 @@ export function FinanceClient({
     if (!confirm(t("finance.confirmDelete"))) return;
     startTransition(async () => {
       await runOrQueue({ type: "deleteTransaction", transactionId });
-      router.refresh();
+      mutate(swrKeys.financeTransactions());
     });
   }
 

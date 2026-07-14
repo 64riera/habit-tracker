@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { SegmentedRouteTabs } from "@/components/nav/segmented-route-tabs";
 import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
@@ -8,21 +9,26 @@ import { CategoryBars } from "@/components/charts/category-bars";
 import { PeriodSummaryCard } from "@/components/stats/period-summary-card";
 import { PatternsPanel } from "@/components/stats/patterns-panel";
 import { useI18n } from "@/lib/i18n/client";
+import { swrKeys } from "@/lib/swr/keys";
+import { usePageData } from "@/lib/swr/use-page-data";
+import { fetchFocusHeaderAction } from "@/lib/actions/habits-read";
+import { fetchStatsAction } from "@/lib/actions/stats-read";
 import type { CategoryStat, HabitStatCard, TrendPoint } from "@/lib/queries/stats";
 import type { MoodCorrelation, WorstWeekday } from "@/lib/queries/patterns";
 import type { PeriodComparison } from "@/lib/queries/summary";
 import type { FocusHeaderData } from "@/lib/queries/focus";
 
 export function EstadisticasClient({
-  overall,
-  trend,
-  categories,
-  cards,
-  weekSummary,
-  monthSummary,
-  worstWeekday,
-  moodCorrelation,
-  focusHeader,
+  overall: initialOverall,
+  trend: initialTrend,
+  categories: initialCategories,
+  cards: initialCards,
+  weekSummary: initialWeekSummary,
+  monthSummary: initialMonthSummary,
+  worstWeekday: initialWorstWeekday,
+  moodCorrelation: initialMoodCorrelation,
+  focusHeader: initialFocusHeader,
+  today,
 }: {
   overall: { pct7: number; pct30: number; pct90: number };
   trend: TrendPoint[];
@@ -33,8 +39,34 @@ export function EstadisticasClient({
   worstWeekday: WorstWeekday;
   moodCorrelation: MoodCorrelation;
   focusHeader: FocusHeaderData;
+  today: string;
 }) {
   const { t, locale } = useI18n();
+  const initialStatsData = useMemo(
+    () => ({
+      overall: initialOverall,
+      trend: initialTrend,
+      categories: initialCategories,
+      cards: initialCards,
+      weekSummary: initialWeekSummary,
+      monthSummary: initialMonthSummary,
+      worstWeekday: initialWorstWeekday,
+      moodCorrelation: initialMoodCorrelation,
+    }),
+    [
+      initialOverall,
+      initialTrend,
+      initialCategories,
+      initialCards,
+      initialWeekSummary,
+      initialMonthSummary,
+      initialWorstWeekday,
+      initialMoodCorrelation,
+    ]
+  );
+  const { data } = usePageData(swrKeys.stats(today), () => fetchStatsAction(today), initialStatsData);
+  const { data: focusHeader } = usePageData(swrKeys.focusHeader(), fetchFocusHeaderAction, initialFocusHeader);
+  const { overall, trend, categories, cards, weekSummary, monthSummary, worstWeekday, moodCorrelation } = data;
 
   const summaryCards = [
     { value: overall.pct7, label: t("stats.last7") },

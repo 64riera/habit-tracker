@@ -342,6 +342,11 @@
     "notificationsDenied": "Bloqueadas en el navegador",
     "exportHistory": "Exportar historial",
     "lastSync": "Última sincronización",
+    "syncSectionTitle": "Sincronización",
+    "syncPendingCount": "{count} cambios pendientes",
+    "syncPendingCountSingular": "1 cambio pendiente",
+    "syncNow": "Sincronizar ahora",
+    "syncNever": "Nunca",
     "logout": "Cerrar sesión",
     "installApp": "Instalar aplicación"
   },
@@ -350,7 +355,12 @@
     "syncing": "Sincronizando…",
     "synced": "Todo sincronizado",
     "pendingItem": "Pendiente de sincronizar",
-    "savedOffline": "Guardado sin conexión. Se sincronizará automáticamente."
+    "savedOffline": "Guardado sin conexión. Se sincronizará automáticamente.",
+    "domainHabits": "Hábitos",
+    "domainRoutines": "Rutinas",
+    "domainTasks": "Tareas",
+    "domainFinance": "Finanzas",
+    "domainCategories": "Categorías"
   },
   "pwa": {
     "installTitle": "Instalar {name}",

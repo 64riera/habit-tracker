@@ -277,3 +277,40 @@ export function applyPendingTransactionEdit(
 ): TransactionWithCategory {
   return { ...transaction, ...transactionEditableFields(values, categories) };
 }
+
+// --- Sync panel (Settings) ---
+
+export type PendingDomain = "habits" | "routines" | "tasks" | "finance" | "categories";
+
+/** One entry per QueuedMutation variant (lib/offline/db.ts) — a `Record` over
+ * the full union, same exhaustiveness trick as replay-registry.ts's
+ * `Registry`: adding a new mutation type without extending this map is a
+ * compile error, so the sync panel's breakdown can't silently go stale. */
+const DOMAIN_BY_MUTATION_TYPE: Record<QueuedRecord["type"], PendingDomain> = {
+  log: "habits",
+  delete: "habits",
+  freeze: "habits",
+  createHabit: "habits",
+  updateHabit: "habits",
+  archiveHabit: "habits",
+  restoreHabit: "habits",
+  togglePinHabit: "habits",
+  reorderHabits: "habits",
+  setCategoryHidden: "categories",
+  createRoutine: "routines",
+  updateRoutine: "routines",
+  deleteRoutine: "routines",
+  createTask: "tasks",
+  updateTask: "tasks",
+  deleteTask: "tasks",
+  toggleTask: "tasks",
+  createTransaction: "finance",
+  updateTransaction: "finance",
+  deleteTransaction: "finance",
+};
+
+export function pendingMutationsByDomain(queue: QueuedRecord[]): Record<PendingDomain, number> {
+  const counts: Record<PendingDomain, number> = { habits: 0, routines: 0, tasks: 0, finance: 0, categories: 0 };
+  for (const mutation of queue) counts[DOMAIN_BY_MUTATION_TYPE[mutation.type]]++;
+  return counts;
+}
