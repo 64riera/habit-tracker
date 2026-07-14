@@ -354,6 +354,10 @@
       "weeks": "weeks"
     }
   },
+  "more": {
+    "manageHabits": "Manage habits",
+    "historyStats": "History & stats"
+  },
   "achievements": {
     "title": "Achievements",
     "subtitle": "Milestones you unlock with your streaks",

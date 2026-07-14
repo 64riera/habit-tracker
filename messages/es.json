@@ -354,6 +354,10 @@
       "weeks": "semanas"
     }
   },
+  "more": {
+    "manageHabits": "Administrar hábitos",
+    "historyStats": "Historial y estadísticas"
+  },
   "achievements": {
     "title": "Logros",
     "subtitle": "Hitos que desbloqueas con tus rachas",
