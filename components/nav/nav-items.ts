@@ -1,4 +1,4 @@
-import { Home, History, Timer, Dumbbell, ListChecks, ListTodo, Wallet, Settings } from "lucide-react";
+import { Home, History, Timer, ListChecks, Wallet, LayoutGrid } from "lucide-react";
 
 export const NAV_ITEMS = [
   { key: "hoy", href: "/", dictKey: "nav.hoy", icon: Home, activeWhen: (p: string) => p === "/" },
@@ -13,9 +13,18 @@ export const NAV_ITEMS = [
     activeWhen: (p: string) => p.startsWith("/history") || p.startsWith("/stats"),
   },
   { key: "enfoque", href: "/focus", dictKey: "nav.enfoque", icon: Timer, activeWhen: (p: string) => p.startsWith("/focus") },
-  { key: "gym", href: "/gym", dictKey: "nav.gym", icon: Dumbbell, activeWhen: (p: string) => p.startsWith("/gym") },
   { key: "habitos", href: "/habits", dictKey: "nav.habitos", icon: ListChecks, activeWhen: (p: string) => p.startsWith("/habits") },
-  { key: "tareas", href: "/tasks", dictKey: "nav.tareas", icon: ListTodo, activeWhen: (p: string) => p.startsWith("/tasks") },
   { key: "finance", href: "/finance", dictKey: "nav.finance", icon: Wallet, activeWhen: (p: string) => p.startsWith("/finance") },
-  { key: "ajustes", href: "/settings", dictKey: "nav.ajustes", icon: Settings, activeWhen: (p: string) => p.startsWith("/settings") },
+  {
+    key: "more",
+    href: "/more",
+    dictKey: "nav.more",
+    icon: LayoutGrid,
+    // Gym, Tasks and Settings live under this one entry (see
+    // components/nav/more-items.ts) instead of each taking their own nav
+    // slot — this is the hub that groups occasional-use utilities so the
+    // bottom nav doesn't keep growing every time a new one is added.
+    activeWhen: (p: string) =>
+      p.startsWith("/more") || p.startsWith("/gym") || p.startsWith("/tasks") || p.startsWith("/settings"),
+  },
 ] as const;

@@ -11,7 +11,8 @@
     "habitos": "Habits",
     "tareas": "Tasks",
     "finance": "Finance",
-    "ajustes": "Settings"
+    "ajustes": "Settings",
+    "more": "More"
   },
   "screens": {
     "hoy": { "title": "Home", "subtitle": "Frictionless daily check-in" },
@@ -23,7 +24,8 @@
     "enfoque": { "title": "Focus", "subtitle": "Concentration sessions with tracking" },
     "gym": { "title": "Gym", "subtitle": "Your workouts, exercise by exercise" },
     "tareas": { "title": "Tasks", "subtitle": "Recurring to-dos that reset on their own" },
-    "finance": { "title": "Finance", "subtitle": "Income and expenses, day by day" }
+    "finance": { "title": "Finance", "subtitle": "Income and expenses, day by day" },
+    "more": { "title": "More", "subtitle": "Extra tools and settings" }
   },
   "common": {
     "save": "Save changes",

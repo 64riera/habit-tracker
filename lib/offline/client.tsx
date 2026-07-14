@@ -42,8 +42,12 @@ const LAST_SYNCED_AT_KEY = "justgo:last-synced-at";
  * opened, not just after a first visit. Deliberately NOT every route:
  * sections whose whole value is showing past data (History, Stats, ...)
  * have nothing useful to offer without it, so they keep the normal "must
- * visit once" rule. Don't add a route here without that same justification. */
-const ALWAYS_WARM_ROUTES = ["/focus", "/finance", "/tasks", "/gym"];
+ * visit once" rule. Don't add a route here without that same justification.
+ * /more is included for a different reason: it has no data of its own, but
+ * since Tasks and Gym are now only reachable through it (see
+ * components/nav/nav-items.ts), it has to work offline unvisited too, or
+ * their own guarantee above would be unreachable in practice. */
+const ALWAYS_WARM_ROUTES = ["/focus", "/finance", "/tasks", "/gym", "/more"];
 
 function warmAlwaysAvailableRoutes(router: ReturnType<typeof useRouter>) {
   for (const route of ALWAYS_WARM_ROUTES) router.prefetch(route);

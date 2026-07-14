@@ -11,7 +11,8 @@
     "habitos": "Hábitos",
     "tareas": "Tareas",
     "finance": "Finanzas",
-    "ajustes": "Ajustes"
+    "ajustes": "Ajustes",
+    "more": "Más"
   },
   "screens": {
     "hoy": { "title": "Inicio", "subtitle": "Registro diario sin fricción" },
@@ -23,7 +24,8 @@
     "enfoque": { "title": "Enfoque", "subtitle": "Sesiones de concentración" },
     "gym": { "title": "Gym", "subtitle": "Tus entrenamientos, ejercicio por ejercicio" },
     "tareas": { "title": "Tareas", "subtitle": "Pendientes que se repiten solos" },
-    "finance": { "title": "Finanzas", "subtitle": "Ingresos y gastos, día a día" }
+    "finance": { "title": "Finanzas", "subtitle": "Ingresos y gastos, día a día" },
+    "more": { "title": "Más", "subtitle": "Herramientas y ajustes adicionales" }
   },
   "common": {
     "save": "Guardar cambios",
