@@ -366,6 +366,13 @@
     "increase": "Aumentar BPM",
     "play": "Reproducir",
     "pause": "Pausar",
+    "sound": {
+      "label": "Sonido",
+      "classic": "Clásico",
+      "soft": "Suave",
+      "wood": "Madera",
+      "digital": "Digital"
+    },
     "timer": {
       "title": "Temporizador",
       "minutes": "Minutos",

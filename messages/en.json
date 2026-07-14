@@ -366,6 +366,13 @@
     "increase": "Increase BPM",
     "play": "Play",
     "pause": "Pause",
+    "sound": {
+      "label": "Sound",
+      "classic": "Classic",
+      "soft": "Soft",
+      "wood": "Wood",
+      "digital": "Digital"
+    },
     "timer": {
       "title": "Timer",
       "minutes": "Minutes",

@@ -1,32 +1,62 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Play, Pause, Minus, Plus } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
+import { Select } from "@/components/ui/select";
 import { setMetronomeBpm } from "@/lib/actions/preferences";
+import { METRONOME_SOUNDS, DEFAULT_METRONOME_SOUND, type MetronomeSoundId } from "@/lib/metronome/sounds";
 
 const MIN_BPM = 40;
 const MAX_BPM = 208;
 const PERSIST_DEBOUNCE_MS = 500;
-
-function createClick(ctx: AudioContext) {
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.frequency.value = 1000;
-  gain.gain.setValueAtTime(0.35, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
-  osc.connect(gain).connect(ctx.destination);
-  osc.start();
-  osc.stop(ctx.currentTime + 0.05);
-}
+// Shorter than the persistence debounce on purpose: this one gates the
+// audible tempo change, so it should feel responsive right after letting
+// go of the slider, not just eventually consistent in the background.
+const TEMPO_APPLY_DEBOUNCE_MS = 150;
 
 export function MetronomePanel({ initialBpm }: { initialBpm: number }) {
   const { t } = useI18n();
   const [bpm, setBpm] = useState(initialBpm);
+  const [soundId, setSoundId] = useState<MetronomeSoundId>(DEFAULT_METRONOME_SOUND);
   const [playing, setPlaying] = useState(false);
   const [pulse, setPulse] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const persistTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // The tempo actually driving the ticking loop, plus whether the slider is
+  // actively being moved right now — deliberately NOT the same as `bpm`
+  // (which updates on every slider move/keystroke). The instant `bpm`
+  // changes, `isAdjusting` flips true and the ticking effect below goes
+  // silent immediately (it doesn't wait for its own interval to notice);
+  // only ~150ms after the *last* change does it settle, adopt the new
+  // tempo, and resume with one audible tick. This is what makes the
+  // metronome mute itself for as long as the slider is being dragged,
+  // instead of just not stuttering while it changes.
+  const [committedBpm, setCommittedBpm] = useState(initialBpm);
+  const [isAdjusting, setIsAdjusting] = useState(false);
+  // "Adjusting state during render" (https://react.dev/reference/react/useState#storing-information-from-previous-renders),
+  // same pattern already used elsewhere in this codebase (e.g.
+  // SwipeableRow's lastSeenOpenId) — flips `isAdjusting` true in the same
+  // render `bpm` changes in, instead of one effect-cycle later, so the
+  // ticking effect below goes silent immediately rather than after one
+  // more tick slips through.
+  const [lastSeenBpm, setLastSeenBpm] = useState(bpm);
+  if (bpm !== lastSeenBpm) {
+    setLastSeenBpm(bpm);
+    setIsAdjusting(true);
+  }
+  useEffect(() => {
+    if (!isAdjusting) return;
+    const id = setTimeout(() => {
+      setCommittedBpm(bpm);
+      setIsAdjusting(false);
+    }, TEMPO_APPLY_DEBOUNCE_MS);
+    return () => clearTimeout(id);
+  }, [bpm, isAdjusting]);
+
+  const sound = useMemo(() => METRONOME_SOUNDS.find((s) => s.id === soundId) ?? METRONOME_SOUNDS[0], [soundId]);
+  const soundOptions = useMemo(() => METRONOME_SOUNDS.map((s) => ({ value: s.id, label: t(s.labelKey) })), [t]);
 
   function changeBpm(next: number) {
     const clamped = Math.round(Math.min(MAX_BPM, Math.max(MIN_BPM, next)));
@@ -37,28 +67,29 @@ export function MetronomePanel({ initialBpm }: { initialBpm: number }) {
     persistTimeoutRef.current = setTimeout(() => setMetronomeBpm(clamped), PERSIST_DEBOUNCE_MS);
   }
 
-  // The ticking loop itself — restarts on every bpm change so the new
-  // tempo takes effect immediately instead of only after the current
+  // The ticking loop itself — silent while `isAdjusting` (see above), and
+  // restarts on every *committed* tempo change or sound change so the new
+  // setting takes effect right away instead of only after the current
   // interval finishes. Plain setInterval (not a lookahead scheduler): this
   // is a casual practice aid, not a precision audio tool, and the small
   // drift that comes with it is an acceptable trade for how much simpler
   // it keeps this.
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || isAdjusting) return;
     function tick() {
       const AudioCtx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (AudioCtx) {
         const ctx = audioCtxRef.current ?? new AudioCtx();
         audioCtxRef.current = ctx;
-        createClick(ctx);
+        sound.play(ctx);
       }
       setPulse(true);
       setTimeout(() => setPulse(false), 100);
     }
     tick();
-    const id = setInterval(tick, 60_000 / bpm);
+    const id = setInterval(tick, 60_000 / committedBpm);
     return () => clearInterval(id);
-  }, [playing, bpm]);
+  }, [playing, isAdjusting, committedBpm, sound]);
 
   useEffect(() => {
     return () => {
@@ -108,6 +139,14 @@ export function MetronomePanel({ initialBpm }: { initialBpm: number }) {
             <Plus size={14} strokeWidth={2} aria-hidden />
           </button>
         </div>
+
+        <Select
+          value={soundId}
+          onValueChange={(value) => setSoundId(value as MetronomeSoundId)}
+          options={soundOptions}
+          variant="pill"
+          ariaLabel={t("metronome.sound.label")}
+        />
 
         <button
           type="button"
