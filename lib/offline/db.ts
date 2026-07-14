@@ -4,6 +4,7 @@ import type { LogInput } from "@/lib/habits/log-write";
 import type { HabitFormValues } from "@/lib/validation/habit";
 import type { RoutineFormValues } from "@/lib/validation/routine";
 import type { TaskFormValues } from "@/lib/validation/task";
+import type { TransactionFormValues } from "@/lib/validation/transaction";
 
 export type QueuedMutation =
   | { type: "log"; input: LogInput }
@@ -22,7 +23,10 @@ export type QueuedMutation =
   | { type: "createTask"; id: string; values: TaskFormValues }
   | { type: "updateTask"; taskId: string; values: TaskFormValues }
   | { type: "deleteTask"; taskId: string }
-  | { type: "toggleTask"; taskId: string; periodKey: string; done: boolean };
+  | { type: "toggleTask"; taskId: string; periodKey: string; done: boolean }
+  | { type: "createTransaction"; id: string; values: TransactionFormValues }
+  | { type: "updateTransaction"; transactionId: string; values: TransactionFormValues }
+  | { type: "deleteTransaction"; transactionId: string };
 
 export type QueuedRecord = QueuedMutation & { id: number; createdAt: number };
 

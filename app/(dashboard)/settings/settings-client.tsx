@@ -11,20 +11,28 @@ import { PushToggle } from "@/components/pwa/push-toggle";
 import { Select } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n/client";
 import { useInstallPrompt } from "@/lib/hooks/use-install-prompt";
-import { setDayCutoffHour } from "@/lib/actions/preferences";
+import { setDayCutoffHour, setCurrencyPreference } from "@/lib/actions/preferences";
 import type { FocusHeaderData } from "@/lib/queries/focus";
+import type { CurrencyPreference } from "@/lib/queries/user";
 
 const CUTOFF_HOURS = Array.from({ length: 24 }, (_, h) => ({
   value: String(h),
   label: `${String(h).padStart(2, "0")}:00`,
 }));
 
+const CURRENCIES = [
+  { value: "MXN", label: "MXN — Peso mexicano" },
+  { value: "USD", label: "USD — US Dollar" },
+];
+
 export function AjustesClient({
   cutoffHour,
   focusHeader,
+  currency,
 }: {
   cutoffHour: number;
   focusHeader: FocusHeaderData;
+  currency: CurrencyPreference;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -36,6 +44,13 @@ export function AjustesClient({
       await setDayCutoffHour(hour);
       // The day cutoff changes which date counts as "today" for every page;
       // router.refresh() re-fetches that data without reloading the browser.
+      router.refresh();
+    });
+  }
+
+  function onCurrencyChange(value: string) {
+    startTransition(async () => {
+      await setCurrencyPreference(value);
       router.refresh();
     });
   }
@@ -60,6 +75,20 @@ export function AjustesClient({
           onValueChange={(v) => onCutoffChange(Number(v))}
           options={CUTOFF_HOURS}
           ariaLabel={t("settings.dayCutoff")}
+          className={isPending ? "pointer-events-none opacity-60" : undefined}
+        />
+      ),
+    },
+    {
+      label: t("settings.currency"),
+      sub: t("settings.currencySub"),
+      control: (
+        <Select
+          variant="pill"
+          value={currency}
+          onValueChange={onCurrencyChange}
+          options={CURRENCIES}
+          ariaLabel={t("settings.currency")}
           className={isPending ? "pointer-events-none opacity-60" : undefined}
         />
       ),

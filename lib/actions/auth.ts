@@ -4,12 +4,13 @@ import { nanoid } from "nanoid";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
-import { categories, users } from "@/lib/db/schema";
+import { categories, financeCategories, users } from "@/lib/db/schema";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { createSessionCookie, safeNextPath } from "@/lib/auth/session";
 import { getPreAuthLocaleCookie, resolvePreAuthLocale } from "@/lib/i18n/locale";
 import { isGoogleAuthEnabled } from "@/lib/auth/google";
 import { CANONICAL_CATEGORIES } from "@/lib/habits/canonical-categories";
+import { CANONICAL_FINANCE_CATEGORIES } from "@/lib/finance/canonical-categories";
 
 /** `redirectTo` instead of next/navigation's `redirect()`: login/signup
  * change which account is active, and with it the language that should be
@@ -33,6 +34,20 @@ function normalizeUsername(raw: string): string {
 export async function seedDefaultCategories(userId: string): Promise<void> {
   await db.insert(categories).values(
     CANONICAL_CATEGORIES.map((c, i) => ({
+      id: nanoid(),
+      userId,
+      nameEs: c.nameEs,
+      nameEn: c.nameEn,
+      color: c.color,
+      icon: c.icon,
+      sortOrder: i,
+    }))
+  );
+}
+
+export async function seedDefaultFinanceCategories(userId: string): Promise<void> {
+  await db.insert(financeCategories).values(
+    CANONICAL_FINANCE_CATEGORIES.map((c, i) => ({
       id: nanoid(),
       userId,
       nameEs: c.nameEs,
@@ -122,6 +137,7 @@ export async function signup(_prevState: AuthState, formData: FormData): Promise
   const localePreference = await resolvePreAuthLocale();
   await db.insert(users).values({ id: userId, username, passwordHash, localePreference });
   await seedDefaultCategories(userId);
+  await seedDefaultFinanceCategories(userId);
 
   await createSessionCookie(userId);
   await invalidateLocaleAcrossApp();

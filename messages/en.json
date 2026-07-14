@@ -9,6 +9,7 @@
     "enfoque": "Focus",
     "habitos": "Habits",
     "tareas": "Tasks",
+    "finance": "Finance",
     "ajustes": "Settings"
   },
   "screens": {
@@ -19,7 +20,8 @@
     "habitoDetalle": { "title": "Edit habit", "subtitle": "Adjust your habit's details" },
     "ajustes": { "title": "Settings", "subtitle": "Appearance, language and data" },
     "enfoque": { "title": "Focus", "subtitle": "Concentration sessions with tracking" },
-    "tareas": { "title": "Tasks", "subtitle": "Recurring to-dos that reset on their own" }
+    "tareas": { "title": "Tasks", "subtitle": "Recurring to-dos that reset on their own" },
+    "finance": { "title": "Finance", "subtitle": "Income and expenses, day by day" }
   },
   "common": {
     "save": "Save changes",
@@ -258,6 +260,28 @@
       "12": "December"
     }
   },
+  "finance": {
+    "newTransaction": "New transaction",
+    "movements": "Transactions",
+    "fieldType": "Type",
+    "fieldAmount": "Amount",
+    "fieldCategory": "Category",
+    "fieldDate": "Date",
+    "fieldNote": "Note",
+    "notePlaceholder": "What was it for?",
+    "type": { "income": "Income", "expense": "Expense" },
+    "period": { "day": "Day", "week": "Week", "month": "Month", "year": "Year", "custom": "Range" },
+    "rangeFrom": "From",
+    "rangeTo": "To",
+    "summary": { "income": "Income", "expense": "Expenses", "balance": "Balance" },
+    "byCategory": "By category",
+    "trend": "Spending trend",
+    "trendBarLabel": "{date}: {amount}",
+    "formError": "Check the fields: the amount, date, or the expense category is missing.",
+    "confirmDelete": "Delete this transaction?",
+    "empty": "No transactions in this period yet.",
+    "noExpenses": "No expenses in this period."
+  },
   "achievements": {
     "title": "Achievements",
     "subtitle": "Milestones you unlock with your streaks",
@@ -282,6 +306,8 @@
     "dayCutoffSub": "\"Today\" ends at this hour",
     "notifications": "Notifications",
     "notificationsSub": "Habit reminder alerts",
+    "currency": "Currency",
+    "currencySub": "Used to display every amount in Finance",
     "notificationsEnable": "Enable",
     "notificationsDisable": "Disable",
     "notificationsUnsupported": "Not available in this browser",

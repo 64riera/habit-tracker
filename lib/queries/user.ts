@@ -6,6 +6,7 @@ import { getCurrentUserIdOrNull } from "@/lib/auth/session";
 import type { Locale } from "@/lib/i18n/dictionaries";
 
 export type ThemePreference = "light" | "dark" | "system";
+export type CurrencyPreference = "MXN" | "USD";
 
 /** Theme preference saved on the account. "system" if there's no session (e.g. /login). */
 export async function getThemePreference(): Promise<ThemePreference> {
@@ -31,6 +32,18 @@ export async function getLocalePreference(): Promise<Locale | null> {
     .where(eq(users.id, userId))
     .limit(1);
   return user?.localePreference ?? null;
+}
+
+/** Currency preference saved on the account. "MXN" if there's no session. */
+export async function getCurrencyPreference(): Promise<CurrencyPreference> {
+  const userId = await getCurrentUserIdOrNull();
+  if (!userId) return "MXN";
+  const [user] = await db
+    .select({ currencyPreference: users.currencyPreference })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return user?.currencyPreference ?? "MXN";
 }
 
 /** IANA timezone saved on the account (detected in the browser, see

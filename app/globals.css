@@ -23,6 +23,25 @@
   --cat-aprendizaje: oklch(0.58 0.09 230);
   --cat-estudio: oklch(0.58 0.1 145);
   --cat-bienestar: oklch(0.58 0.09 300);
+
+  /* Finance categories — hues chosen to fall in the gaps left by the
+     habit categories above, so the two sets stay visually distinguishable
+     from each other even though both read from the same OKLCH scale. */
+  --cat-home: oklch(0.6 0.13 5);
+  --cat-car: oklch(0.55 0.1 250);
+  --cat-groceries: oklch(0.58 0.12 110);
+  --cat-dining: oklch(0.6 0.14 340);
+  --cat-entertainment: oklch(0.6 0.13 315);
+  --cat-health: oklch(0.58 0.11 125);
+  --cat-transport: oklch(0.55 0.1 270);
+  --cat-bills: oklch(0.58 0.1 160);
+  --cat-education: oklch(0.6 0.12 55);
+  --cat-other: oklch(0.55 0.08 200);
+
+  /* Semantic tone for money in/out — independent of category color, used
+     for the amount itself (income vs. expense) across the finance section. */
+  --color-income: oklch(0.56 0.14 152);
+  --color-expense: var(--color-text);
 }
 
 .dark {
@@ -54,6 +73,19 @@
   --color-cat-aprendizaje: var(--cat-aprendizaje);
   --color-cat-estudio: var(--cat-estudio);
   --color-cat-bienestar: var(--cat-bienestar);
+
+  --color-cat-home: var(--cat-home);
+  --color-cat-car: var(--cat-car);
+  --color-cat-groceries: var(--cat-groceries);
+  --color-cat-dining: var(--cat-dining);
+  --color-cat-entertainment: var(--cat-entertainment);
+  --color-cat-health: var(--cat-health);
+  --color-cat-transport: var(--cat-transport);
+  --color-cat-bills: var(--cat-bills);
+  --color-cat-education: var(--cat-education);
+  --color-cat-other: var(--cat-other);
+  --color-income: var(--color-income);
+  --color-expense: var(--color-expense);
 
   --font-serif: var(--font-newsreader);
   --font-sans: var(--font-public-sans);

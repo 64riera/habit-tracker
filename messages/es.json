@@ -9,6 +9,7 @@
     "enfoque": "Enfoque",
     "habitos": "Hábitos",
     "tareas": "Tareas",
+    "finance": "Finanzas",
     "ajustes": "Ajustes"
   },
   "screens": {
@@ -19,7 +20,8 @@
     "habitoDetalle": { "title": "Editar hábito", "subtitle": "Ajusta los detalles de tu hábito" },
     "ajustes": { "title": "Ajustes", "subtitle": "Apariencia, idioma y datos" },
     "enfoque": { "title": "Enfoque", "subtitle": "Sesiones de concentración" },
-    "tareas": { "title": "Tareas", "subtitle": "Pendientes que se repiten solos" }
+    "tareas": { "title": "Tareas", "subtitle": "Pendientes que se repiten solos" },
+    "finance": { "title": "Finanzas", "subtitle": "Ingresos y gastos, día a día" }
   },
   "common": {
     "save": "Guardar cambios",
@@ -258,6 +260,28 @@
       "12": "diciembre"
     }
   },
+  "finance": {
+    "newTransaction": "Nuevo movimiento",
+    "movements": "Movimientos",
+    "fieldType": "Tipo",
+    "fieldAmount": "Monto",
+    "fieldCategory": "Categoría",
+    "fieldDate": "Fecha",
+    "fieldNote": "Nota",
+    "notePlaceholder": "¿En qué fue?",
+    "type": { "income": "Ingreso", "expense": "Gasto" },
+    "period": { "day": "Día", "week": "Semana", "month": "Mes", "year": "Año", "custom": "Rango" },
+    "rangeFrom": "Desde",
+    "rangeTo": "Hasta",
+    "summary": { "income": "Ingresos", "expense": "Gastos", "balance": "Balance" },
+    "byCategory": "Por categoría",
+    "trend": "Tendencia de gasto",
+    "trendBarLabel": "{date}: {amount}",
+    "formError": "Revisa los campos: falta el monto, la fecha, o la categoría del gasto.",
+    "confirmDelete": "¿Eliminar este movimiento?",
+    "empty": "Aún no tienes movimientos en este período.",
+    "noExpenses": "Sin gastos en este período."
+  },
   "achievements": {
     "title": "Logros",
     "subtitle": "Hitos que desbloqueas con tus rachas",
@@ -282,6 +306,8 @@
     "dayCutoffSub": "El día \"de hoy\" termina a esta hora",
     "notifications": "Notificaciones",
     "notificationsSub": "Avisos de recordatorio de hábitos",
+    "currency": "Moneda",
+    "currencySub": "Se usa para mostrar todos los montos en Finanzas",
     "notificationsEnable": "Activar",
     "notificationsDisable": "Desactivar",
     "notificationsUnsupported": "No disponible en este navegador",

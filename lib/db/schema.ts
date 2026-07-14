@@ -13,6 +13,7 @@ export const users = sqliteTable(
       .notNull()
       .default("system"),
     localePreference: text("locale_preference", { enum: ["es", "en"] }).notNull().default("es"),
+    currencyPreference: text("currency_preference", { enum: ["MXN", "USD"] }).notNull().default("MXN"),
     timezone: text("timezone"), // IANA, e.g. "America/Monterrey" — detected in the browser, see timezone-sync.tsx
     installPromptSeen: integer("install_prompt_seen", { mode: "boolean" }).notNull().default(false),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
@@ -175,6 +176,46 @@ export const settings = sqliteTable("settings", {
   value: text("value"),
 });
 
+// Fixed set of expense categories seeded per account (see
+// lib/finance/canonical-categories.ts), same taxonomy shape as habits'
+// `categories` table. No hide/create/edit yet — everyone gets the same
+// list — but it already lives in the DB (not hardcoded in the UI) so that
+// capability can be added later the same way habits' `hidden` was.
+export const financeCategories = sqliteTable(
+  "finance_categories",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    nameEs: text("name_es").notNull(),
+    nameEn: text("name_en").notNull(),
+    color: text("color").notNull(),
+    icon: text("icon").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+  },
+  (t) => [index("finance_categories_user_idx").on(t.userId)]
+);
+
+export const transactions = sqliteTable(
+  "transactions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    type: text("type", { enum: ["income", "expense"] }).notNull(),
+    // Required for expense, always null for income — enforced in
+    // lib/validation/transaction.ts, not at the DB level.
+    categoryId: text("category_id").references(() => financeCategories.id, { onDelete: "set null" }),
+    amount: real("amount").notNull(), // always positive; sign comes from `type`
+    note: text("note"),
+    date: text("date").notNull(), // YYYY-MM-DD
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    index("transactions_user_idx").on(t.userId),
+    index("transactions_user_date_idx").on(t.userId, t.date),
+    index("transactions_category_idx").on(t.categoryId),
+  ]
+);
+
 export const focusSessions = sqliteTable(
   "focus_sessions",
   {
@@ -273,4 +314,12 @@ export const categoriesRelations = relations(categories, ({ many }) => ({
 
 export const habitLogsRelations = relations(habitLogs, ({ one }) => ({
   habit: one(habits, { fields: [habitLogs.habitId], references: [habits.id] }),
+}));
+
+export const financeCategoriesRelations = relations(financeCategories, ({ many }) => ({
+  transactions: many(transactions),
+}));
+
+export const transactionsRelations = relations(transactions, ({ one }) => ({
+  category: one(financeCategories, { fields: [transactions.categoryId], references: [financeCategories.id] }),
 }));

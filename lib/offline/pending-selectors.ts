@@ -2,9 +2,11 @@ import type { QueuedRecord } from "@/lib/offline/db";
 import type { HabitFormValues } from "@/lib/validation/habit";
 import type { RoutineFormValues } from "@/lib/validation/routine";
 import type { TaskFormValues } from "@/lib/validation/task";
+import type { TransactionFormValues } from "@/lib/validation/transaction";
 import type { HabitWithExtras, CategoryRow } from "@/lib/queries/habits";
 import type { RoutineWithStats, RoutineHabitSummary } from "@/lib/queries/routines";
 import type { TaskWithStatus } from "@/lib/queries/tasks";
+import type { FinanceCategoryRow, TransactionWithCategory } from "@/lib/queries/finance";
 import { buildFrequencyConfig } from "@/lib/habits/frequency";
 import { FREEZE_MONTHLY_ALLOWANCE } from "@/lib/habits/status";
 import { buildTaskRecurrenceConfig, currentPeriodKey } from "@/lib/tasks/recurrence";
@@ -213,4 +215,65 @@ export function buildGhostTask(id: string, values: TaskFormValues, today: string
  * recurrence change shouldn't retroactively reinterpret today's completion state. */
 export function applyPendingTaskEdit(task: TaskWithStatus, values: TaskFormValues): TaskWithStatus {
   return { ...task, ...taskEditableFields(values) };
+}
+
+// --- Transactions ---
+
+export function pendingTransactionCreates(queue: QueuedRecord[]) {
+  return queue.filter(
+    (m): m is Extract<QueuedRecord, { type: "createTransaction" }> => m.type === "createTransaction"
+  );
+}
+
+export function pendingTransactionUpdates(queue: QueuedRecord[]): Map<string, TransactionFormValues> {
+  return new Map(
+    queue
+      .filter((m): m is Extract<QueuedRecord, { type: "updateTransaction" }> => m.type === "updateTransaction")
+      .map((m) => [m.transactionId, m.values])
+  );
+}
+
+export function pendingTransactionDeleteIds(queue: QueuedRecord[]): Set<string> {
+  return new Set(
+    queue
+      .filter((m): m is Extract<QueuedRecord, { type: "deleteTransaction" }> => m.type === "deleteTransaction")
+      .map((m) => m.transactionId)
+  );
+}
+
+/** Editable transaction fields derived from the form values — reused by the creation ghost and the edit overlay. */
+function transactionEditableFields(values: TransactionFormValues, categories: FinanceCategoryRow[]) {
+  const categoryId = values.type === "expense" ? (values.categoryId ?? null) : null;
+  return {
+    type: values.type,
+    categoryId,
+    amount: values.amount,
+    note: values.note || null,
+    date: values.date,
+    category: categoryId ? (categories.find((c) => c.id === categoryId) ?? null) : null,
+  };
+}
+
+/** Builds a "good enough" `TransactionWithCategory` to display a transaction
+ * created offline that hasn't synced yet. */
+export function buildGhostTransaction(
+  id: string,
+  values: TransactionFormValues,
+  categories: FinanceCategoryRow[]
+): TransactionWithCategory {
+  return {
+    id,
+    userId: "",
+    createdAt: new Date().toISOString(),
+    ...transactionEditableFields(values, categories),
+  };
+}
+
+/** Overlays an offline edit not yet synced on top of the already-loaded real transaction. */
+export function applyPendingTransactionEdit(
+  transaction: TransactionWithCategory,
+  values: TransactionFormValues,
+  categories: FinanceCategoryRow[]
+): TransactionWithCategory {
+  return { ...transaction, ...transactionEditableFields(values, categories) };
 }

@@ -49,13 +49,36 @@ export function startOfWeek(value: string): string {
   return addDays(value, -(wd - 1));
 }
 
+export function endOfWeek(value: string): string {
+  return addDays(startOfWeek(value), 6);
+}
+
 export function startOfMonth(value: string): string {
   const d = parseISODate(value);
   return toISODate(new Date(d.getFullYear(), d.getMonth(), 1));
 }
 
+export function endOfMonth(value: string): string {
+  const d = parseISODate(value);
+  return toISODate(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+}
+
+export function startOfYear(value: string): string {
+  const d = parseISODate(value);
+  return toISODate(new Date(d.getFullYear(), 0, 1));
+}
+
+export function endOfYear(value: string): string {
+  const d = parseISODate(value);
+  return toISODate(new Date(d.getFullYear(), 11, 31));
+}
+
 export function monthKey(value: string): string {
   return value.slice(0, 7); // YYYY-MM
+}
+
+export function yearKey(value: string): string {
+  return value.slice(0, 4); // YYYY
 }
 
 /** Time of day in 12h format with am/pm — the whole app uses 12h for any

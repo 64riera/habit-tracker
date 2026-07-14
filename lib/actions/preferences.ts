@@ -40,6 +40,13 @@ export async function setThemePreference(theme: string) {
     .where(eq(users.id, userId));
 }
 
+/** Saves the currency used to display every amount in the Finance section. */
+export async function setCurrencyPreference(currency: string) {
+  if (currency !== "MXN" && currency !== "USD") return;
+  const userId = await getCurrentUserId();
+  await db.update(users).set({ currencyPreference: currency }).where(eq(users.id, userId));
+}
+
 /** Saves the IANA timezone detected in the browser (see
  * `timezone-sync.tsx`) — needed to know which UTC time a reminder's local
  * time corresponds to, see `app/api/cron/reminders/route.ts`. */

@@ -9,6 +9,7 @@ import {
   generateUniqueUsernameFromEmail,
   invalidateLocaleAcrossApp,
   seedDefaultCategories,
+  seedDefaultFinanceCategories,
   syncLocalePreferenceOnLogin,
 } from "@/lib/actions/auth";
 import { createSessionCookie, safeNextPath } from "@/lib/auth/session";
@@ -47,6 +48,7 @@ async function findOrCreateGoogleUser(profile: GoogleProfile): Promise<string> {
     .insert(users)
     .values({ id: userId, username, email: profile.email, googleId: profile.googleId, localePreference });
   await seedDefaultCategories(userId);
+  await seedDefaultFinanceCategories(userId);
   return userId;
 }
 
