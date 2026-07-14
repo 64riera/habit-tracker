@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
-import { Play, Pause, Square } from "lucide-react";
+import { useEffect, useState, useTransition } from "react";
+import { Play, Pause, Square, BellRing, RotateCcw, Check } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { formatClock } from "@/lib/focus/format";
 import { startTimer, pauseTimer, resumeTimer, cancelTimer } from "@/lib/actions/metronome";
@@ -9,6 +9,10 @@ import { useLiveTimer } from "./use-live-timer";
 import type { TimerRow } from "@/lib/metronome/timer-compute";
 
 const PRESET_MINUTES = [1, 3, 5, 10, 15];
+// Repeats like an alarm, not a one-off beep, until the user actually
+// dismisses it (see the "finished" branch below) — a single beep is easy
+// to miss if you're not looking right at that moment.
+const ALARM_REPEAT_MS = 1200;
 
 function playDoneSound() {
   const AudioCtx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -30,17 +34,18 @@ export function TimerPanel({ initialTimer }: { initialTimer: TimerRow | null }) 
   const [minutes, setMinutes] = useState(5);
   const [seconds, setSeconds] = useState(0);
   const [isPending, startTransition] = useTransition();
-  const announcedDone = useRef(false);
 
-  // Best-effort: a short beep the moment the countdown hits zero, only
-  // while this tab is actually open to hear it — the timer's persisted
-  // state (and the "done" display once reopened) doesn't depend on this.
+  // Best-effort: rings like an alarm — a beep immediately, then repeating
+  // — for as long as this tab is open and `finished` stays true, i.e.
+  // until the user hits "Repetir" or "Terminar" below (both clear it, one
+  // by starting a fresh timer, the other by cancelling this one). Only
+  // audible while the tab is actually open; the timer's persisted state
+  // (and the "done" display once reopened) never depends on this.
   useEffect(() => {
-    if (finished && !announcedDone.current) {
-      announcedDone.current = true;
-      playDoneSound();
-    }
-    if (!finished) announcedDone.current = false;
+    if (!finished) return;
+    playDoneSound();
+    const id = setInterval(playDoneSound, ALARM_REPEAT_MS);
+    return () => clearInterval(id);
   }, [finished]);
 
   function handleStart() {
@@ -70,6 +75,17 @@ export function TimerPanel({ initialTimer }: { initialTimer: TimerRow | null }) 
     startTransition(async () => {
       await cancelTimer();
       setTimer(null);
+    });
+  }
+
+  /** Starts a brand new timer with the same duration that just finished —
+   * for "one more round" without having to re-enter the minutes/seconds. */
+  function handleRepeat() {
+    if (!timer) return;
+    const duration = timer.durationSeconds;
+    startTransition(async () => {
+      const fresh = await startTimer(duration);
+      setTimer(fresh);
     });
   }
 
@@ -132,42 +148,73 @@ export function TimerPanel({ initialTimer }: { initialTimer: TimerRow | null }) 
           <div className="font-serif-italic text-[44px] leading-none font-semibold tabular-nums">
             {formatClock(Math.ceil(remaining))}
           </div>
-          {finished && <div className="text-[12.5px] font-semibold">{t("metronome.timer.done")}</div>}
 
-          <div className="flex items-center gap-2.5">
-            {/* Pause/resume is meaningless once the countdown already hit
-                zero — only offer dismissing it at that point. */}
-            {!finished && (timer.status === "running" ? (
+          {finished ? (
+            <>
+              <div className="flex items-center gap-1.5 text-[12.5px] font-semibold">
+                <BellRing size={15} strokeWidth={2} className="animate-pulse" aria-hidden />
+                {t("metronome.timer.done")}
+              </div>
+              {/* Both clear the alarm (see the effect above): "Terminar" just
+                  dismisses it, "Repetir" dismisses it by immediately starting
+                  a new timer with the same duration. Labeled, not icon-only —
+                  this is the one moment on this screen the user needs to act
+                  on without guessing what a bare icon means. */}
+              <div className="flex w-full max-w-xs gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  disabled={isPending}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-text px-4 py-2.5 text-[13px] font-semibold text-surface disabled:opacity-60"
+                >
+                  <Check size={15} strokeWidth={2} aria-hidden />
+                  {t("metronome.timer.finish")}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRepeat}
+                  disabled={isPending}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border px-4 py-2.5 text-[13px] font-medium disabled:opacity-60"
+                >
+                  <RotateCcw size={15} strokeWidth={2} aria-hidden />
+                  {t("metronome.timer.repeat")}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-2.5">
+              {timer.status === "running" ? (
+                <button
+                  type="button"
+                  onClick={handlePause}
+                  disabled={isPending}
+                  aria-label={t("metronome.timer.pause")}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-border disabled:opacity-60"
+                >
+                  <Pause size={16} strokeWidth={2} aria-hidden />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResume}
+                  disabled={isPending}
+                  aria-label={t("metronome.timer.resume")}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-border disabled:opacity-60"
+                >
+                  <Play size={16} strokeWidth={2} aria-hidden />
+                </button>
+              )}
               <button
                 type="button"
-                onClick={handlePause}
+                onClick={handleCancel}
                 disabled={isPending}
-                aria-label={t("metronome.timer.pause")}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-border disabled:opacity-60"
+                aria-label={t("metronome.timer.cancel")}
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-border text-muted disabled:opacity-60"
               >
-                <Pause size={16} strokeWidth={2} aria-hidden />
+                <Square size={14} strokeWidth={2} aria-hidden />
               </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleResume}
-                disabled={isPending}
-                aria-label={t("metronome.timer.resume")}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-border disabled:opacity-60"
-              >
-                <Play size={16} strokeWidth={2} aria-hidden />
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={handleCancel}
-              disabled={isPending}
-              aria-label={t("metronome.timer.cancel")}
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-border text-muted disabled:opacity-60"
-            >
-              <Square size={14} strokeWidth={2} aria-hidden />
-            </button>
-          </div>
+            </div>
+          )}
         </div>
       )}
     </div>

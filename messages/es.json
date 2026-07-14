@@ -382,7 +382,9 @@
       "pause": "Pausar",
       "resume": "Reanudar",
       "cancel": "Cancelar",
-      "done": "¡Tiempo terminado!"
+      "done": "¡Tiempo terminado!",
+      "finish": "Terminar",
+      "repeat": "Repetir"
     }
   },
   "achievements": {
