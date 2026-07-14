@@ -77,19 +77,32 @@ export function TransactionForm({
         </div>
       </Field>
 
-      <Field label={t("finance.fieldAmount")}>
-        <input
-          name="amount"
-          type="number"
-          inputMode="decimal"
-          min={0.01}
-          step="0.01"
-          required
-          defaultValue={transaction?.amount ?? ""}
-          placeholder="0.00"
-          className="w-40 rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none focus:border-text"
-        />
-      </Field>
+      {/* Amount + date share a row: both are short fields, so stacking them
+          full-width one below the other wasted most of the row on mobile. */}
+      <div className="flex gap-3">
+        <Field label={t("finance.fieldAmount")} className="flex-1">
+          <input
+            name="amount"
+            type="number"
+            inputMode="decimal"
+            min={0.01}
+            step="0.01"
+            required
+            defaultValue={transaction?.amount ?? ""}
+            placeholder="0.00"
+            className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none focus:border-text"
+          />
+        </Field>
+        <Field label={t("finance.fieldDate")} className="flex-1">
+          <input
+            name="date"
+            type="date"
+            defaultValue={transaction?.date ?? today}
+            required
+            className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2 text-sm outline-none focus:border-text"
+          />
+        </Field>
+      </div>
 
       {type === "expense" && (
         <Field label={t("finance.fieldCategory")}>
@@ -117,16 +130,6 @@ export function TransactionForm({
         </Field>
       )}
 
-      <Field label={t("finance.fieldDate")}>
-        <input
-          name="date"
-          type="date"
-          defaultValue={transaction?.date ?? today}
-          required
-          className="w-fit rounded-lg border border-border bg-transparent px-3.5 py-2 text-sm outline-none focus:border-text"
-        />
-      </Field>
-
       <Field label={`${t("finance.fieldNote")} (${t("common.optional")})`}>
         <input
           name="note"
@@ -137,27 +140,41 @@ export function TransactionForm({
         />
       </Field>
 
-      <SaveButton label={t("common.save")} loadingLabel={t("common.loading")} />
+      <SaveBar label={t("common.save")} loadingLabel={t("common.loading")} />
     </form>
   );
 }
 
-function SaveButton({ label, loadingLabel }: { label: string; loadingLabel: string }) {
+/** Sticky within <main> (the app's only scroll container, see the dashboard
+ * layout): Save always sits at the bottom of the visible viewport instead of
+ * wherever the last field happens to end, so reaching it never needs an
+ * extra scroll no matter how long the form gets. */
+function SaveBar({ label, loadingLabel }: { label: string; loadingLabel: string }) {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="w-fit rounded-lg bg-text px-4 py-2 text-[12.5px] font-semibold text-surface disabled:opacity-60"
-    >
-      {pending ? loadingLabel : label}
-    </button>
+    <div className="sticky bottom-0 -mx-5 -mb-6 border-t border-border bg-bg/90 px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+18px)] backdrop-blur-xl md:-mx-10 md:-mb-9 md:px-10">
+      <button
+        type="submit"
+        disabled={pending}
+        className="w-full rounded-lg bg-text px-4 py-3 text-[13px] font-semibold text-surface disabled:opacity-60 md:w-fit"
+      >
+        {pending ? loadingLabel : label}
+      </button>
+    </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className={cn("flex flex-col gap-1.5")}>
+    <div className={cn("flex flex-col gap-1.5", className)}>
       <div className="text-[10px] tracking-wide text-muted uppercase">{label}</div>
       {children}
     </div>

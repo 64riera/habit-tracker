@@ -10,7 +10,8 @@ export default async function MovimientoDetallePage({ params }: { params: Promis
   const { id } = await params;
   const cutoffHour = await getDayCutoffHour();
   const today = getTodayDateString(cutoffHour);
-  const [transactions, categories] = await Promise.all([getTransactions(), getFinanceCategories()]);
+  const categories = await getFinanceCategories();
+  const transactions = await getTransactions(categories);
   const transaction = transactions.find((tx) => tx.id === id);
   if (!transaction) notFound();
 

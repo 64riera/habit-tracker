@@ -215,6 +215,7 @@
     "title": "Tareas",
     "subtitle": "Pendientes que se repiten solos",
     "newTask": "Nueva tarea",
+    "newTaskSubtitle": "Configura cuándo se repite",
     "fieldTitle": "Título",
     "fieldRecurrence": "Se repite",
     "recurrence": {
@@ -262,6 +263,7 @@
   },
   "finance": {
     "newTransaction": "Nuevo movimiento",
+    "newTransactionSubtitle": "Registra un ingreso o un gasto",
     "movements": "Movimientos",
     "fieldType": "Tipo",
     "fieldAmount": "Monto",

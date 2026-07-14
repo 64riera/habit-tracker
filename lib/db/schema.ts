@@ -192,7 +192,14 @@ export const financeCategories = sqliteTable(
     icon: text("icon").notNull(),
     sortOrder: integer("sort_order").notNull().default(0),
   },
-  (t) => [index("finance_categories_user_idx").on(t.userId)]
+  (t) => [
+    index("finance_categories_user_idx").on(t.userId),
+    // Categories are a fixed canonical set per account (see
+    // lib/finance/canonical-categories.ts + the backfill in
+    // getFinanceCategories()): this stops that backfill from ever
+    // double-inserting the same category again under a race.
+    uniqueIndex("finance_categories_user_name_idx").on(t.userId, t.nameEs),
+  ]
 );
 
 export const transactions = sqliteTable(

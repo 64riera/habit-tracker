@@ -54,14 +54,17 @@ export async function getFinanceCategories(): Promise<FinanceCategoryRow[]> {
  * lib/finance/aggregate.ts): that's what lets switching between day/week/
  * month/year/custom-range views work with zero network requests, which
  * matters here more than on other screens since Finance is meant to work offline.
+ *
+ * Takes `categories` instead of calling getFinanceCategories() itself: that
+ * function backfills missing canonical categories as a side effect, and
+ * callers already need the category list for their own rendering — fetching
+ * it twice in the same Promise.all raced the backfill insert and produced
+ * duplicate rows. Call getFinanceCategories() once per request and share it.
  */
-export async function getTransactions(): Promise<TransactionWithCategory[]> {
+export async function getTransactions(categories: FinanceCategoryRow[]): Promise<TransactionWithCategory[]> {
   const userId = await getCurrentUserId();
-  const [rows, cats] = await Promise.all([
-    db.select().from(transactions).where(eq(transactions.userId, userId)),
-    getFinanceCategories(),
-  ]);
-  const catById = new Map(cats.map((c) => [c.id, c]));
+  const rows = await db.select().from(transactions).where(eq(transactions.userId, userId));
+  const catById = new Map(categories.map((c) => [c.id, c]));
   return rows
     .map((r) => ({ ...r, category: r.categoryId ? (catById.get(r.categoryId) ?? null) : null }))
     .sort((a, b) => (a.date === b.date ? b.createdAt.localeCompare(a.createdAt) : b.date.localeCompare(a.date)));

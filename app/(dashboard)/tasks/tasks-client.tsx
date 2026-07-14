@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
@@ -51,13 +52,13 @@ export function TasksClient({ tasks, today }: { tasks: TaskWithStatus[]; today: 
     <div>
       <ContentHeader titleKey="screens.tareas.title" subtitleKey="screens.tareas.subtitle" />
       <div className="mb-3 flex justify-end">
-        <a
-          href="#crear-tarea"
+        <Link
+          href="/tasks/new"
           className="flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1.5 text-[11px] text-muted"
         >
           <Plus size={13} strokeWidth={2} aria-hidden />
           {t("tasks.newTask")}
-        </a>
+        </Link>
       </div>
       <SwipeableListProvider>
         <div className="flex flex-col gap-0.5">

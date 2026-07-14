@@ -215,6 +215,7 @@
     "title": "Tasks",
     "subtitle": "Recurring to-dos that reset on their own",
     "newTask": "New task",
+    "newTaskSubtitle": "Set up when it repeats",
     "fieldTitle": "Title",
     "fieldRecurrence": "Repeats",
     "recurrence": {
@@ -262,6 +263,7 @@
   },
   "finance": {
     "newTransaction": "New transaction",
+    "newTransactionSubtitle": "Log an income or an expense",
     "movements": "Transactions",
     "fieldType": "Type",
     "fieldAmount": "Amount",

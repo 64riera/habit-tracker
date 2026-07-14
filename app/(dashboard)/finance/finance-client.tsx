@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
@@ -130,13 +131,13 @@ export function FinanceClient({
 
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-[11px] font-semibold tracking-wide text-muted uppercase">{t("finance.movements")}</h2>
-        <a
-          href="#nuevo-movimiento"
+        <Link
+          href="/finance/new"
           className="flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1.5 text-[11px] text-muted"
         >
           <Plus size={13} strokeWidth={2} aria-hidden />
           {t("finance.newTransaction")}
-        </a>
+        </Link>
       </div>
 
       <SwipeableListProvider>

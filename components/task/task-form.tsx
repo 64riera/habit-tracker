@@ -128,7 +128,7 @@ export function TaskForm({ task }: { task?: TaskRow }) {
             max={31}
             value={dayOfMonth}
             onChange={(e) => setDayOfMonth(Number(e.target.value))}
-            className="w-24 rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none focus:border-text"
+            className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none focus:border-text md:w-24"
           />
         </Field>
       )}
@@ -168,7 +168,7 @@ export function TaskForm({ task }: { task?: TaskRow }) {
             max={365}
             value={intervalDays}
             onChange={(e) => setIntervalDays(Number(e.target.value))}
-            className="w-24 rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none focus:border-text"
+            className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none focus:border-text md:w-24"
           />
         </Field>
       )}
@@ -198,21 +198,27 @@ export function TaskForm({ task }: { task?: TaskRow }) {
         </Field>
       )}
 
-      <SaveButton label={t("common.save")} loadingLabel={t("common.loading")} />
+      <SaveBar label={t("common.save")} loadingLabel={t("common.loading")} />
     </form>
   );
 }
 
-function SaveButton({ label, loadingLabel }: { label: string; loadingLabel: string }) {
+/** Sticky within <main> (the app's only scroll container, see the dashboard
+ * layout): Save always sits at the bottom of the visible viewport instead of
+ * wherever the last field happens to end, so reaching it never needs an
+ * extra scroll no matter how long the form gets (e.g. custom weekdays). */
+function SaveBar({ label, loadingLabel }: { label: string; loadingLabel: string }) {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="w-fit rounded-lg bg-text px-4 py-2 text-[12.5px] font-semibold text-surface disabled:opacity-60"
-    >
-      {pending ? loadingLabel : label}
-    </button>
+    <div className="sticky bottom-0 -mx-5 -mb-6 border-t border-border bg-bg/90 px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+18px)] backdrop-blur-xl md:-mx-10 md:-mb-9 md:px-10">
+      <button
+        type="submit"
+        disabled={pending}
+        className="w-full rounded-lg bg-text px-4 py-3 text-[13px] font-semibold text-surface disabled:opacity-60 md:w-fit"
+      >
+        {pending ? loadingLabel : label}
+      </button>
+    </div>
   );
 }
 
