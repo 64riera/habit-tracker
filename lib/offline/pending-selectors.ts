@@ -13,7 +13,14 @@ import type { GymSessionRow } from "@/lib/queries/gym";
 import { buildFrequencyConfig } from "@/lib/habits/frequency";
 import { FREEZE_MONTHLY_ALLOWANCE } from "@/lib/habits/status";
 import { buildTaskRecurrenceConfig, currentPeriodKey } from "@/lib/tasks/recurrence";
-import { applyEndBreakEarly, applyPause, applyResume, resolveStartFocusValues, type FocusSessionRow } from "@/lib/focus/compute";
+import {
+  applyEndBreakEarly,
+  applyPause as applyFocusPause,
+  applyResume as applyFocusResume,
+  resolveStartFocusValues,
+  type FocusSessionRow,
+} from "@/lib/focus/compute";
+import { applyPause, applyResume, type TimerRow } from "@/lib/metronome/timer-compute";
 
 // --- Habits ---
 
@@ -346,9 +353,9 @@ function applyFocusMutation(
     case "startFocusSession":
       return buildGhostFocusSession(mutation.id, mutation.values, today);
     case "pauseFocusSession":
-      return session ? { ...session, ...applyPause(session, now) } : session;
+      return session ? { ...session, ...applyFocusPause(session, now) } : session;
     case "resumeFocusSession":
-      return session ? { ...session, ...applyResume(now) } : session;
+      return session ? { ...session, ...applyFocusResume(now) } : session;
     case "endBreakEarly":
       return session ? { ...session, ...applyEndBreakEarly(now) } : session;
     case "finishFocusSession":
@@ -415,9 +422,64 @@ export function applyPendingGymSessionEdit(session: GymSessionRow, values: GymSe
   return { ...session, ...gymSessionEditableFields(values) };
 }
 
+// --- Metronome timer ---
+
+/** Builds a "good enough" `TimerRow` to display a countdown started offline
+ * that hasn't synced yet. `at` is the real moment the "start" mutation was
+ * queued, not render time — see `applyMetronomeTimerMutation` below for why
+ * that distinction matters. */
+export function buildGhostTimer(durationSeconds: number, at: Date = new Date()): TimerRow {
+  const atIso = at.toISOString();
+  return { status: "running", durationSeconds, startedAt: atIso, lastResumedAt: atIso, accumulatedActiveSeconds: 0 };
+}
+
+const METRONOME_TIMER_MUTATION_TYPES: ReadonlySet<QueuedRecord["type"]> = new Set([
+  "startMetronomeTimer",
+  "pauseMetronomeTimer",
+  "resumeMetronomeTimer",
+  "cancelMetronomeTimer",
+]);
+
+/**
+ * Folds every queued timer mutation, in order, into a single "ghost"
+ * preview — reusing the exact pure transitions the server applies
+ * (lib/metronome/timer-compute.ts), so the offline preview and the eventual
+ * synced result agree. Each step is anchored to *that mutation's own*
+ * `createdAt` (set once, at `enqueueMutation` time — see lib/offline/db.ts),
+ * not to the current wall-clock time: this fold re-runs on every render
+ * once per queued mutation (see `pendingMetronomeTimer`'s `useMemo` caller),
+ * and a shared "now" would silently push `startedAt`/`lastResumedAt`
+ * forward on every re-fold — e.g. a "start" 10s ago would be folded again
+ * when a later "pause" is queued and be reconstructed as if it had just
+ * started, losing the 10 elapsed seconds. Per-mutation timestamps make the
+ * fold idempotent regardless of how many times or when it re-runs.
+ */
+function applyMetronomeTimerMutation(timer: TimerRow | null, mutation: QueuedRecord): TimerRow | null {
+  const at = new Date(mutation.createdAt);
+  switch (mutation.type) {
+    case "startMetronomeTimer":
+      return buildGhostTimer(mutation.durationSeconds, at);
+    case "pauseMetronomeTimer":
+      return timer ? { ...timer, ...applyPause(timer, at) } : timer;
+    case "resumeMetronomeTimer":
+      return timer ? { ...timer, ...applyResume(at) } : timer;
+    case "cancelMetronomeTimer":
+      return null;
+    default:
+      return timer;
+  }
+}
+
+export function pendingMetronomeTimer(queue: QueuedRecord[]): TimerRow | null | undefined {
+  const timerMutations = queue.filter((m) => METRONOME_TIMER_MUTATION_TYPES.has(m.type));
+  if (timerMutations.length === 0) return undefined;
+
+  return timerMutations.reduce<TimerRow | null>(applyMetronomeTimerMutation, null);
+}
+
 // --- Sync panel (Settings) ---
 
-export type PendingDomain = "habits" | "routines" | "tasks" | "finance" | "categories" | "focus" | "gym";
+export type PendingDomain = "habits" | "routines" | "tasks" | "finance" | "categories" | "focus" | "gym" | "metronome";
 
 /** One entry per QueuedMutation variant (lib/offline/db.ts) — a `Record` over
  * the full union, same exhaustiveness trick as replay-registry.ts's
@@ -453,6 +515,10 @@ const DOMAIN_BY_MUTATION_TYPE: Record<QueuedRecord["type"], PendingDomain> = {
   createGymSession: "gym",
   updateGymSession: "gym",
   deleteGymSession: "gym",
+  startMetronomeTimer: "metronome",
+  pauseMetronomeTimer: "metronome",
+  resumeMetronomeTimer: "metronome",
+  cancelMetronomeTimer: "metronome",
 };
 
 export function pendingMutationsByDomain(queue: QueuedRecord[]): Record<PendingDomain, number> {
@@ -464,6 +530,7 @@ export function pendingMutationsByDomain(queue: QueuedRecord[]): Record<PendingD
     categories: 0,
     focus: 0,
     gym: 0,
+    metronome: 0,
   };
   for (const mutation of queue) counts[DOMAIN_BY_MUTATION_TYPE[mutation.type]]++;
   return counts;

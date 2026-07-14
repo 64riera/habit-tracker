@@ -37,7 +37,11 @@ export type QueuedMutation =
   | { type: "cancelFocusSession" }
   | { type: "createGymSession"; id: string; values: GymSessionFormValues }
   | { type: "updateGymSession"; sessionId: string; values: GymSessionFormValues }
-  | { type: "deleteGymSession"; sessionId: string };
+  | { type: "deleteGymSession"; sessionId: string }
+  | { type: "startMetronomeTimer"; durationSeconds: number }
+  | { type: "pauseMetronomeTimer" }
+  | { type: "resumeMetronomeTimer" }
+  | { type: "cancelMetronomeTimer" };
 
 export type QueuedRecord = QueuedMutation & { id: number; createdAt: number };
 

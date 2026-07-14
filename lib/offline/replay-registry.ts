@@ -27,6 +27,7 @@ import {
   cancelFocusSession,
 } from "@/lib/actions/focus";
 import { createGymSessionCore, updateGymSessionCore, deleteGymSessionCore } from "@/lib/actions/gym";
+import { startTimer, pauseTimer, resumeTimer, cancelTimer } from "@/lib/actions/metronome";
 import type { AchievementType } from "@/lib/achievements";
 
 export type ReplayResult = { unlocked?: AchievementType[]; freezeQuotaExhausted?: boolean } | void;
@@ -102,6 +103,19 @@ const registry: Registry = {
     await updateGymSessionCore(m.sessionId, m.values);
   },
   deleteGymSession: (m) => deleteGymSessionCore(m.sessionId),
+  // No ack needed on success: the timer's own ghost preview (built the
+  // instant this was queued, see lib/offline/pending-selectors.ts) is
+  // already showing the right thing — this replay just makes it real.
+  startMetronomeTimer: async (m) => {
+    await startTimer(m.durationSeconds);
+  },
+  pauseMetronomeTimer: async () => {
+    await pauseTimer();
+  },
+  resumeMetronomeTimer: async () => {
+    await resumeTimer();
+  },
+  cancelMetronomeTimer: () => cancelTimer(),
 };
 
 export async function replay(mutation: QueuedMutation): Promise<ReplayResult> {

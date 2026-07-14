@@ -5,11 +5,8 @@ import { db } from "@/lib/db/client";
 import { metronomeTimers } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { getActiveTimer } from "@/lib/queries/metronome";
-import { elapsedSeconds } from "@/lib/metronome/timer-compute";
+import { applyPause, applyResume, isValidDuration } from "@/lib/metronome/timer-compute";
 import type { TimerRow } from "@/lib/metronome/timer-compute";
-
-const MIN_DURATION_SECONDS = 5;
-const MAX_DURATION_SECONDS = 6 * 60 * 60; // 6h — generous ceiling, not a real use case past this
 
 /**
  * Read-only RPC for the client's ticking hook (see
@@ -26,8 +23,8 @@ export async function getActiveTimerAction(): Promise<TimerRow | null> {
  * there's only ever one active timer per account (see the table's
  * comment), a new start always wins. */
 export async function startTimer(durationSeconds: number): Promise<TimerRow | null> {
+  if (!isValidDuration(durationSeconds)) return null;
   const duration = Math.round(durationSeconds);
-  if (!Number.isFinite(duration) || duration < MIN_DURATION_SECONDS || duration > MAX_DURATION_SECONDS) return null;
 
   const userId = await getCurrentUserId();
   const nowIso = new Date().toISOString();
@@ -57,7 +54,7 @@ export async function pauseTimer(): Promise<TimerRow | null> {
   const now = new Date();
   await db
     .update(metronomeTimers)
-    .set({ status: "paused", accumulatedActiveSeconds: Math.round(elapsedSeconds(timer, now)) })
+    .set(applyPause(timer, now))
     .where(eq(metronomeTimers.userId, userId));
 
   return getActiveTimer();
@@ -65,10 +62,10 @@ export async function pauseTimer(): Promise<TimerRow | null> {
 
 export async function resumeTimer(): Promise<TimerRow | null> {
   const userId = await getCurrentUserId();
-  const nowIso = new Date().toISOString();
+  const now = new Date();
   await db
     .update(metronomeTimers)
-    .set({ status: "running", lastResumedAt: nowIso })
+    .set(applyResume(now))
     .where(and(eq(metronomeTimers.userId, userId), eq(metronomeTimers.status, "paused")));
 
   return getActiveTimer();

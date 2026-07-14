@@ -62,9 +62,15 @@ export function MetronomePanel({ initialBpm }: { initialBpm: number }) {
     const clamped = Math.round(Math.min(MAX_BPM, Math.max(MIN_BPM, next)));
     setBpm(clamped);
     // Debounced, not on every step: dragging the slider or tapping ±
-    // repeatedly would otherwise fire a write per tick.
+    // repeatedly would otherwise fire a write per tick. Best-effort: the
+    // metronome itself never depends on this succeeding (it's pure Web
+    // Audio, no network involved), so a failed write while offline is
+    // swallowed rather than surfacing as a console error — the next
+    // successful change picks up the persistence again.
     if (persistTimeoutRef.current) clearTimeout(persistTimeoutRef.current);
-    persistTimeoutRef.current = setTimeout(() => setMetronomeBpm(clamped), PERSIST_DEBOUNCE_MS);
+    persistTimeoutRef.current = setTimeout(() => {
+      setMetronomeBpm(clamped).catch(() => {});
+    }, PERSIST_DEBOUNCE_MS);
   }
 
   // The ticking loop itself — silent while `isAdjusting` (see above), and

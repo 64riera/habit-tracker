@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getActiveTimerAction } from "@/lib/actions/metronome";
 import { remainingSeconds, isFinished, type TimerRow } from "@/lib/metronome/timer-compute";
 import { REALTIME_SYNC_EVENT } from "@/lib/realtime/client";
 
@@ -14,34 +13,49 @@ import { REALTIME_SYNC_EVENT } from "@/lib/realtime/client";
  * Resyncing on mount/focus/reconnect is what makes the timer correct after
  * the app was fully closed: there's no local state to lose in the first
  * place, just a fresh read of what the server already knows.
+ *
+ * `resync` is injected rather than hardcoded so the caller can short-circuit
+ * it while offline or while a locally-queued "ghost" timer (see
+ * lib/offline/pending-selectors.ts) hasn't synced yet — same reasoning as
+ * lib/focus/use-live-focus-state.ts.
  */
-export function useLiveTimer(initialTimer: TimerRow | null) {
+export function useLiveTimer(initialTimer: TimerRow | null, resync: () => Promise<TimerRow | null>) {
   const [timer, setTimer] = useState(initialTimer);
   const [now, setNow] = useState(() => new Date());
 
-  const resync = useCallback(async () => {
-    const fresh = await getActiveTimerAction();
+  // "Adjusting state during render" (see metronome-panel.tsx for the same
+  // pattern) — adopts a new `initialTimer` prop the instant it changes
+  // (e.g. the parent recomputed the offline ghost after a queued action),
+  // instead of waiting an extra frame for an effect to notice.
+  const [prevInitialTimer, setPrevInitialTimer] = useState(initialTimer);
+  if (initialTimer !== prevInitialTimer) {
+    setPrevInitialTimer(initialTimer);
+    setTimer(initialTimer);
+  }
+
+  const runResync = useCallback(async () => {
+    const fresh = await resync();
     setTimer(fresh);
     setNow(new Date());
-  }, []);
+  }, [resync]);
 
   useEffect(() => {
     function onVisibilityChange() {
-      if (document.visibilityState === "visible") resync();
+      if (document.visibilityState === "visible") runResync();
     }
-    window.addEventListener("focus", resync);
-    window.addEventListener("online", resync);
+    window.addEventListener("focus", runResync);
+    window.addEventListener("online", runResync);
     // Another device started/paused/cancelled the timer (see
     // lib/realtime/client.tsx) — same resync, one more trigger source.
-    window.addEventListener(REALTIME_SYNC_EVENT, resync);
+    window.addEventListener(REALTIME_SYNC_EVENT, runResync);
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
-      window.removeEventListener("focus", resync);
-      window.removeEventListener("online", resync);
-      window.removeEventListener(REALTIME_SYNC_EVENT, resync);
+      window.removeEventListener("focus", runResync);
+      window.removeEventListener("online", runResync);
+      window.removeEventListener(REALTIME_SYNC_EVENT, runResync);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [resync]);
+  }, [runResync]);
 
   useEffect(() => {
     if (timer?.status !== "running") return;

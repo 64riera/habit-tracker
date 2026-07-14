@@ -13,6 +13,7 @@ const DOMAIN_LABEL_KEY: Record<PendingDomain, string> = {
   categories: "offline.domainCategories",
   focus: "offline.domainFocus",
   gym: "offline.domainGym",
+  metronome: "offline.domainMetronome",
 };
 
 /** Sync status + manual "sync now", scoped to Settings — the global floating

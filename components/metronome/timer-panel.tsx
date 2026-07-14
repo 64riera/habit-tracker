@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
+import { unstable_rethrow } from "next/navigation";
 import { Play, Pause, Square, BellRing, RotateCcw, Check } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { formatClock } from "@/lib/focus/format";
-import { startTimer, pauseTimer, resumeTimer, cancelTimer } from "@/lib/actions/metronome";
+import { startTimer, pauseTimer, resumeTimer, cancelTimer, getActiveTimerAction } from "@/lib/actions/metronome";
+import { useOffline } from "@/lib/offline/client";
+import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
 import { useLiveTimer } from "./use-live-timer";
-import type { TimerRow } from "@/lib/metronome/timer-compute";
+import { isValidDuration, type TimerRow } from "@/lib/metronome/timer-compute";
 
 const PRESET_MINUTES = [1, 3, 5, 10, 15];
 // Repeats like an alarm, not a one-off beep, until the user actually
@@ -28,9 +31,28 @@ function playDoneSound() {
   osc.stop(ctx.currentTime + 0.6);
 }
 
-export function TimerPanel({ initialTimer }: { initialTimer: TimerRow | null }) {
+export function TimerPanel({
+  timer: initialTimer,
+  pendingSync = false,
+}: {
+  timer: TimerRow | null;
+  /** True while this timer only exists as a locally-queued "ghost" (not yet
+   * synced) — the server doesn't know about it yet, so resync must not
+   * overwrite the local preview until the queue drains. Same convention as
+   * FocusTimerDisplay's `pendingSync` prop. */
+  pendingSync?: boolean;
+}) {
   const { t } = useI18n();
-  const { timer, remaining, finished, setTimer } = useLiveTimer(initialTimer);
+  const { isOnline, runOrQueue } = useOffline();
+  // Offline (or genuinely disconnected mid-session), there's nothing to
+  // fetch: trust whatever the caller already resolved (real state, or the
+  // offline queue's ghost preview) instead of throwing on every
+  // focus/visibility tick.
+  const resync = useCallback(async () => {
+    if (pendingSync || !isOnline) return initialTimer;
+    return getActiveTimerAction();
+  }, [pendingSync, isOnline, initialTimer]);
+  const { timer, remaining, finished, setTimer } = useLiveTimer(initialTimer, resync);
   const [minutes, setMinutes] = useState(5);
   const [seconds, setSeconds] = useState(0);
   const [isPending, startTransition] = useTransition();
@@ -50,31 +72,61 @@ export function TimerPanel({ initialTimer }: { initialTimer: TimerRow | null }) 
 
   function handleStart() {
     const totalSeconds = minutes * 60 + seconds;
-    if (totalSeconds <= 0) return;
+    if (!isValidDuration(totalSeconds)) return;
     startTransition(async () => {
-      const fresh = await startTimer(totalSeconds);
-      setTimer(fresh);
+      if (isOnline) {
+        try {
+          setTimer(await startTimer(totalSeconds));
+          return;
+        } catch (err) {
+          unstable_rethrow(err);
+          // Falls through: a genuine transport failure, queue it instead.
+        }
+      }
+      await runOrQueue({ type: "startMetronomeTimer", durationSeconds: totalSeconds });
     });
   }
 
   function handlePause() {
     startTransition(async () => {
-      const fresh = await pauseTimer();
-      setTimer(fresh);
+      if (isOnline) {
+        try {
+          setTimer(await pauseTimer());
+          return;
+        } catch (err) {
+          unstable_rethrow(err);
+        }
+      }
+      await runOrQueue({ type: "pauseMetronomeTimer" });
     });
   }
 
   function handleResume() {
     startTransition(async () => {
-      const fresh = await resumeTimer();
-      setTimer(fresh);
+      if (isOnline) {
+        try {
+          setTimer(await resumeTimer());
+          return;
+        } catch (err) {
+          unstable_rethrow(err);
+        }
+      }
+      await runOrQueue({ type: "resumeMetronomeTimer" });
     });
   }
 
   function handleCancel() {
     startTransition(async () => {
-      await cancelTimer();
-      setTimer(null);
+      if (isOnline) {
+        try {
+          await cancelTimer();
+          setTimer(null);
+          return;
+        } catch (err) {
+          unstable_rethrow(err);
+        }
+      }
+      await runOrQueue({ type: "cancelMetronomeTimer" });
     });
   }
 
@@ -84,14 +136,24 @@ export function TimerPanel({ initialTimer }: { initialTimer: TimerRow | null }) 
     if (!timer) return;
     const duration = timer.durationSeconds;
     startTransition(async () => {
-      const fresh = await startTimer(duration);
-      setTimer(fresh);
+      if (isOnline) {
+        try {
+          setTimer(await startTimer(duration));
+          return;
+        } catch (err) {
+          unstable_rethrow(err);
+        }
+      }
+      await runOrQueue({ type: "startMetronomeTimer", durationSeconds: duration });
     });
   }
 
   return (
     <div className="rounded-xl border border-border p-4">
-      <div className="text-[13px] font-semibold">{t("metronome.timer.title")}</div>
+      <div className="flex items-center gap-1.5 text-[13px] font-semibold">
+        {t("metronome.timer.title")}
+        {pendingSync && <PendingSyncBadge />}
+      </div>
 
       {!timer ? (
         <div className="mt-3.5 flex flex-col gap-3">
@@ -136,7 +198,7 @@ export function TimerPanel({ initialTimer }: { initialTimer: TimerRow | null }) 
           <button
             type="button"
             onClick={handleStart}
-            disabled={isPending || minutes * 60 + seconds <= 0}
+            disabled={isPending || !isValidDuration(minutes * 60 + seconds)}
             className="mx-auto flex items-center gap-1.5 rounded-lg bg-text px-5 py-2.5 text-[13px] font-semibold text-surface disabled:opacity-60"
           >
             <Play size={14} strokeWidth={2} aria-hidden />

@@ -440,6 +440,7 @@
     "domainCategories": "Categories",
     "domainFocus": "Focus",
     "domainGym": "Gym",
+    "domainMetronome": "Metronome",
     "fallbackTitle": "You're offline",
     "fallbackBody": "This section hasn't been saved on this device yet, so there's nothing to show offline. Try again once you have signal, or open a section you've already visited.",
     "fallbackCta": "Go to Today"
