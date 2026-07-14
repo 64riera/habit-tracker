@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale";
 import { isLocale } from "@/lib/i18n/dictionaries";
+import { DAY_CUTOFF_COOKIE } from "@/lib/settings/day-cutoff-shared";
 import { db } from "@/lib/db/client";
 import { users } from "@/lib/db/schema";
 import { getCurrentUserId, getCurrentUserIdOrNull } from "@/lib/auth/session";
@@ -27,7 +28,7 @@ export async function setLocale(locale: string) {
 
 export async function setDayCutoffHour(hour: number) {
   const store = await cookies();
-  store.set("justgo_day_cutoff", String(hour), { path: "/", maxAge: YEAR_SECONDS });
+  store.set(DAY_CUTOFF_COOKIE, String(hour), { path: "/", maxAge: YEAR_SECONDS });
 }
 
 /** Saves the theme preference on the account, so it follows the user across devices. */

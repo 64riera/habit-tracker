@@ -8,6 +8,9 @@ import type { QueuedMutation, QueuedRecord } from "@/lib/offline/db";
 import { replay } from "@/lib/offline/replay-registry";
 import { useAchievementToast, useToast } from "@/lib/toast/client";
 import { useI18n } from "@/lib/i18n/client";
+import { refreshVisitedSections } from "@/lib/swr/refresh-visited-sections";
+import { getTodayDateString } from "@/lib/date";
+import { DAY_CUTOFF_COOKIE, DEFAULT_DAY_CUTOFF_HOUR } from "@/lib/settings/day-cutoff-shared";
 
 type SyncState = "offline" | "syncing" | "synced" | "idle";
 
@@ -37,6 +40,16 @@ function readLastSyncedAt(): number | null {
   if (typeof window === "undefined") return null;
   const raw = window.localStorage.getItem(LAST_SYNCED_AT_KEY);
   return raw ? Number(raw) : null;
+}
+
+/** Mirrors `getDayCutoffHour` (lib/settings/day-cutoff.ts), which can't be
+ * imported here directly — it's `server-only`. The cookie itself is plain
+ * (not httpOnly), so reading it from `document.cookie` is safe. */
+function readTodayClientSide(): string {
+  const match = document.cookie.match(new RegExp(`(?:^|; )${DAY_CUTOFF_COOKIE}=([^;]*)`));
+  const parsed = match ? Number(decodeURIComponent(match[1])) : NaN;
+  const cutoffHour = Number.isFinite(parsed) && parsed >= 0 && parsed <= 23 ? parsed : DEFAULT_DAY_CUTOFF_HOUR;
+  return getTodayDateString(cutoffHour);
 }
 
 function subscribeToConnectivity(callback: () => void) {
@@ -83,7 +96,7 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
   const { t } = useI18n();
   const { push } = useToast();
   const notifyAchievements = useAchievementToast();
-  const { mutate: globalMutate } = useSWRConfig();
+  const { cache, mutate: globalMutate } = useSWRConfig();
   const draining = useRef(false);
 
   useEffect(() => {
@@ -121,19 +134,26 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
         // derived from a cookie no SWR key covers (e.g. `today`).
         globalMutate(() => true);
         router.refresh();
-        const syncedAt = Date.now();
-        setLastSyncedAt(syncedAt);
-        window.localStorage.setItem(LAST_SYNCED_AT_KEY, String(syncedAt));
-        setJustSynced(true);
-        setTimeout(() => setJustSynced(false), SYNCED_BANNER_MS);
       }
+      // Refreshes every *visited* section, not just the ones mounted right
+      // now (globalMutate above only reaches those) — otherwise a section
+      // left in the background would keep showing stale data until the
+      // user happens to revisit it. Runs on every successful drain, even
+      // with nothing queued, so simply regaining connectivity is enough to
+      // catch up on any writes made from another device meanwhile.
+      await refreshVisitedSections(cache, globalMutate, readTodayClientSide());
+      const syncedAt = Date.now();
+      setLastSyncedAt(syncedAt);
+      window.localStorage.setItem(LAST_SYNCED_AT_KEY, String(syncedAt));
+      setJustSynced(true);
+      setTimeout(() => setJustSynced(false), SYNCED_BANNER_MS);
     } catch {
       // Still genuinely offline: will retry on the next "online" event.
     } finally {
       draining.current = false;
       setIsDraining(false);
     }
-  }, [globalMutate, notifyAchievements, push, refreshQueue, router, t]);
+  }, [cache, globalMutate, notifyAchievements, push, refreshQueue, router, t]);
 
   useEffect(() => {
     // Reads the queue state (IndexedDB) on mount; it's not derivable state during render.

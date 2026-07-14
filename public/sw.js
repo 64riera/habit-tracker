@@ -1,4 +1,4 @@
-const CACHE_VERSION = "just-go-v1";
+const CACHE_VERSION = "just-go-v2";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const PAGES_CACHE = `${CACHE_VERSION}-pages`;
 const FLIGHT_CACHE = `${CACHE_VERSION}-flight`;
@@ -10,9 +10,24 @@ const PRECACHE_URLS = [
   "/icons/icon-maskable.png",
 ];
 
+// Unlike every other page (only cached once actually visited), `/offline`
+// is precached unconditionally: it's the navigation fallback for routes
+// that were never visited, so it must exist in PAGES_CACHE before any of
+// those failures can happen.
+function precacheOfflineFallback() {
+  return caches.open(PAGES_CACHE).then((cache) =>
+    fetch("/offline", { headers: { accept: "text/html" } })
+      .then((response) => {
+        if (response.ok) return cache.put("/offline", response);
+      })
+      .catch(() => {})
+  );
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => cache.addAll(PRECACHE_URLS)).then(() => self.skipWaiting())
+    Promise.all([caches.open(STATIC_CACHE).then((cache) => cache.addAll(PRECACHE_URLS)), precacheOfflineFallback()])
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -137,9 +152,12 @@ self.addEventListener("fetch", (event) => {
             return response;
           })
           .catch(() =>
+            // Falls back to the honest "you're offline" page rather than
+            // silently swapping in "/" — showing Today's content under a
+            // different URL would look like real data for that section.
             cache
               .match(request, { ignoreSearch: true })
-              .then((cached) => cached || cache.match("/"))
+              .then((cached) => cached || cache.match("/offline"))
           )
       )
     );
