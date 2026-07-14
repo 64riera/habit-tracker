@@ -55,6 +55,15 @@ export async function getTimezonePreference(): Promise<string | null> {
   return user?.timezone ?? null;
 }
 
+/** Last BPM used in the metronome (see app/(dashboard)/metronome). 120 —
+ * a common default tempo — if there's no session. */
+export async function getMetronomeBpm(): Promise<number> {
+  const userId = await getCurrentUserIdOrNull();
+  if (!userId) return 120;
+  const [user] = await db.select({ metronomeBpm: users.metronomeBpm }).from(users).where(eq(users.id, userId)).limit(1);
+  return user?.metronomeBpm ?? 120;
+}
+
 /** Whether the install-suggestion modal after their first habit has
  * already been shown (and decided on) — see install-suggestion-modal.tsx.
  * `true` if there's no session, so it's never offered on public pages. */

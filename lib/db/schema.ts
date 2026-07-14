@@ -15,6 +15,7 @@ export const users = sqliteTable(
     localePreference: text("locale_preference", { enum: ["es", "en"] }).notNull().default("es"),
     currencyPreference: text("currency_preference", { enum: ["MXN", "USD"] }).notNull().default("MXN"),
     timezone: text("timezone"), // IANA, e.g. "America/Monterrey" — detected in the browser, see timezone-sync.tsx
+    metronomeBpm: integer("metronome_bpm").notNull().default(120), // last BPM used, see app/(dashboard)/metronome
     installPromptSeen: integer("install_prompt_seen", { mode: "boolean" }).notNull().default(false),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
@@ -313,6 +314,23 @@ export const focusSettings = sqliteTable("focus_settings", {
   breakIntervalMinutes: integer("break_interval_minutes").notNull().default(25),
   breakDurationMinutes: integer("break_duration_minutes").notNull().default(5),
   soundEnabled: integer("sound_enabled", { mode: "boolean" }).notNull().default(true),
+});
+
+// Single row per account (like focusSettings) — a quick countdown utility
+// under the Metronome section (see app/(dashboard)/metronome), not a
+// logged history like focusSessions. Server-authoritative on purpose: the
+// remaining time is always derived from `startedAt`/`lastResumedAt` (real
+// timestamps) rather than trusted from a client-side counter, so closing
+// the app (or the tab losing its interval entirely) doesn't lose or reset
+// it — reopening just recomputes the correct remaining time from these
+// columns. See lib/metronome/timer-compute.ts.
+export const metronomeTimers = sqliteTable("metronome_timers", {
+  userId: text("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
+  status: text("status", { enum: ["running", "paused"] }).notNull(),
+  durationSeconds: integer("duration_seconds").notNull(),
+  startedAt: text("started_at").notNull(),
+  lastResumedAt: text("last_resumed_at").notNull(),
+  accumulatedActiveSeconds: integer("accumulated_active_seconds").notNull().default(0),
 });
 
 export const focusRewardTiers = sqliteTable(

@@ -1,4 +1,4 @@
-import { Dumbbell, Settings, ListChecks, History } from "lucide-react";
+import { Dumbbell, Settings, ListChecks, History, Metronome } from "lucide-react";
 
 /** Utilities grouped under the "Más" hub (see components/nav/nav-items.ts) —
  * add new ones here as they show up; the grid in app/(dashboard)/more
@@ -13,5 +13,6 @@ export const MORE_ITEMS = [
   { key: "habitos", href: "/habits", dictKey: "more.manageHabits", icon: ListChecks },
   { key: "historial", href: "/history", dictKey: "more.historyStats", icon: History },
   { key: "gym", href: "/gym", dictKey: "nav.gym", icon: Dumbbell },
+  { key: "metronomo", href: "/metronome", dictKey: "nav.metronome", icon: Metronome },
   { key: "ajustes", href: "/settings", dictKey: "nav.ajustes", icon: Settings },
 ] as const;

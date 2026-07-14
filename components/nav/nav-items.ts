@@ -10,13 +10,15 @@ export const NAV_ITEMS = [
     href: "/more",
     dictKey: "nav.more",
     icon: LayoutGrid,
-    // Habits, History/Stats, Gym and Settings live under this one entry
-    // (see components/nav/more-items.ts) instead of each taking their own
-    // nav slot — this is the hub that groups the rest of the sections so
-    // the bottom nav doesn't keep growing every time a new one is added.
+    // Habits, History/Stats, Gym, Metronome and Settings live under this
+    // one entry (see components/nav/more-items.ts) instead of each taking
+    // their own nav slot — this is the hub that groups the rest of the
+    // sections so the bottom nav doesn't keep growing every time a new one
+    // is added.
     activeWhen: (p: string) =>
       p.startsWith("/more") ||
       p.startsWith("/gym") ||
+      p.startsWith("/metronome") ||
       p.startsWith("/settings") ||
       p.startsWith("/habits") ||
       p.startsWith("/history") ||

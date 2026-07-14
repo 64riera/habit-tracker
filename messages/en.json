@@ -12,7 +12,8 @@
     "tareas": "Tasks",
     "finance": "Finance",
     "ajustes": "Settings",
-    "more": "More"
+    "more": "More",
+    "metronome": "Metronome"
   },
   "screens": {
     "hoy": { "title": "Home", "subtitle": "Frictionless daily check-in" },
@@ -25,7 +26,8 @@
     "gym": { "title": "Gym", "subtitle": "Your workouts, exercise by exercise" },
     "tareas": { "title": "Tasks", "subtitle": "Recurring to-dos that reset on their own" },
     "finance": { "title": "Finance", "subtitle": "Income and expenses, day by day" },
-    "more": { "title": "More", "subtitle": "Extra tools and settings" }
+    "more": { "title": "More", "subtitle": "Extra tools and settings" },
+    "metronome": { "title": "Metronome", "subtitle": "Keep the beat and time your sessions" }
   },
   "common": {
     "save": "Save changes",
@@ -357,6 +359,24 @@
   "more": {
     "manageHabits": "Manage habits",
     "historyStats": "History & stats"
+  },
+  "metronome": {
+    "bpm": "BPM",
+    "decrease": "Decrease BPM",
+    "increase": "Increase BPM",
+    "play": "Play",
+    "pause": "Pause",
+    "timer": {
+      "title": "Timer",
+      "minutes": "Minutes",
+      "seconds": "Seconds",
+      "minutesShort": "{n} min",
+      "start": "Start",
+      "pause": "Pause",
+      "resume": "Resume",
+      "cancel": "Cancel",
+      "done": "Time's up!"
+    }
   },
   "achievements": {
     "title": "Achievements",

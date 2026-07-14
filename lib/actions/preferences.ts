@@ -48,6 +48,14 @@ export async function setCurrencyPreference(currency: string) {
   await db.update(users).set({ currencyPreference: currency }).where(eq(users.id, userId));
 }
 
+/** Saves the last BPM used in the metronome (see app/(dashboard)/metronome),
+ * so it resumes at the same tempo next time instead of a fixed default. */
+export async function setMetronomeBpm(bpm: number) {
+  if (!Number.isFinite(bpm) || bpm < 30 || bpm > 300) return;
+  const userId = await getCurrentUserId();
+  await db.update(users).set({ metronomeBpm: Math.round(bpm) }).where(eq(users.id, userId));
+}
+
 /** Saves the IANA timezone detected in the browser (see
  * `timezone-sync.tsx`) — both on the account (needed to know which UTC time
  * a reminder's local time corresponds to, see

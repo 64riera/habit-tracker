@@ -12,7 +12,8 @@
     "tareas": "Tareas",
     "finance": "Finanzas",
     "ajustes": "Ajustes",
-    "more": "Más"
+    "more": "Más",
+    "metronome": "Metrónomo"
   },
   "screens": {
     "hoy": { "title": "Inicio", "subtitle": "Registro diario sin fricción" },
@@ -25,7 +26,8 @@
     "gym": { "title": "Gym", "subtitle": "Tus entrenamientos, ejercicio por ejercicio" },
     "tareas": { "title": "Tareas", "subtitle": "Pendientes que se repiten solos" },
     "finance": { "title": "Finanzas", "subtitle": "Ingresos y gastos, día a día" },
-    "more": { "title": "Más", "subtitle": "Herramientas y ajustes adicionales" }
+    "more": { "title": "Más", "subtitle": "Herramientas y ajustes adicionales" },
+    "metronome": { "title": "Metrónomo", "subtitle": "Mantén el tiempo y cronometra tus sesiones" }
   },
   "common": {
     "save": "Guardar cambios",
@@ -357,6 +359,24 @@
   "more": {
     "manageHabits": "Administrar hábitos",
     "historyStats": "Historial y estadísticas"
+  },
+  "metronome": {
+    "bpm": "BPM",
+    "decrease": "Reducir BPM",
+    "increase": "Aumentar BPM",
+    "play": "Reproducir",
+    "pause": "Pausar",
+    "timer": {
+      "title": "Temporizador",
+      "minutes": "Minutos",
+      "seconds": "Segundos",
+      "minutesShort": "{n} min",
+      "start": "Iniciar",
+      "pause": "Pausar",
+      "resume": "Reanudar",
+      "cancel": "Cancelar",
+      "done": "¡Tiempo terminado!"
+    }
   },
   "achievements": {
     "title": "Logros",
