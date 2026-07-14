@@ -21,6 +21,7 @@ export const swrKeys = {
   financeCategories: () => ["finance:categories"] as const,
 
   gymSessions: () => ["gym:sessions"] as const,
+  gymExercises: () => ["gym:exercises"] as const,
 
   history: (today: string, habitId: string, categoryId: string, rangeDays: number) =>
     ["history", today, habitId, categoryId, rangeDays] as const,

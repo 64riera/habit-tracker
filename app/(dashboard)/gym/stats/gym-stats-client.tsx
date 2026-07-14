@@ -8,10 +8,12 @@ import { MetricSummaryCard } from "@/components/stats/metric-summary-card";
 import { StatMini } from "@/components/stats/stat-mini";
 import { PersonalRecordsList } from "@/components/gym/personal-records-list";
 import { useI18n } from "@/lib/i18n/client";
+import { categoryDisplayName } from "@/lib/habits/describe";
 import { formatVolume } from "@/lib/gym/format";
 import { swrKeys } from "@/lib/swr/keys";
 import { usePageData } from "@/lib/swr/use-page-data";
 import { fetchGymSessionsAction } from "@/lib/actions/gym-read";
+import { fetchGymExercisesAction } from "@/lib/actions/gym-exercises-read";
 import {
   overallSessionCounts,
   getGymWeekSummary,
@@ -23,6 +25,7 @@ import {
   type GymPeriodComparison,
 } from "@/lib/gym/stats";
 import type { GymSessionRow } from "@/lib/queries/gym";
+import type { GymExerciseCatalogRow } from "@/lib/queries/gym-exercises";
 
 /** Bars tinted with Gym's own identity color (already used for its nav icon
  * and list rows) instead of Focus's neutral monochrome — ties this stats
@@ -32,13 +35,18 @@ const BAR_COLOR = "color-mix(in srgb, var(--color-cat-fitness) 65%, transparent)
 
 export function GymEstadisticasClient({
   sessions: initialSessions,
+  exercises: initialExercises,
   today,
 }: {
   sessions: GymSessionRow[];
+  exercises: GymExerciseCatalogRow[];
   today: string;
 }) {
   const { t, locale } = useI18n();
   const { data: sessions } = usePageData(swrKeys.gymSessions(), fetchGymSessionsAction, initialSessions);
+  const { data: exercises } = usePageData(swrKeys.gymExercises(), fetchGymExercisesAction, initialExercises);
+  const exercisesById = useMemo(() => new Map(exercises.map((e) => [e.id, e])), [exercises]);
+  const exerciseName = (exerciseId: string) => categoryDisplayName(exercisesById.get(exerciseId), locale);
 
   const overall = useMemo(() => overallSessionCounts(sessions, today), [sessions, today]);
   const weekSummary = useMemo(() => getGymWeekSummary(sessions, today), [sessions, today]);
@@ -49,15 +57,17 @@ export function GymEstadisticasClient({
   const allTime = useMemo(() => summarizeSessions(sessions), [sessions]);
 
   const hasAnyData = sessions.length > 0;
-  const favoriteExercise = breakdown[0]?.name ?? null;
+  const favoriteExercise = breakdown[0] ? exerciseName(breakdown[0].exerciseId) : null;
   const topExercises = breakdown.slice(0, 8);
   const personalRecords = useMemo(
     () =>
       breakdown
         .filter((e) => e.bestWeight !== null)
         .sort((a, b) => b.bestWeight! - a.bestWeight!)
-        .slice(0, 6),
-    [breakdown]
+        .slice(0, 6)
+        .map((e) => ({ ...e, name: exerciseName(e.exerciseId) })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [breakdown, exercisesById, locale]
   );
 
   function volumeDelta(comparison: GymPeriodComparison, vsLabelKey: string) {
@@ -137,7 +147,12 @@ export function GymEstadisticasClient({
                 {t("gym.stats.topExercises")}
               </div>
               <CategoryBars
-                items={topExercises.map((e) => ({ key: e.name, label: e.name, value: e.setCount, color: BAR_COLOR }))}
+                items={topExercises.map((e) => ({
+                  key: e.exerciseId,
+                  label: exerciseName(e.exerciseId),
+                  value: e.setCount,
+                  color: BAR_COLOR,
+                }))}
                 formatValue={(v) => `${v}`}
               />
             </div>

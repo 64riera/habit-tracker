@@ -109,7 +109,7 @@ export function gymTrend(sessions: GymSessionRow[], today: string, days = 30): G
 }
 
 export type GymExerciseStat = {
-  name: string;
+  exerciseId: string;
   sessionCount: number;
   setCount: number;
   volume: number;
@@ -117,22 +117,20 @@ export type GymExerciseStat = {
   bestReps: number;
 };
 
-/** Aggregates by a trimmed/lowercased key (so "Press militar" and "press
- * militar " count as the same exercise) but keeps the first-seen casing
- * for display — free-text entry means small typing inconsistencies are
- * expected, and this is cheap insurance against fragmenting the same
- * exercise into lookalike entries. */
+/** Aggregates by `exerciseId` — exact by construction now that exercises
+ * come from a fixed catalog instead of free text (see
+ * lib/gym/canonical-exercises.ts), so unlike the old name-based version
+ * there's no fuzzy matching to do here. Display name is resolved by the
+ * caller (it needs the locale, which this pure function doesn't take). */
 export function exerciseBreakdown(sessions: GymSessionRow[]): GymExerciseStat[] {
-  const byKey = new Map<
+  const byId = new Map<
     string,
-    { name: string; sessionIds: Set<string>; setCount: number; volume: number; bestWeight: number | null; bestReps: number }
+    { sessionIds: Set<string>; setCount: number; volume: number; bestWeight: number | null; bestReps: number }
   >();
   for (const session of sessions) {
     for (const exercise of session.exercises) {
-      const key = exercise.name.trim().toLowerCase();
-      if (!key) continue;
-      const entry = byKey.get(key) ?? {
-        name: exercise.name.trim(),
+      if (!exercise.exerciseId) continue;
+      const entry = byId.get(exercise.exerciseId) ?? {
         sessionIds: new Set<string>(),
         setCount: 0,
         volume: 0,
@@ -147,12 +145,12 @@ export function exerciseBreakdown(sessions: GymSessionRow[]): GymExerciseStat[] 
         if (weight !== null && (entry.bestWeight === null || weight > entry.bestWeight)) entry.bestWeight = weight;
         entry.bestReps = Math.max(entry.bestReps, set.reps);
       }
-      byKey.set(key, entry);
+      byId.set(exercise.exerciseId, entry);
     }
   }
-  return [...byKey.values()]
-    .map((v) => ({
-      name: v.name,
+  return [...byId.entries()]
+    .map(([exerciseId, v]) => ({
+      exerciseId,
       sessionCount: v.sessionIds.size,
       setCount: v.setCount,
       volume: Math.round(v.volume),

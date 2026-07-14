@@ -20,12 +20,24 @@ import { addDays, groupByDate, parseISODate } from "@/lib/date";
 import { swrKeys } from "@/lib/swr/keys";
 import { usePageData } from "@/lib/swr/use-page-data";
 import { fetchGymSessionsAction } from "@/lib/actions/gym-read";
+import { fetchGymExercisesAction } from "@/lib/actions/gym-exercises-read";
 import type { GymSessionRow as GymSession } from "@/lib/queries/gym";
+import type { GymExerciseCatalogRow } from "@/lib/queries/gym-exercises";
 
-export function GymClient({ sessions: initialSessions, today }: { sessions: GymSession[]; today: string }) {
+export function GymClient({
+  sessions: initialSessions,
+  exercises: initialExercises,
+  today,
+}: {
+  sessions: GymSession[];
+  exercises: GymExerciseCatalogRow[];
+  today: string;
+}) {
   const { t, locale } = useI18n();
   const { mutate } = useSWRConfig();
   const { data: sessions } = usePageData(swrKeys.gymSessions(), fetchGymSessionsAction, initialSessions);
+  const { data: exercises } = usePageData(swrKeys.gymExercises(), fetchGymExercisesAction, initialExercises);
+  const exercisesById = useMemo(() => new Map(exercises.map((e) => [e.id, e])), [exercises]);
   const { pendingMutations, runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
 
@@ -104,7 +116,11 @@ export function GymClient({ sessions: initialSessions, today }: { sessions: GymS
                     },
                   ]}
                 >
-                  <GymSessionRow session={session} isPendingSync={pendingIds.has(session.id)} />
+                  <GymSessionRow
+                    session={session}
+                    exercisesById={exercisesById}
+                    isPendingSync={pendingIds.has(session.id)}
+                  />
                 </SwipeableRow>
               ))}
             </div>

@@ -4,20 +4,24 @@ import Link from "next/link";
 import { Dumbbell } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
+import { categoryDisplayName } from "@/lib/habits/describe";
 import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
 import type { GymSessionRow as GymSession } from "@/lib/queries/gym";
+import type { GymExerciseCatalogRow } from "@/lib/queries/gym-exercises";
 
 export function GymSessionRow({
   session,
+  exercisesById,
   isPendingSync,
   showDivider = true,
 }: {
   session: GymSession;
+  exercisesById: Map<string, GymExerciseCatalogRow>;
   isPendingSync?: boolean;
   showDivider?: boolean;
 }) {
-  const { t } = useI18n();
-  const names = session.exercises.map((e) => e.name).filter(Boolean);
+  const { t, locale } = useI18n();
+  const names = session.exercises.map((e) => categoryDisplayName(exercisesById.get(e.exerciseId), locale)).filter(Boolean);
   const preview = names.slice(0, 3).join(", ") + (names.length > 3 ? ` +${names.length - 3}` : "");
   const totalSets = session.exercises.reduce((sum, e) => sum + e.sets.length, 0);
 

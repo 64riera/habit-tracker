@@ -107,8 +107,8 @@ describe("gym sessions", () => {
   const values: GymSessionFormValues = {
     date: "2026-07-13",
     exercises: [
-      { name: "Pecho inclinado", sets: [{ weight: "12.5", reps: 12 }, { weight: "12.5", reps: 10 }] },
-      { name: "Press militar", note: "cuidar muñeca", sets: [{ weight: "29", reps: 10 }] },
+      { exerciseId: "pecho-inclinado", sets: [{ weight: "12.5", reps: 12 }, { weight: "12.5", reps: 10 }] },
+      { exerciseId: "press-militar", note: "cuidar muñeca", sets: [{ weight: "29", reps: 10 }] },
     ],
   };
 
@@ -125,7 +125,7 @@ describe("gym sessions", () => {
       id: "g1",
       userId: "u1",
       date: "2026-07-01",
-      exercises: [{ name: "Old exercise", sets: [{ weight: "10", reps: 5 }] }],
+      exercises: [{ exerciseId: "old-exercise", sets: [{ weight: "10", reps: 5 }] }],
       createdAt: "2026-07-01T00:00:00.000Z",
     };
     const edited = applyPendingGymSessionEdit(real, values);

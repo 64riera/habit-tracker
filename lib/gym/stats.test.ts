@@ -36,8 +36,8 @@ describe("parseWeight", () => {
 describe("sessionVolume", () => {
   it("sums weight × reps across sets, treating bodyweight sets as 0", () => {
     const s = session("s1", "2026-07-13", [
-      { name: "Pecho inclinado", sets: [{ weight: "12.5", reps: 12 }, { weight: "12.5", reps: 10 }] },
-      { name: "Dominadas", sets: [{ reps: 8 }] },
+      { exerciseId: "pecho-inclinado", sets: [{ weight: "12.5", reps: 12 }, { weight: "12.5", reps: 10 }] },
+      { exerciseId: "dominadas", sets: [{ reps: 8 }] },
     ]);
     expect(sessionVolume(s)).toBe(12.5 * 12 + 12.5 * 10);
   });
@@ -62,8 +62,8 @@ describe("getGymWeekSummary", () => {
   it("compares this week's volume against last week's", () => {
     // 2026-07-13 is a Monday.
     const sessions = [
-      session("s1", "2026-07-13", [{ name: "Press", sets: [{ weight: "20", reps: 10 }] }]), // this week
-      session("s2", "2026-07-06", [{ name: "Press", sets: [{ weight: "20", reps: 5 }] }]), // last week
+      session("s1", "2026-07-13", [{ exerciseId: "press", sets: [{ weight: "20", reps: 10 }] }]), // this week
+      session("s2", "2026-07-06", [{ exerciseId: "press", sets: [{ weight: "20", reps: 5 }] }]), // last week
     ];
     const summary = getGymWeekSummary(sessions, "2026-07-14");
     expect(summary.current.volume).toBe(200);
@@ -74,7 +74,7 @@ describe("getGymWeekSummary", () => {
 
 describe("gymTrend", () => {
   it("zero-fills days with no session in the range", () => {
-    const sessions = [session("s1", "2026-07-13", [{ name: "Press", sets: [{ weight: "10", reps: 10 }] }])];
+    const sessions = [session("s1", "2026-07-13", [{ exerciseId: "press", sets: [{ weight: "10", reps: 10 }] }])];
     const trend = gymTrend(sessions, "2026-07-14", 3);
     expect(trend).toEqual([
       { date: "2026-07-12", volume: 0 },
@@ -85,14 +85,14 @@ describe("gymTrend", () => {
 });
 
 describe("exerciseBreakdown", () => {
-  it("merges exercises that only differ by case/whitespace, keeping first-seen casing", () => {
+  it("aggregates by exerciseId across sessions", () => {
     const sessions = [
-      session("s1", "2026-07-13", [{ name: "Press militar", sets: [{ weight: "29", reps: 10 }] }]),
-      session("s2", "2026-07-06", [{ name: " press militar ", sets: [{ weight: "23", reps: 8 }] }]),
+      session("s1", "2026-07-13", [{ exerciseId: "press-militar", sets: [{ weight: "29", reps: 10 }] }]),
+      session("s2", "2026-07-06", [{ exerciseId: "press-militar", sets: [{ weight: "23", reps: 8 }] }]),
     ];
     const breakdown = exerciseBreakdown(sessions);
     expect(breakdown).toHaveLength(1);
-    expect(breakdown[0].name).toBe("Press militar");
+    expect(breakdown[0].exerciseId).toBe("press-militar");
     expect(breakdown[0].setCount).toBe(2);
     expect(breakdown[0].sessionCount).toBe(2);
     expect(breakdown[0].bestWeight).toBe(29);
@@ -101,12 +101,23 @@ describe("exerciseBreakdown", () => {
   it("tracks the best weight and best reps independently", () => {
     const sessions = [
       session("s1", "2026-07-13", [
-        { name: "Press militar", sets: [{ weight: "29", reps: 10 }, { weight: "23", reps: 12 }] },
+        { exerciseId: "press-militar", sets: [{ weight: "29", reps: 10 }, { weight: "23", reps: 12 }] },
       ]),
     ];
     const [stat] = exerciseBreakdown(sessions);
     expect(stat.bestWeight).toBe(29);
     expect(stat.bestReps).toBe(12);
+  });
+
+  it("keeps different exercises as separate entries", () => {
+    const sessions = [
+      session("s1", "2026-07-13", [
+        { exerciseId: "press-militar", sets: [{ weight: "29", reps: 10 }] },
+        { exerciseId: "dominadas", sets: [{ reps: 8 }] },
+      ]),
+    ];
+    const breakdown = exerciseBreakdown(sessions);
+    expect(breakdown).toHaveLength(2);
   });
 });
 

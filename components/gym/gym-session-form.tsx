@@ -1,32 +1,50 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { nanoid } from "nanoid";
 import { Plus, Trash2, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
+import { categoryDisplayName } from "@/lib/habits/describe";
+import { Select } from "@/components/ui/select";
 import type { GymSessionRow } from "@/lib/queries/gym";
+import type { GymExerciseCatalogRow } from "@/lib/queries/gym-exercises";
 import { createGymSession, updateGymSession } from "@/lib/actions/gym";
 import { gymSessionFormSchema, extractGymSessionFields } from "@/lib/validation/gym";
 import { useOfflineFormAction } from "@/lib/offline/form";
 
 type SetDraft = { weight: string; reps: string };
-type ExerciseDraft = { name: string; note: string; sets: SetDraft[] };
+type ExerciseDraft = { exerciseId: string; note: string; sets: SetDraft[] };
 
-function toDrafts(session?: GymSessionRow): ExerciseDraft[] {
-  if (!session || session.exercises.length === 0) return [{ name: "", note: "", sets: [{ weight: "", reps: "" }] }];
+function toDrafts(session: GymSessionRow | undefined, defaultExerciseId: string): ExerciseDraft[] {
+  if (!session || session.exercises.length === 0) {
+    return [{ exerciseId: defaultExerciseId, note: "", sets: [{ weight: "", reps: "" }] }];
+  }
   return session.exercises.map((e) => ({
-    name: e.name,
+    exerciseId: e.exerciseId,
     note: e.note ?? "",
     sets: e.sets.map((s) => ({ weight: s.weight ?? "", reps: String(s.reps) })),
   }));
 }
 
-export function GymSessionForm({ session, today }: { session?: GymSessionRow; today: string }) {
-  const { t } = useI18n();
+export function GymSessionForm({
+  session,
+  today,
+  exercises: catalog,
+}: {
+  session?: GymSessionRow;
+  today: string;
+  exercises: GymExerciseCatalogRow[];
+}) {
+  const { t, locale } = useI18n();
   const [id] = useState(() => session?.id ?? nanoid());
   const [date, setDate] = useState(session?.date ?? today);
-  const [exercises, setExercises] = useState<ExerciseDraft[]>(() => toDrafts(session));
+  const [exercises, setExercises] = useState<ExerciseDraft[]>(() => toDrafts(session, catalog[0]?.id ?? ""));
+
+  const catalogOptions = useMemo(
+    () => catalog.map((e) => ({ value: e.id, label: categoryDisplayName(e, locale) })),
+    [catalog, locale]
+  );
 
   const action = useOfflineFormAction({
     schema: gymSessionFormSchema,
@@ -50,7 +68,7 @@ export function GymSessionForm({ session, today }: { session?: GymSessionRow; to
     );
   }
   function addExercise() {
-    setExercises((prev) => [...prev, { name: "", note: "", sets: [{ weight: "", reps: "" }] }]);
+    setExercises((prev) => [...prev, { exerciseId: catalog[0]?.id ?? "", note: "", sets: [{ weight: "", reps: "" }] }]);
   }
   function removeExercise(i: number) {
     setExercises((prev) => prev.filter((_, idx) => idx !== i));
@@ -73,7 +91,7 @@ export function GymSessionForm({ session, today }: { session?: GymSessionRow; to
 
   const serializedExercises = JSON.stringify(
     exercises.map((e) => ({
-      name: e.name,
+      exerciseId: e.exerciseId,
       note: e.note || undefined,
       sets: e.sets.map((s) => ({ weight: s.weight, reps: s.reps })),
     }))
@@ -112,6 +130,7 @@ export function GymSessionForm({ session, today }: { session?: GymSessionRow; to
             key={i}
             index={i}
             exercise={exercise}
+            catalogOptions={catalogOptions}
             canRemove={exercises.length > 1}
             onChange={(patch) => updateExercise(i, patch)}
             onRemove={() => removeExercise(i)}
@@ -139,6 +158,7 @@ export function GymSessionForm({ session, today }: { session?: GymSessionRow; to
 function ExerciseCard({
   index,
   exercise,
+  catalogOptions,
   canRemove,
   onChange,
   onRemove,
@@ -148,6 +168,7 @@ function ExerciseCard({
 }: {
   index: number;
   exercise: ExerciseDraft;
+  catalogOptions: { value: string; label: string }[];
   canRemove: boolean;
   onChange: (patch: Partial<ExerciseDraft>) => void;
   onRemove: () => void;
@@ -159,13 +180,12 @@ function ExerciseCard({
   return (
     <div className="rounded-lg border border-border p-3.5">
       <div className="flex items-center gap-2">
-        <input
-          value={exercise.name}
-          onChange={(e) => onChange({ name: e.target.value })}
-          placeholder={t("gym.exerciseNamePlaceholder")}
-          aria-label={t("gym.exerciseLabel", { n: index + 1 })}
-          required
-          className="min-w-0 flex-1 rounded-lg border border-border bg-transparent px-3 py-2 text-[13.5px] font-semibold outline-none focus:border-text"
+        <Select
+          value={exercise.exerciseId}
+          onValueChange={(exerciseId) => onChange({ exerciseId })}
+          options={catalogOptions}
+          ariaLabel={t("gym.exerciseLabel", { n: index + 1 })}
+          className="flex-1 font-semibold"
         />
         {canRemove && (
           <button

@@ -4,7 +4,7 @@ export type GymSet = {
 };
 
 export type GymExercise = {
-  name: string;
+  exerciseId: string; // references gymExercises (lib/queries/gym-exercises.ts) — see lib/gym/canonical-exercises.ts
   note?: string;
   sets: GymSet[];
 };

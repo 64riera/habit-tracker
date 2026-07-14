@@ -6,7 +6,7 @@ export const gymSetSchema = z.object({
 });
 
 export const gymExerciseSchema = z.object({
-  name: z.string().trim().min(1).max(80),
+  exerciseId: z.string().trim().min(1),
   note: z.string().trim().max(200).optional(),
   sets: z.array(gymSetSchema).min(1),
 });

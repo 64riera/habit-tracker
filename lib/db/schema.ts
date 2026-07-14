@@ -223,11 +223,35 @@ export const transactions = sqliteTable(
   ]
 );
 
+// Fixed catalog of exercises every account gets (see
+// lib/gym/canonical-exercises.ts), same taxonomy shape as habits'/finance's
+// categories — sessions reference an exercise by id instead of typing its
+// name freely, so stats can aggregate by an exact id instead of
+// fuzzy-matching text.
+export const gymExercises = sqliteTable(
+  "gym_exercises",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    nameEs: text("name_es").notNull(),
+    nameEn: text("name_en").notNull(),
+    muscleGroup: text("muscle_group", {
+      enum: ["chest", "back", "shoulders", "arms", "legs", "core", "cardio"],
+    }).notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
+  },
+  (t) => [
+    index("gym_exercises_user_idx").on(t.userId),
+    uniqueIndex("gym_exercises_user_name_idx").on(t.userId, t.nameEs),
+  ]
+);
+
 // One row per workout session, exercises/sets stored as JSON (parsed shape:
-// GymExercise[] in lib/gym/types.ts) rather than normalized child tables —
-// a session is always read/written as one atomic unit (never queried at the
-// individual-set level across sessions), same reasoning as tasks'
-// recurrenceConfig above.
+// GymExercise[] in lib/gym/types.ts, each entry referencing a gymExercises
+// row by id) rather than normalized child tables — a session is always
+// read/written as one atomic unit (never queried at the individual-set
+// level across sessions), same reasoning as tasks' recurrenceConfig above.
 export const gymSessions = sqliteTable(
   "gym_sessions",
   {
