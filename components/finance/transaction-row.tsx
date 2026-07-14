@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n/client";
+import { cn } from "@/lib/utils";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { formatCurrency, type Currency } from "@/lib/finance/format";
 import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
@@ -11,10 +12,15 @@ export function TransactionRow({
   transaction,
   currency,
   isPendingSync,
+  showDivider = true,
 }: {
   transaction: TransactionWithCategory;
   currency: Currency;
   isPendingSync?: boolean;
+  /** Off when the row is shown alone inside its own card (e.g. the "biggest
+   * expense" highlight in FinanceInsights) instead of a list — otherwise the
+   * row's own bottom border doubles up with the card's border. */
+  showDivider?: boolean;
 }) {
   const { t, locale } = useI18n();
   const isIncome = transaction.type === "income";
@@ -23,7 +29,10 @@ export function TransactionRow({
   const avatarColor = isIncome ? "var(--color-income)" : (transaction.category?.color ?? "var(--color-muted)");
 
   return (
-    <Link href={`/finance/${transaction.id}`} className="flex items-center gap-3 border-b border-border py-3">
+    <Link
+      href={`/finance/${transaction.id}`}
+      className={cn("flex items-center gap-3 py-3", showDivider && "border-b border-border")}
+    >
       <span
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[15px]"
         style={{ background: `color-mix(in oklch, ${avatarColor} 16%, transparent)`, color: avatarColor }}

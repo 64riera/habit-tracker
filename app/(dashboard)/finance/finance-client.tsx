@@ -11,6 +11,7 @@ import { PeriodSummary } from "@/components/finance/period-summary";
 import { CategoryBreakdown } from "@/components/finance/category-breakdown";
 import { TrendChart } from "@/components/finance/trend-chart";
 import { TransactionRow } from "@/components/finance/transaction-row";
+import { FinanceInsights } from "@/components/finance/finance-insights";
 import { useI18n } from "@/lib/i18n/client";
 import { useOffline } from "@/lib/offline/client";
 import {
@@ -20,13 +21,20 @@ import {
   buildGhostTransaction,
   applyPendingTransactionEdit,
 } from "@/lib/offline/pending-selectors";
-import { addDays, groupByDate, parseISODate } from "@/lib/date";
+import { addDays, daysBetween, groupByDate, parseISODate } from "@/lib/date";
 import {
   periodRange,
+  previousPeriodRange,
   filterByRange,
   summarizeTransactions,
   bucketTransactions,
   bucketForPeriod,
+  dailyAverageExpense,
+  savingsRate,
+  topExpense as topExpenseOf,
+  topCategoryShare,
+  transactionStats,
+  weekdayExpenseBreakdown,
   type Period,
 } from "@/lib/finance/aggregate";
 import type { FinanceCategoryRow, TransactionWithCategory } from "@/lib/queries/finance";
@@ -85,6 +93,25 @@ export function FinanceClient({
   const buckets = useMemo(() => bucketTransactions(inRange, bucketForPeriod(period)), [inRange, period]);
   const groups = useMemo(() => groupByDate(inRange), [inRange]);
 
+  // Everything the collapsed "more stats" panel needs — derived from the
+  // same inRange/totals already computed above, plus one extra slice for
+  // the previous-period comparison. Kept as plain useMemo values (not a
+  // separate component's state) so FinanceInsights stays a pure renderer.
+  const spansMultipleDays = daysBetween(from, to) >= 1;
+  const comparison = useMemo(() => {
+    const { from: prevFrom, to: prevTo } = previousPeriodRange(period, today, customRange);
+    const previous = summarizeTransactions(filterByRange(allTransactions, prevFrom, prevTo));
+    if (previous.expense <= 0) return null;
+    const changePct = Math.round(((totals.expense - previous.expense) / previous.expense) * 100);
+    return { current: totals.expense, previous: previous.expense, changePct };
+  }, [allTransactions, period, today, customRange, totals.expense]);
+  const dailyAverage = spansMultipleDays ? dailyAverageExpense(inRange, from, to) : 0;
+  const savings = savingsRate(totals);
+  const topExpense = useMemo(() => topExpenseOf(inRange), [inRange]);
+  const topCategory = topCategoryShare(totals);
+  const txStats = useMemo(() => transactionStats(inRange), [inRange]);
+  const weekdayData = daysBetween(from, to) >= 6 ? weekdayExpenseBreakdown(inRange) : null;
+
   function handleDelete(transactionId: string) {
     if (!confirm(t("finance.confirmDelete"))) return;
     startTransition(async () => {
@@ -107,8 +134,22 @@ export function FinanceClient({
         />
       </div>
 
-      <div className="mb-6">
+      <div className="mb-3">
         <PeriodSummary totals={totals} currency={currency} />
+      </div>
+
+      <div className="mb-6">
+        <FinanceInsights
+          comparison={comparison}
+          dailyAverage={dailyAverage}
+          savings={savings}
+          topExpense={topExpense}
+          topCategory={topCategory}
+          categories={categories}
+          txStats={txStats}
+          weekdayData={weekdayData}
+          currency={currency}
+        />
       </div>
 
       {totals.byCategory.length > 0 && (

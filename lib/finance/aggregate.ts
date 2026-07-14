@@ -1,4 +1,16 @@
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, monthKey, yearKey } from "@/lib/date";
+import {
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  startOfYear,
+  endOfYear,
+  monthKey,
+  yearKey,
+  addDays,
+  daysBetween,
+  isoWeekday,
+} from "@/lib/date";
 
 export type Period = "day" | "week" | "month" | "year" | "custom";
 export type Bucket = "day" | "week" | "month" | "year";
@@ -25,6 +37,38 @@ export function periodRange(period: Period, today: string, custom?: { from: stri
 
 export function filterByRange<T extends { date: string }>(rows: T[], from: string, to: string): T[] {
   return rows.filter((r) => r.date >= from && r.date <= to);
+}
+
+/** The equivalent-length window immediately before the selected period —
+ * "last week" for "week", the previous calendar month for "month", etc.
+ * Same shifting logic already used for Focus's week/month comparisons (see
+ * getFocusWeekSummary/getFocusMonthSummary in lib/queries/focus-stats.ts),
+ * generalized here to cover day/year/custom too since Finance's period
+ * selector has more options than Focus's. */
+export function previousPeriodRange(period: Period, today: string, custom?: { from: string; to: string }): { from: string; to: string } {
+  const { from } = periodRange(period, today, custom);
+  switch (period) {
+    case "day":
+      return { from: addDays(from, -1), to: addDays(from, -1) };
+    case "week": {
+      const prevEnd = addDays(from, -1);
+      return { from: startOfWeek(prevEnd), to: prevEnd };
+    }
+    case "month": {
+      const prevEnd = addDays(from, -1);
+      return { from: startOfMonth(prevEnd), to: prevEnd };
+    }
+    case "year": {
+      const prevEnd = addDays(from, -1);
+      return { from: startOfYear(prevEnd), to: prevEnd };
+    }
+    case "custom": {
+      const { to } = periodRange(period, today, custom);
+      const length = daysBetween(from, to) + 1;
+      const prevTo = addDays(from, -1);
+      return { from: addDays(prevTo, -(length - 1)), to: prevTo };
+    }
+  }
 }
 
 export type TransactionLike = { date: string; type: "income" | "expense"; amount: number; categoryId: string | null };
@@ -93,4 +137,69 @@ export function bucketTransactions(rows: TransactionLike[], bucket: Bucket): Buc
  * 365 daily bars would be unreadable, so it rolls up to months instead. */
 export function bucketForPeriod(period: Period): Bucket {
   return period === "year" ? "month" : "day";
+}
+
+/** Average expense per day across the range — the simple denominator
+ * (calendar days in range, not "days with a transaction") is what makes
+ * "you spend ~$X/day" comparable across periods of different lengths. */
+export function dailyAverageExpense(rows: TransactionLike[], from: string, to: string): number {
+  const totalExpense = rows.filter((r) => r.type === "expense").reduce((sum, r) => sum + r.amount, 0);
+  const days = daysBetween(from, to) + 1;
+  return days > 0 ? totalExpense / days : 0;
+}
+
+/** Share of income actually kept, as a percentage — `null` (not 0) when
+ * there's no income to divide by, so callers can distinguish "no data" from
+ * "spent every peso" (0%). */
+export function savingsRate(totals: PeriodTotals): number | null {
+  if (totals.income <= 0) return null;
+  return Math.round((totals.balance / totals.income) * 100);
+}
+
+/** The single largest expense in the range — generic over any row shape
+ * that carries at least the TransactionLike fields, so the caller (which
+ * has the richer TransactionWithCategory rows, including note/id) can pass
+ * those straight through instead of losing fields to a narrower return type. */
+export function topExpense<T extends TransactionLike>(rows: T[]): T | null {
+  let top: T | null = null;
+  for (const row of rows) {
+    if (row.type === "expense" && (!top || row.amount > top.amount)) top = row;
+  }
+  return top;
+}
+
+/** The biggest category's share of total expense — `null` when there's
+ * nothing to highlight (no expenses in range). */
+export function topCategoryShare(totals: PeriodTotals): { categoryId: string; total: number; pct: number } | null {
+  const top = totals.byCategory[0];
+  if (!top || totals.expense <= 0) return null;
+  return { ...top, pct: Math.round((top.total / totals.expense) * 100) };
+}
+
+export type TransactionStats = { count: number; avgExpense: number; avgIncome: number };
+
+export function transactionStats(rows: TransactionLike[]): TransactionStats {
+  const expenseRows = rows.filter((r) => r.type === "expense");
+  const incomeRows = rows.filter((r) => r.type === "income");
+  const sum = (arr: TransactionLike[]) => arr.reduce((s, r) => s + r.amount, 0);
+  return {
+    count: rows.length,
+    avgExpense: expenseRows.length > 0 ? sum(expenseRows) / expenseRows.length : 0,
+    avgIncome: incomeRows.length > 0 ? sum(incomeRows) / incomeRows.length : 0,
+  };
+}
+
+export type WeekdayExpense = { weekday: number; total: number };
+
+/** Total expense per ISO weekday (1=Monday..7=Sunday), always all 7 entries
+ * in order (zero-filled) so the caller can render a fixed-width chart
+ * without special-casing missing days. */
+export function weekdayExpenseBreakdown(rows: TransactionLike[]): WeekdayExpense[] {
+  const totals = new Map<number, number>();
+  for (const row of rows) {
+    if (row.type !== "expense") continue;
+    const wd = isoWeekday(row.date);
+    totals.set(wd, (totals.get(wd) ?? 0) + row.amount);
+  }
+  return Array.from({ length: 7 }, (_, i) => ({ weekday: i + 1, total: totals.get(i + 1) ?? 0 }));
 }

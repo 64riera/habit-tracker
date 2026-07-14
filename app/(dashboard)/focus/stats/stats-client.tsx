@@ -6,6 +6,7 @@ import { SegmentedRouteTabs } from "@/components/nav/segmented-route-tabs";
 import { TrendBars } from "@/components/charts/trend-bars";
 import { CategoryBars } from "@/components/charts/category-bars";
 import { MetricSummaryCard } from "@/components/stats/metric-summary-card";
+import { StatMini } from "@/components/stats/stat-mini";
 import { useI18n } from "@/lib/i18n/client";
 import { formatMinutesShort } from "@/lib/focus/format";
 import { categoryDisplayName } from "@/lib/habits/describe";
@@ -195,15 +196,6 @@ export function FocusEstadisticasClient({
           <p className="text-sm text-muted">{t("focus.stats.empty")}</p>
         )}
       </div>
-    </div>
-  );
-}
-
-function StatMini({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex-1 rounded-xl border border-border p-3.5" style={{ minWidth: 150 }}>
-      <div className="text-[10px] tracking-wide text-muted uppercase">{label}</div>
-      <div className="mt-1.5 font-serif-italic text-base font-semibold">{value}</div>
     </div>
   );
 }

@@ -197,6 +197,44 @@ body {
   }
 }
 
+/* Radix Collapsible (FinanceInsights' "ver más estadísticas" panel): height
+   is the one layout property motion guidance allows animating, since a
+   collapsible has no fixed height to interpolate between otherwise — Radix
+   exposes the measured content height as this custom property for exactly
+   that purpose. */
+@keyframes collapsible-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height);
+  }
+}
+
+@keyframes collapsible-up {
+  from {
+    height: var(--radix-collapsible-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+.animate-collapsible-down {
+  animation: collapsible-down 0.22s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animate-collapsible-up {
+  animation: collapsible-up 0.18s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-collapsible-down,
+  .animate-collapsible-up {
+    animation: none;
+  }
+}
+
 /* Tamaño de celda del mapa de calor (components/heatmap/heatmap.tsx): fluido
    en mobile para ocupar todo el ancho disponible (columnas = semanas, dato
    que solo se conoce en runtime, por eso vive en variables en vez de una

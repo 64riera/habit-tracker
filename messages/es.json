@@ -282,7 +282,33 @@
     "formError": "Revisa los campos: falta el monto, la fecha, o la categoría del gasto.",
     "confirmDelete": "¿Eliminar este movimiento?",
     "empty": "Aún no tienes movimientos en este período.",
-    "noExpenses": "Sin gastos en este período."
+    "noExpenses": "Sin gastos en este período.",
+    "insights": {
+      "show": "Ver más estadísticas",
+      "hide": "Ocultar estadísticas",
+      "vsPrevious": "Vs. período anterior",
+      "spendingDown": "Gastando menos",
+      "spendingUp": "Gastando más",
+      "thisPeriod": "Este período",
+      "previousPeriod": "Anterior",
+      "dailyAverage": "Promedio diario",
+      "savingsRate": "Tasa de ahorro",
+      "topExpense": "Gasto más alto",
+      "topCategory": "Categoría principal",
+      "avgTransaction": "Promedio por movimiento",
+      "transactionCount": "Movimientos",
+      "weekdayPattern": "Patrón semanal",
+      "weekdayInsightHigh": "Sueles gastar más los {day}",
+      "weekdayLong": {
+        "1": "lunes",
+        "2": "martes",
+        "3": "miércoles",
+        "4": "jueves",
+        "5": "viernes",
+        "6": "sábados",
+        "7": "domingos"
+      }
+    }
   },
   "achievements": {
     "title": "Logros",

@@ -282,7 +282,33 @@
     "formError": "Check the fields: the amount, date, or the expense category is missing.",
     "confirmDelete": "Delete this transaction?",
     "empty": "No transactions in this period yet.",
-    "noExpenses": "No expenses in this period."
+    "noExpenses": "No expenses in this period.",
+    "insights": {
+      "show": "Show more stats",
+      "hide": "Hide stats",
+      "vsPrevious": "Vs. previous period",
+      "spendingDown": "Spending less",
+      "spendingUp": "Spending more",
+      "thisPeriod": "This period",
+      "previousPeriod": "Previous",
+      "dailyAverage": "Daily average",
+      "savingsRate": "Savings rate",
+      "topExpense": "Biggest expense",
+      "topCategory": "Top category",
+      "avgTransaction": "Avg. per transaction",
+      "transactionCount": "Transactions",
+      "weekdayPattern": "Weekly pattern",
+      "weekdayInsightHigh": "You tend to spend more on {day}",
+      "weekdayLong": {
+        "1": "Mondays",
+        "2": "Tuesdays",
+        "3": "Wednesdays",
+        "4": "Thursdays",
+        "5": "Fridays",
+        "6": "Saturdays",
+        "7": "Sundays"
+      }
+    }
   },
   "achievements": {
     "title": "Achievements",
