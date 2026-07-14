@@ -223,6 +223,23 @@ export const transactions = sqliteTable(
   ]
 );
 
+// One row per workout session, exercises/sets stored as JSON (parsed shape:
+// GymExercise[] in lib/gym/types.ts) rather than normalized child tables —
+// a session is always read/written as one atomic unit (never queried at the
+// individual-set level across sessions), same reasoning as tasks'
+// recurrenceConfig above.
+export const gymSessions = sqliteTable(
+  "gym_sessions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    date: text("date").notNull(), // YYYY-MM-DD
+    exercises: text("exercises").notNull(), // JSON, GymExercise[]
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [index("gym_sessions_user_idx").on(t.userId), index("gym_sessions_user_date_idx").on(t.userId, t.date)]
+);
+
 export const focusSessions = sqliteTable(
   "focus_sessions",
   {

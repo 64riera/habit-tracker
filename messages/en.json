@@ -7,6 +7,7 @@
     "historial": "History",
     "estadisticas": "Stats",
     "enfoque": "Focus",
+    "gym": "Gym",
     "habitos": "Habits",
     "tareas": "Tasks",
     "finance": "Finance",
@@ -20,6 +21,7 @@
     "habitoDetalle": { "title": "Edit habit", "subtitle": "Adjust your habit's details" },
     "ajustes": { "title": "Settings", "subtitle": "Appearance, language and data" },
     "enfoque": { "title": "Focus", "subtitle": "Concentration sessions with tracking" },
+    "gym": { "title": "Gym", "subtitle": "Your workouts, exercise by exercise" },
     "tareas": { "title": "Tasks", "subtitle": "Recurring to-dos that reset on their own" },
     "finance": { "title": "Finance", "subtitle": "Income and expenses, day by day" }
   },
@@ -310,6 +312,29 @@
       }
     }
   },
+  "gym": {
+    "title": "Gym",
+    "subtitle": "Your workouts, exercise by exercise",
+    "newSession": "New session",
+    "newSessionSubtitle": "Log today's exercises",
+    "editSession": "Edit session",
+    "fieldDate": "Date",
+    "exerciseLabel": "Exercise {n}",
+    "exerciseNamePlaceholder": "e.g. Incline chest press",
+    "addExercise": "Add exercise",
+    "removeExercise": "Remove exercise",
+    "setLabel": "Set {n}",
+    "weightPlaceholder": "weight",
+    "repsPlaceholder": "reps",
+    "addSet": "Add set",
+    "removeSet": "Remove set",
+    "noteLabel": "Note (optional)",
+    "notePlaceholder": "e.g. watch the wrist",
+    "formError": "Check the fields: an exercise is missing its name, or a set isn't valid.",
+    "confirmDelete": "Delete this session?",
+    "empty": "You don't have any gym sessions yet. Log the first one.",
+    "summary": "{exercises} exercises · {sets} sets"
+  },
   "achievements": {
     "title": "Achievements",
     "subtitle": "Milestones you unlock with your streaks",
@@ -362,6 +387,7 @@
     "domainFinance": "Finance",
     "domainCategories": "Categories",
     "domainFocus": "Focus",
+    "domainGym": "Gym",
     "fallbackTitle": "You're offline",
     "fallbackBody": "This section hasn't been saved on this device yet, so there's nothing to show offline. Try again once you have signal, or open a section you've already visited.",
     "fallbackCta": "Go to Today"

@@ -37,13 +37,13 @@ const LAST_SYNCED_AT_KEY = "justgo:last-synced-at";
 
 /** Routes with an action that doesn't depend on any previously-loaded data
  * (starting a focus session, logging a transaction, adding/checking a
- * task) — kept warm in the background whenever online so they're usable
- * offline even the very first time they're opened, not just after a first
- * visit. Deliberately NOT every route: sections whose whole value is
- * showing past data (History, Stats, ...) have nothing useful to offer
- * without it, so they keep the normal "must visit once" rule. Don't add a
- * route here without that same justification. */
-const ALWAYS_WARM_ROUTES = ["/focus", "/finance", "/tasks"];
+ * task, logging a gym session) — kept warm in the background whenever
+ * online so they're usable offline even the very first time they're
+ * opened, not just after a first visit. Deliberately NOT every route:
+ * sections whose whole value is showing past data (History, Stats, ...)
+ * have nothing useful to offer without it, so they keep the normal "must
+ * visit once" rule. Don't add a route here without that same justification. */
+const ALWAYS_WARM_ROUTES = ["/focus", "/finance", "/tasks", "/gym"];
 
 function warmAlwaysAvailableRoutes(router: ReturnType<typeof useRouter>) {
   for (const route of ALWAYS_WARM_ROUTES) router.prefetch(route);

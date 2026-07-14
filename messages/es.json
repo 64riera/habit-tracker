@@ -7,6 +7,7 @@
     "historial": "Historial",
     "estadisticas": "Estadísticas",
     "enfoque": "Enfoque",
+    "gym": "Gym",
     "habitos": "Hábitos",
     "tareas": "Tareas",
     "finance": "Finanzas",
@@ -20,6 +21,7 @@
     "habitoDetalle": { "title": "Editar hábito", "subtitle": "Ajusta los detalles de tu hábito" },
     "ajustes": { "title": "Ajustes", "subtitle": "Apariencia, idioma y datos" },
     "enfoque": { "title": "Enfoque", "subtitle": "Sesiones de concentración" },
+    "gym": { "title": "Gym", "subtitle": "Tus entrenamientos, ejercicio por ejercicio" },
     "tareas": { "title": "Tareas", "subtitle": "Pendientes que se repiten solos" },
     "finance": { "title": "Finanzas", "subtitle": "Ingresos y gastos, día a día" }
   },
@@ -310,6 +312,29 @@
       }
     }
   },
+  "gym": {
+    "title": "Gym",
+    "subtitle": "Tus entrenamientos, ejercicio por ejercicio",
+    "newSession": "Nueva sesión",
+    "newSessionSubtitle": "Anota los ejercicios de hoy",
+    "editSession": "Editar sesión",
+    "fieldDate": "Fecha",
+    "exerciseLabel": "Ejercicio {n}",
+    "exerciseNamePlaceholder": "p. ej. Pecho inclinado",
+    "addExercise": "Agregar ejercicio",
+    "removeExercise": "Quitar ejercicio",
+    "setLabel": "Serie {n}",
+    "weightPlaceholder": "peso",
+    "repsPlaceholder": "reps",
+    "addSet": "Agregar serie",
+    "removeSet": "Quitar serie",
+    "noteLabel": "Nota (opcional)",
+    "notePlaceholder": "p. ej. cuidar muñeca",
+    "formError": "Revisa los campos: falta el nombre de algún ejercicio o alguna serie no es válida.",
+    "confirmDelete": "¿Eliminar esta sesión?",
+    "empty": "Aún no tienes sesiones de gym. Registra la primera.",
+    "summary": "{exercises} ejercicios · {sets} series"
+  },
   "achievements": {
     "title": "Logros",
     "subtitle": "Hitos que desbloqueas con tus rachas",
@@ -362,6 +387,7 @@
     "domainFinance": "Finanzas",
     "domainCategories": "Categorías",
     "domainFocus": "Enfoque",
+    "domainGym": "Gym",
     "fallbackTitle": "Sin conexión",
     "fallbackBody": "Esta sección todavía no se guardó en este dispositivo, así que no hay nada que mostrar sin conexión. Vuelve a intentarlo cuando tengas señal, o revisa una sección que ya hayas visitado antes.",
     "fallbackCta": "Ir a Hoy"

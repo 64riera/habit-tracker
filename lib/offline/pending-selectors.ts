@@ -4,10 +4,12 @@ import type { RoutineFormValues } from "@/lib/validation/routine";
 import type { TaskFormValues } from "@/lib/validation/task";
 import type { TransactionFormValues } from "@/lib/validation/transaction";
 import type { StartFocusSessionValues } from "@/lib/validation/focus";
+import type { GymSessionFormValues } from "@/lib/validation/gym";
 import type { HabitWithExtras, CategoryRow } from "@/lib/queries/habits";
 import type { RoutineWithStats, RoutineHabitSummary } from "@/lib/queries/routines";
 import type { TaskWithStatus } from "@/lib/queries/tasks";
 import type { FinanceCategoryRow, TransactionWithCategory } from "@/lib/queries/finance";
+import type { GymSessionRow } from "@/lib/queries/gym";
 import { buildFrequencyConfig } from "@/lib/habits/frequency";
 import { FREEZE_MONTHLY_ALLOWANCE } from "@/lib/habits/status";
 import { buildTaskRecurrenceConfig, currentPeriodKey } from "@/lib/tasks/recurrence";
@@ -368,9 +370,54 @@ export function pendingFocusSession(queue: QueuedRecord[], today: string): Focus
   );
 }
 
+// --- Gym sessions ---
+
+export function pendingGymSessionCreates(queue: QueuedRecord[]) {
+  return queue.filter(
+    (m): m is Extract<QueuedRecord, { type: "createGymSession" }> => m.type === "createGymSession"
+  );
+}
+
+export function pendingGymSessionUpdates(queue: QueuedRecord[]): Map<string, GymSessionFormValues> {
+  return new Map(
+    queue
+      .filter((m): m is Extract<QueuedRecord, { type: "updateGymSession" }> => m.type === "updateGymSession")
+      .map((m) => [m.sessionId, m.values])
+  );
+}
+
+export function pendingGymSessionDeleteIds(queue: QueuedRecord[]): Set<string> {
+  return new Set(
+    queue
+      .filter((m): m is Extract<QueuedRecord, { type: "deleteGymSession" }> => m.type === "deleteGymSession")
+      .map((m) => m.sessionId)
+  );
+}
+
+/** Editable gym session fields derived from the form values — reused by the creation ghost and the edit overlay. */
+function gymSessionEditableFields(values: GymSessionFormValues) {
+  return { date: values.date, exercises: values.exercises };
+}
+
+/** Builds a "good enough" `GymSessionRow` to display a session logged
+ * offline that hasn't synced yet. */
+export function buildGhostGymSession(id: string, values: GymSessionFormValues): GymSessionRow {
+  return {
+    id,
+    userId: "",
+    createdAt: new Date().toISOString(),
+    ...gymSessionEditableFields(values),
+  };
+}
+
+/** Overlays an offline edit not yet synced on top of the already-loaded real session. */
+export function applyPendingGymSessionEdit(session: GymSessionRow, values: GymSessionFormValues): GymSessionRow {
+  return { ...session, ...gymSessionEditableFields(values) };
+}
+
 // --- Sync panel (Settings) ---
 
-export type PendingDomain = "habits" | "routines" | "tasks" | "finance" | "categories" | "focus";
+export type PendingDomain = "habits" | "routines" | "tasks" | "finance" | "categories" | "focus" | "gym";
 
 /** One entry per QueuedMutation variant (lib/offline/db.ts) — a `Record` over
  * the full union, same exhaustiveness trick as replay-registry.ts's
@@ -403,6 +450,9 @@ const DOMAIN_BY_MUTATION_TYPE: Record<QueuedRecord["type"], PendingDomain> = {
   endBreakEarly: "focus",
   finishFocusSession: "focus",
   cancelFocusSession: "focus",
+  createGymSession: "gym",
+  updateGymSession: "gym",
+  deleteGymSession: "gym",
 };
 
 export function pendingMutationsByDomain(queue: QueuedRecord[]): Record<PendingDomain, number> {
@@ -413,6 +463,7 @@ export function pendingMutationsByDomain(queue: QueuedRecord[]): Record<PendingD
     finance: 0,
     categories: 0,
     focus: 0,
+    gym: 0,
   };
   for (const mutation of queue) counts[DOMAIN_BY_MUTATION_TYPE[mutation.type]]++;
   return counts;

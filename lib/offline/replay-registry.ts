@@ -26,6 +26,7 @@ import {
   finishFocusSession,
   cancelFocusSession,
 } from "@/lib/actions/focus";
+import { createGymSessionCore, updateGymSessionCore, deleteGymSessionCore } from "@/lib/actions/gym";
 import type { AchievementType } from "@/lib/achievements";
 
 export type ReplayResult = { unlocked?: AchievementType[]; freezeQuotaExhausted?: boolean } | void;
@@ -94,6 +95,13 @@ const registry: Registry = {
     await finishFocusSession();
   },
   cancelFocusSession: () => cancelFocusSession(),
+  createGymSession: async (m) => {
+    await createGymSessionCore(m.id, m.values);
+  },
+  updateGymSession: async (m) => {
+    await updateGymSessionCore(m.sessionId, m.values);
+  },
+  deleteGymSession: (m) => deleteGymSessionCore(m.sessionId),
 };
 
 export async function replay(mutation: QueuedMutation): Promise<ReplayResult> {

@@ -6,6 +6,7 @@ import type { RoutineFormValues } from "@/lib/validation/routine";
 import type { TaskFormValues } from "@/lib/validation/task";
 import type { TransactionFormValues } from "@/lib/validation/transaction";
 import type { StartFocusSessionValues } from "@/lib/validation/focus";
+import type { GymSessionFormValues } from "@/lib/validation/gym";
 
 export type QueuedMutation =
   | { type: "log"; input: LogInput }
@@ -33,7 +34,10 @@ export type QueuedMutation =
   | { type: "resumeFocusSession" }
   | { type: "endBreakEarly" }
   | { type: "finishFocusSession" }
-  | { type: "cancelFocusSession" };
+  | { type: "cancelFocusSession" }
+  | { type: "createGymSession"; id: string; values: GymSessionFormValues }
+  | { type: "updateGymSession"; sessionId: string; values: GymSessionFormValues }
+  | { type: "deleteGymSession"; sessionId: string };
 
 export type QueuedRecord = QueuedMutation & { id: number; createdAt: number };
 

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { pendingMutationsByDomain, pendingFocusSession } from "./pending-selectors";
+import { pendingMutationsByDomain, pendingFocusSession, buildGhostGymSession, applyPendingGymSessionEdit } from "./pending-selectors";
 import type { QueuedMutation, QueuedRecord } from "./db";
 import type { StartFocusSessionValues } from "@/lib/validation/focus";
+import type { GymSessionFormValues } from "@/lib/validation/gym";
+import type { GymSessionRow } from "@/lib/queries/gym";
 
 function record(mutation: QueuedMutation): QueuedRecord {
   // Mirrors real IndexedDB `add()` behavior (lib/offline/db.ts): when the
@@ -22,6 +24,7 @@ describe("pendingMutationsByDomain", () => {
       finance: 0,
       categories: 0,
       focus: 0,
+      gym: 0,
     });
   });
 
@@ -35,6 +38,7 @@ describe("pendingMutationsByDomain", () => {
       record({ type: "createTransaction", id: "x1", values: {} as never }),
       record({ type: "setCategoryHidden", categoryId: "c1", hidden: true }),
       record({ type: "startFocusSession", id: "f1", values: {} as never }),
+      record({ type: "createGymSession", id: "g1", values: {} as never }),
     ];
     expect(pendingMutationsByDomain(queue)).toEqual({
       habits: 2,
@@ -43,6 +47,7 @@ describe("pendingMutationsByDomain", () => {
       finance: 1,
       categories: 1,
       focus: 1,
+      gym: 1,
     });
   });
 
@@ -95,5 +100,37 @@ describe("pendingFocusSession", () => {
       record({ type: "cancelFocusSession" }),
     ];
     expect(pendingFocusSession(cancelled, "2026-07-13")).toBeNull();
+  });
+});
+
+describe("gym sessions", () => {
+  const values: GymSessionFormValues = {
+    date: "2026-07-13",
+    exercises: [
+      { name: "Pecho inclinado", sets: [{ weight: "12.5", reps: 12 }, { weight: "12.5", reps: 10 }] },
+      { name: "Press militar", note: "cuidar muñeca", sets: [{ weight: "29", reps: 10 }] },
+    ],
+  };
+
+  it("builds a ghost session with the submitted date and exercises", () => {
+    const ghost = buildGhostGymSession("g1", values);
+    expect(ghost.id).toBe("g1");
+    expect(ghost.date).toBe("2026-07-13");
+    expect(ghost.exercises).toHaveLength(2);
+    expect(ghost.exercises[1].note).toBe("cuidar muñeca");
+  });
+
+  it("overlays a pending edit on top of the real session", () => {
+    const real: GymSessionRow = {
+      id: "g1",
+      userId: "u1",
+      date: "2026-07-01",
+      exercises: [{ name: "Old exercise", sets: [{ weight: "10", reps: 5 }] }],
+      createdAt: "2026-07-01T00:00:00.000Z",
+    };
+    const edited = applyPendingGymSessionEdit(real, values);
+    expect(edited.id).toBe("g1");
+    expect(edited.date).toBe("2026-07-13");
+    expect(edited.exercises).toHaveLength(2);
   });
 });
