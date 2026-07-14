@@ -149,8 +149,24 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    // Retries the queue when the browser regains connectivity (real external event).
-    if (isOnline) drainQueueRef.current();
+    // Retries the queue when the browser regains connectivity (real external
+    // event) — deliberately re-checks the *live* navigator.onLine here
+    // instead of trusting the `isOnline` state captured in this render's
+    // closure. That state comes from useSyncExternalStore, which serves
+    // `getServerConnectivitySnapshot` (hardcoded `true`) for one render
+    // whenever it differs from the real client snapshot, to avoid a
+    // hydration mismatch — and effects fire based on whatever was actually
+    // committed. On a page loaded from the Service Worker's offline cache
+    // (a document that was fetched, and thus rendered, while online), that
+    // first render *is* the mismatched one: `isOnline` briefly reads `true`
+    // even though the device is genuinely offline, this same effect fires
+    // believing it should sync, calls drainQueue -> resyncEverything, whose
+    // router.refresh()/router.prefetch() calls fail immediately — and any
+    // uncaught failure during a pending client-side navigation makes
+    // Next.js fall back to a hard reload (see node_modules/next/dist/client
+    // /components/nav-failure-handler.js), which repeats the exact same
+    // mismatch on the next load, forever. A live read here can't be stale.
+    if (isOnline && navigator.onLine) drainQueueRef.current();
   }, [isOnline]);
 
   useEffect(() => {
