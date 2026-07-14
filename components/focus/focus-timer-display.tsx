@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useTransition } from "react";
+import { useRouter, unstable_rethrow } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { Check, Pause, Play } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -12,6 +12,7 @@ import { useFocusStatusAlerts } from "@/lib/focus/use-focus-status-alerts";
 import { flashTitle, playChime } from "@/lib/focus/alerts";
 import { formatClock } from "@/lib/focus/format";
 import { LIVE_STATUSES, type FocusSessionRow } from "@/lib/focus/compute";
+import type { FocusRewardTier } from "@/lib/focus/rewards";
 import { APP_NAME } from "@/lib/branding";
 import {
   cancelFocusSession,
@@ -20,6 +21,9 @@ import {
   pauseFocusSession,
   resumeFocusSession,
 } from "@/lib/actions/focus";
+import { useOffline } from "@/lib/offline/client";
+import { useOfflineIdAction } from "@/lib/offline/form";
+import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
 import { BreakBanner } from "./break-banner";
 
 /** "Cancel session" only makes sense as a quick exit for a session started
@@ -31,14 +35,26 @@ const CANCEL_VISIBLE_ACTIVE_SECONDS = 10;
 export function FocusTimerDisplay({
   session: initialSession,
   soundEnabled,
+  pendingSync = false,
 }: {
   session: FocusSessionRow;
   soundEnabled: boolean;
+  /** True while this session only exists as a locally-queued "ghost" (not
+   * yet synced) — the server doesn't have it yet, or has a stale one, so
+   * resync must not overwrite the local preview until the queue drains. */
+  pendingSync?: boolean;
 }) {
   const { t } = useI18n();
   const router = useRouter();
   const notifyRewards = useFocusRewardToast();
-  const { session, state } = useLiveFocusState(initialSession, getActiveFocusSessionAction, notifyRewards);
+  const resync = useCallback(async () => {
+    if (pendingSync) return { session: initialSession, unlockedTiers: [] };
+    return getActiveFocusSessionAction();
+  }, [pendingSync, initialSession]);
+  const { session, state } = useLiveFocusState(initialSession, resync, notifyRewards);
+  const pause = useOfflineIdAction({ onlineAction: pauseFocusSession, buildMutation: () => ({ type: "pauseFocusSession" }) });
+  const resume = useOfflineIdAction({ onlineAction: resumeFocusSession, buildMutation: () => ({ type: "resumeFocusSession" }) });
+  const cancel = useOfflineIdAction({ onlineAction: cancelFocusSession, buildMutation: () => ({ type: "cancelFocusSession" }) });
 
   // Covers entering "on_break" and auto-completion while the screen is
   // still being watched: in both cases the component stays mounted long
@@ -68,8 +84,9 @@ export function FocusTimerDisplay({
   return (
     <div className="flex flex-1 flex-col">
       <div className="flex flex-col items-center gap-4 py-6 text-center md:py-10">
-        <div className="text-[11px] font-semibold tracking-wide text-muted uppercase">
+        <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-muted uppercase">
           {t(`focus.status.${session.status}`)}
+          {pendingSync && <PendingSyncBadge />}
         </div>
         <div className="font-serif-italic text-[56px] leading-none font-semibold tabular-nums md:text-[72px]">
           {formatClock(bigValueSeconds)}
@@ -89,7 +106,7 @@ export function FocusTimerDisplay({
           <BreakBanner remainingSeconds={state.breakRemainingSeconds ?? 0} />
           {canCancel && (
             <form
-              action={cancelFocusSession}
+              action={cancel}
               onSubmit={(e) => {
                 if (!confirm(t("focus.cancelConfirm"))) e.preventDefault();
               }}
@@ -102,11 +119,11 @@ export function FocusTimerDisplay({
         <div className="mt-auto flex flex-col items-center gap-3 pt-6">
           <div className="flex items-center justify-center gap-3">
             {isPaused ? (
-              <form action={resumeFocusSession}>
+              <form action={resume}>
                 <PrimaryButton icon={Play} label={t("focus.controls.resume")} />
               </form>
             ) : (
-              <form action={pauseFocusSession}>
+              <form action={pause}>
                 <PrimaryButton icon={Pause} label={t("focus.controls.pause")} />
               </form>
             )}
@@ -119,7 +136,7 @@ export function FocusTimerDisplay({
           </div>
           {canCancel && (
             <form
-              action={cancelFocusSession}
+              action={cancel}
               onSubmit={(e) => {
                 if (!confirm(t("focus.cancelConfirm"))) e.preventDefault();
               }}
@@ -137,7 +154,9 @@ export function FocusTimerDisplay({
  * `unlockedTiers` from the response to trigger the reward toast, and
  * triggers the sound/title alert right here — the `router.refresh()` that
  * follows "Finish" unmounts this tree before `useFocusStatusAlerts` gets to
- * observe the transition to "completed". */
+ * observe the transition to "completed". When offline, none of that is
+ * available yet (the reward isn't known until the queued mutation actually
+ * syncs) — it just queues and skips the toast/sound for this tap. */
 function FinishButton({
   label,
   soundEnabled,
@@ -147,8 +166,9 @@ function FinishButton({
   label: string;
   soundEnabled: boolean;
   completeTitle: string;
-  onUnlocked: (tiers: Awaited<ReturnType<typeof finishFocusSession>>["unlockedTiers"]) => void;
+  onUnlocked: (tiers: FocusRewardTier[]) => void;
 }) {
+  const { isOnline, runOrQueue } = useOffline();
   const [isPending, startTransition] = useTransition();
   return (
     <button
@@ -156,10 +176,19 @@ function FinishButton({
       disabled={isPending}
       onClick={() =>
         startTransition(async () => {
-          const { unlockedTiers } = await finishFocusSession();
-          if (soundEnabled) playChime();
-          flashTitle(completeTitle);
-          onUnlocked(unlockedTiers);
+          if (isOnline) {
+            try {
+              const { unlockedTiers } = await finishFocusSession();
+              if (soundEnabled) playChime();
+              flashTitle(completeTitle);
+              onUnlocked(unlockedTiers);
+              return;
+            } catch (err) {
+              unstable_rethrow(err);
+              // Falls through to the offline branch: a genuine transport failure.
+            }
+          }
+          await runOrQueue({ type: "finishFocusSession" });
         })
       }
       className="inline-flex items-center gap-1.5 rounded-lg border border-border px-5 py-2.5 text-[12.5px] font-medium disabled:opacity-60"

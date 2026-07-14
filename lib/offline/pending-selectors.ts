@@ -3,6 +3,7 @@ import type { HabitFormValues } from "@/lib/validation/habit";
 import type { RoutineFormValues } from "@/lib/validation/routine";
 import type { TaskFormValues } from "@/lib/validation/task";
 import type { TransactionFormValues } from "@/lib/validation/transaction";
+import type { StartFocusSessionValues } from "@/lib/validation/focus";
 import type { HabitWithExtras, CategoryRow } from "@/lib/queries/habits";
 import type { RoutineWithStats, RoutineHabitSummary } from "@/lib/queries/routines";
 import type { TaskWithStatus } from "@/lib/queries/tasks";
@@ -10,6 +11,7 @@ import type { FinanceCategoryRow, TransactionWithCategory } from "@/lib/queries/
 import { buildFrequencyConfig } from "@/lib/habits/frequency";
 import { FREEZE_MONTHLY_ALLOWANCE } from "@/lib/habits/status";
 import { buildTaskRecurrenceConfig, currentPeriodKey } from "@/lib/tasks/recurrence";
+import { applyEndBreakEarly, applyPause, applyResume, resolveStartFocusValues, type FocusSessionRow } from "@/lib/focus/compute";
 
 // --- Habits ---
 
@@ -278,9 +280,97 @@ export function applyPendingTransactionEdit(
   return { ...transaction, ...transactionEditableFields(values, categories) };
 }
 
+// --- Focus ---
+
+/** Builds a "good enough" `FocusSessionRow` to display a session started
+ * offline that hasn't synced yet. `habitId`/`categoryId` are used as-is
+ * from the form (no server-side habit→category resolution possible
+ * offline) — self-corrects once the real sync happens. */
+export function buildGhostFocusSession(
+  id: string,
+  values: StartFocusSessionValues,
+  today: string
+): FocusSessionRow {
+  const resolved = resolveStartFocusValues(values);
+  const nowIso = new Date().toISOString();
+  return {
+    id,
+    userId: "",
+    habitId: values.habitId || null,
+    categoryId: values.categoryId || null,
+    mode: resolved.mode,
+    plannedDurationSeconds: resolved.plannedDurationSeconds,
+    status: "running",
+    startedAt: nowIso,
+    lastResumedAt: nowIso,
+    accumulatedActiveSeconds: 0,
+    breaksEnabled: resolved.breaksEnabled,
+    breakIntervalMinutes: resolved.breaksEnabled ? resolved.breakIntervalMinutes : null,
+    breakDurationMinutes: resolved.breaksEnabled ? resolved.breakDurationMinutes : null,
+    breaksTakenCount: 0,
+    breakStartedAt: null,
+    pausedAt: null,
+    completedAt: null,
+    autoCompleted: false,
+    date: today,
+    createdAt: nowIso,
+  };
+}
+
+const FOCUS_MUTATION_TYPES: ReadonlySet<QueuedRecord["type"]> = new Set([
+  "startFocusSession",
+  "pauseFocusSession",
+  "resumeFocusSession",
+  "endBreakEarly",
+  "finishFocusSession",
+  "cancelFocusSession",
+]);
+
+/**
+ * Folds every queued focus mutation, in order, into a single "ghost"
+ * session preview — reusing the same pure transition functions the server
+ * applies (lib/focus/compute.ts), so the offline preview and the eventual
+ * synced result agree. Returns `undefined` when there's no pending focus
+ * mutation at all (the caller should trust the real server session), or
+ * `null` once a finish/cancel closes the session (no longer active).
+ */
+function applyFocusMutation(
+  session: FocusSessionRow | null,
+  mutation: QueuedRecord,
+  today: string,
+  now: Date
+): FocusSessionRow | null {
+  switch (mutation.type) {
+    case "startFocusSession":
+      return buildGhostFocusSession(mutation.id, mutation.values, today);
+    case "pauseFocusSession":
+      return session ? { ...session, ...applyPause(session, now) } : session;
+    case "resumeFocusSession":
+      return session ? { ...session, ...applyResume(now) } : session;
+    case "endBreakEarly":
+      return session ? { ...session, ...applyEndBreakEarly(now) } : session;
+    case "finishFocusSession":
+    case "cancelFocusSession":
+      return null;
+    default:
+      return session;
+  }
+}
+
+export function pendingFocusSession(queue: QueuedRecord[], today: string): FocusSessionRow | null | undefined {
+  const focusMutations = queue.filter((m) => FOCUS_MUTATION_TYPES.has(m.type));
+  if (focusMutations.length === 0) return undefined;
+
+  const now = new Date();
+  return focusMutations.reduce<FocusSessionRow | null>(
+    (session, mutation) => applyFocusMutation(session, mutation, today, now),
+    null
+  );
+}
+
 // --- Sync panel (Settings) ---
 
-export type PendingDomain = "habits" | "routines" | "tasks" | "finance" | "categories";
+export type PendingDomain = "habits" | "routines" | "tasks" | "finance" | "categories" | "focus";
 
 /** One entry per QueuedMutation variant (lib/offline/db.ts) — a `Record` over
  * the full union, same exhaustiveness trick as replay-registry.ts's
@@ -307,10 +397,23 @@ const DOMAIN_BY_MUTATION_TYPE: Record<QueuedRecord["type"], PendingDomain> = {
   createTransaction: "finance",
   updateTransaction: "finance",
   deleteTransaction: "finance",
+  startFocusSession: "focus",
+  pauseFocusSession: "focus",
+  resumeFocusSession: "focus",
+  endBreakEarly: "focus",
+  finishFocusSession: "focus",
+  cancelFocusSession: "focus",
 };
 
 export function pendingMutationsByDomain(queue: QueuedRecord[]): Record<PendingDomain, number> {
-  const counts: Record<PendingDomain, number> = { habits: 0, routines: 0, tasks: 0, finance: 0, categories: 0 };
+  const counts: Record<PendingDomain, number> = {
+    habits: 0,
+    routines: 0,
+    tasks: 0,
+    finance: 0,
+    categories: 0,
+    focus: 0,
+  };
   for (const mutation of queue) counts[DOMAIN_BY_MUTATION_TYPE[mutation.type]]++;
   return counts;
 }

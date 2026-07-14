@@ -18,6 +18,14 @@ import {
   updateTransactionCore,
   deleteTransactionCore,
 } from "@/lib/actions/transactions";
+import {
+  startFocusSessionCore,
+  pauseFocusSession,
+  resumeFocusSession,
+  endBreakEarly,
+  finishFocusSession,
+  cancelFocusSession,
+} from "@/lib/actions/focus";
 import type { AchievementType } from "@/lib/achievements";
 
 export type ReplayResult = { unlocked?: AchievementType[]; freezeQuotaExhausted?: boolean } | void;
@@ -72,6 +80,20 @@ const registry: Registry = {
     await updateTransactionCore(m.transactionId, m.values);
   },
   deleteTransaction: (m) => deleteTransactionCore(m.transactionId),
+  // Reward-unlock toasts for a session finished while offline don't fire
+  // synchronously (unlike the online "Finish" button, which reads them
+  // straight from the response) — the reward is still granted server-side
+  // regardless, and the next natural resync picks up the closed session.
+  startFocusSession: async (m) => {
+    await startFocusSessionCore(m.id, m.values);
+  },
+  pauseFocusSession: () => pauseFocusSession(),
+  resumeFocusSession: () => resumeFocusSession(),
+  endBreakEarly: () => endBreakEarly(),
+  finishFocusSession: async () => {
+    await finishFocusSession();
+  },
+  cancelFocusSession: () => cancelFocusSession(),
 };
 
 export async function replay(mutation: QueuedMutation): Promise<ReplayResult> {

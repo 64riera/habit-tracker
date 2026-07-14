@@ -5,6 +5,7 @@ import type { HabitFormValues } from "@/lib/validation/habit";
 import type { RoutineFormValues } from "@/lib/validation/routine";
 import type { TaskFormValues } from "@/lib/validation/task";
 import type { TransactionFormValues } from "@/lib/validation/transaction";
+import type { StartFocusSessionValues } from "@/lib/validation/focus";
 
 export type QueuedMutation =
   | { type: "log"; input: LogInput }
@@ -26,7 +27,13 @@ export type QueuedMutation =
   | { type: "toggleTask"; taskId: string; periodKey: string; done: boolean }
   | { type: "createTransaction"; id: string; values: TransactionFormValues }
   | { type: "updateTransaction"; transactionId: string; values: TransactionFormValues }
-  | { type: "deleteTransaction"; transactionId: string };
+  | { type: "deleteTransaction"; transactionId: string }
+  | { type: "startFocusSession"; id: string; values: StartFocusSessionValues }
+  | { type: "pauseFocusSession" }
+  | { type: "resumeFocusSession" }
+  | { type: "endBreakEarly" }
+  | { type: "finishFocusSession" }
+  | { type: "cancelFocusSession" };
 
 export type QueuedRecord = QueuedMutation & { id: number; createdAt: number };
 
@@ -67,7 +74,15 @@ export async function getQueuedMutations(): Promise<QueuedRecord[]> {
     request.onerror = () => reject(request.error);
   });
   db.close();
-  return result.sort((a, b) => a.id - b.id);
+  // Sorted by `createdAt`, not `id`: the store's keyPath ("id") holds a
+  // client-generated string for mutations that carry their own domain id
+  // (createHabit, startFocusSession, ...) and a numeric autoincrement value
+  // for every other mutation type (see enqueueMutation/openDb) — sorting a
+  // mix of strings and numbers with `a.id - b.id` silently produces NaN for
+  // any string/number pair and corrupts the order. `createdAt` is always a
+  // plain number set uniformly for every mutation, so it sorts correctly
+  // regardless of what the id happens to be.
+  return result.sort((a, b) => a.createdAt - b.createdAt);
 }
 
 export async function removeQueuedMutation(id: number): Promise<void> {

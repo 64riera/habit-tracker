@@ -361,6 +361,7 @@
     "domainTasks": "Tareas",
     "domainFinance": "Finanzas",
     "domainCategories": "Categorías",
+    "domainFocus": "Enfoque",
     "fallbackTitle": "Sin conexión",
     "fallbackBody": "Esta sección todavía no se guardó en este dispositivo, así que no hay nada que mostrar sin conexión. Vuelve a intentarlo cuando tengas señal, o revisa una sección que ya hayas visitado antes.",
     "fallbackCta": "Ir a Hoy"

@@ -2,12 +2,15 @@
 
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { nanoid } from "nanoid";
 import { Play } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
 import { categoryDisplayName } from "@/lib/habits/describe";
-import { startFocusSessionForm, type StartFocusSessionFormState } from "@/lib/actions/focus";
+import { startFocusSessionOnline, type StartFocusSessionFormState } from "@/lib/actions/focus";
+import { startFocusSessionSchema, extractStartFocusSessionFields } from "@/lib/validation/focus";
+import { useOfflineFormAction } from "@/lib/offline/form";
 import { FocusDurationDial } from "@/components/focus/focus-duration-dial";
 import {
   BREAK_DURATION_MAX_MINUTES,
@@ -37,7 +40,14 @@ const NONE = "__none__";
 
 export function FocusStartForm({ settings, habitOptions, categories, defaultHabitId }: Props) {
   const { t, locale } = useI18n();
-  const [state, formAction] = useActionState(startFocusSessionForm, INITIAL_STATE);
+  const [id] = useState(() => nanoid());
+  const action = useOfflineFormAction({
+    schema: startFocusSessionSchema,
+    extractFields: extractStartFocusSessionFields,
+    buildMutation: (id, values) => ({ type: "startFocusSession", id, values }),
+    onlineAction: startFocusSessionOnline,
+  });
+  const [state, formAction] = useActionState(action, INITIAL_STATE);
   const [mode, setMode] = useState<(typeof MODES)[number]>(settings.defaultMode);
   const [durationMinutes, setDurationMinutes] = useState(settings.defaultDurationMinutes);
   const [breaksEnabled, setBreaksEnabled] = useState(settings.breaksEnabled);
@@ -67,6 +77,7 @@ export function FocusStartForm({ settings, habitOptions, categories, defaultHabi
 
   return (
     <form action={formAction} className="flex flex-1 flex-col min-w-0">
+      <input type="hidden" name="id" value={id} />
       {state.error && (
         <div
           role="alert"

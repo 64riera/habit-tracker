@@ -71,6 +71,45 @@ function flightCacheKey(url) {
   return key.toString();
 }
 
+// A route's real HTML document lists every JS/CSS chunk its hydration
+// actually needs (<script src>, <link rel=stylesheet href>) — a much more
+// reliable source than trying to predict which chunks a route needs from
+// the outside. `router.prefetch()` (used to keep a handful of routes
+// available offline even before they're ever visited, see
+// lib/offline/client.tsx) only fetches the RSC payload, not the modules a
+// real hydration would request — without this, those chunks stay missing
+// from STATIC_CACHE until an actual visit renders them, and a prefetched
+// route that's opened offline before that first real visit fails with a
+// chunk-load error instead of rendering.
+function extractStaticAssetPaths(html) {
+  const paths = new Set();
+  const scriptSrcs = html.matchAll(/<script[^>]+src="([^"]+)"/g);
+  const stylesheetHrefs = html.matchAll(/<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"/g);
+  for (const match of [...scriptSrcs, ...stylesheetHrefs]) {
+    if (match[1].startsWith("/_next/static/")) paths.add(match[1]);
+  }
+  return [...paths];
+}
+
+function warmStaticAssets(html) {
+  const paths = extractStaticAssetPaths(html);
+  if (paths.length === 0) return;
+  caches.open(STATIC_CACHE).then((cache) =>
+    Promise.all(
+      paths.map((path) =>
+        cache.match(path).then((existing) => {
+          if (existing) return;
+          return fetch(path)
+            .then((response) => {
+              if (response.ok) return cache.put(path, response);
+            })
+            .catch(() => {});
+        })
+      )
+    )
+  );
+}
+
 // The App Router almost never issues a real "navigate" fetch again after
 // the initial load (everything after that is a client-side transition),
 // so PAGES_CACHE would stay empty for any route only ever visited via a
@@ -85,7 +124,13 @@ function warmPagesCache(pathnameUrl) {
       if (existing) return;
       fetch(pathnameUrl, { headers: { accept: "text/html" } })
         .then((response) => {
-          if (response.ok) cache.put(pathnameUrl, response);
+          if (!response.ok) return;
+          cache.put(pathnameUrl, response.clone());
+          response
+            .clone()
+            .text()
+            .then(warmStaticAssets)
+            .catch(() => {});
         })
         .catch(() => {});
     })

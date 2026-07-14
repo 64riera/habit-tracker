@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Timer } from "lucide-react";
@@ -11,6 +12,10 @@ import { getActiveFocusSessionAction } from "@/lib/actions/focus";
 import { formatClock } from "@/lib/focus/format";
 import { LIVE_STATUSES, type FocusSessionRow } from "@/lib/focus/compute";
 import { hasFocusHeaderSlot } from "@/lib/focus/header-slot";
+import { useOffline } from "@/lib/offline/client";
+import { pendingFocusSession } from "@/lib/offline/pending-selectors";
+import { getClientToday } from "@/lib/date-client";
+import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
 
 /**
  * Floating pill visible on any dashboard route except /focus (the full
@@ -29,21 +34,42 @@ export function MiniFocusIndicator({
   session: FocusSessionRow | null;
   soundEnabled: boolean;
 }) {
-  if (!session) return null;
-  return <MiniFocusIndicatorActive initialSession={session} soundEnabled={soundEnabled} />;
+  const { pendingMutations } = useOffline();
+  // A session started offline never reaches this component through
+  // `session` (that prop only ever comes from the server) — without this,
+  // the floating indicator simply wouldn't exist until the queue drains.
+  const pendingSession = useMemo(
+    () => pendingFocusSession(pendingMutations, getClientToday()),
+    [pendingMutations]
+  );
+  const effectiveSession = pendingSession !== undefined ? pendingSession : session;
+  if (!effectiveSession) return null;
+  return (
+    <MiniFocusIndicatorActive
+      initialSession={effectiveSession}
+      soundEnabled={soundEnabled}
+      pendingSync={pendingSession !== undefined}
+    />
+  );
 }
 
 function MiniFocusIndicatorActive({
   initialSession,
   soundEnabled,
+  pendingSync,
 }: {
   initialSession: FocusSessionRow;
   soundEnabled: boolean;
+  pendingSync: boolean;
 }) {
   const pathname = usePathname();
   const { t } = useI18n();
   const notifyRewards = useFocusRewardToast();
-  const { session, state } = useLiveFocusState(initialSession, getActiveFocusSessionAction, notifyRewards);
+  const resync = useCallback(async () => {
+    if (pendingSync) return { session: initialSession, unlockedTiers: [] };
+    return getActiveFocusSessionAction();
+  }, [pendingSync, initialSession]);
+  const { session, state } = useLiveFocusState(initialSession, resync, notifyRewards);
   useFocusStatusAlerts(session, soundEnabled);
 
   if (!session || !state || !LIVE_STATUSES.includes(session.status)) return null;
@@ -59,6 +85,7 @@ function MiniFocusIndicatorActive({
       <Timer size={13} strokeWidth={2} className="text-muted" aria-hidden />
       <span className="font-medium tabular-nums">{formatClock(bigValueSeconds)}</span>
       <span className="text-muted">{t(`focus.status.${session.status}`)}</span>
+      {pendingSync && <PendingSyncBadge />}
     </Link>
   );
 }

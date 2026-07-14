@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n/client";
 import { NAV_ITEMS } from "./nav-items";
+import { OfflineNavLink } from "./offline-nav-link";
 import { cn } from "@/lib/utils";
 import { APP_NAME } from "@/lib/branding";
 
@@ -22,7 +22,7 @@ export function Sidebar({ streakMax }: { streakMax?: number | null }) {
           const active = item.activeWhen(pathname);
           const Icon = item.icon;
           return (
-            <Link
+            <OfflineNavLink
               key={item.key}
               href={item.href}
               aria-current={active ? "page" : undefined}
@@ -33,7 +33,7 @@ export function Sidebar({ streakMax }: { streakMax?: number | null }) {
             >
               <Icon size={16} strokeWidth={2} aria-hidden />
               {t(item.dictKey)}
-            </Link>
+            </OfflineNavLink>
           );
         })}
       </nav>

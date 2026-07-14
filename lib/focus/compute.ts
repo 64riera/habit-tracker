@@ -168,6 +168,40 @@ export function reconcileFocusSession(row: FocusSessionRow, now: Date): FocusRec
   return { changed, session };
 }
 
+export type ResolvedStartFocusValues = {
+  mode: FocusSessionRow["mode"];
+  plannedDurationSeconds: number | null;
+  breaksEnabled: boolean;
+  /** Always resolved to a number (defaults to 25/5), even when breaks are
+   * disabled — `focusSettings` remembers this so re-enabling breaks later
+   * starts from a sensible value. Null it out yourself for a session row
+   * (`breaksEnabled ? breakIntervalMinutes : null`), which has no interval
+   * at all when breaks are off. */
+  breakIntervalMinutes: number;
+  breakDurationMinutes: number;
+};
+
+/**
+ * Fills in the same defaults the server applies when starting a session —
+ * shared by `startFocusSessionCore` (lib/actions/focus.ts) and the offline
+ * "ghost" session preview (lib/offline/pending-selectors.ts) so both agree
+ * on what an unspecified duration/break config actually resolves to.
+ */
+export function resolveStartFocusValues(values: {
+  mode: FocusSessionRow["mode"];
+  durationMinutes?: number;
+  breaksEnabled?: boolean;
+  breakIntervalMinutes?: number;
+  breakDurationMinutes?: number;
+}): ResolvedStartFocusValues {
+  const breaksEnabled = Boolean(values.breaksEnabled);
+  const breakIntervalMinutes = breaksEnabled ? values.breakIntervalMinutes ?? 25 : 25;
+  const breakDurationMinutes = breaksEnabled ? values.breakDurationMinutes ?? 5 : 5;
+  const durationMinutes = values.mode === "countdown" ? values.durationMinutes ?? 25 : 25;
+  const plannedDurationSeconds = values.mode === "countdown" ? Math.round(durationMinutes * 60) : null;
+  return { mode: values.mode, plannedDurationSeconds, breaksEnabled, breakIntervalMinutes, breakDurationMinutes };
+}
+
 export function applyPause(session: FocusSessionRow, now: Date): FocusSessionPatch {
   return {
     status: "paused",

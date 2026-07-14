@@ -9,8 +9,7 @@ import { replay } from "@/lib/offline/replay-registry";
 import { useAchievementToast, useToast } from "@/lib/toast/client";
 import { useI18n } from "@/lib/i18n/client";
 import { refreshVisitedSections } from "@/lib/swr/refresh-visited-sections";
-import { getTodayDateString } from "@/lib/date";
-import { DAY_CUTOFF_COOKIE, DEFAULT_DAY_CUTOFF_HOUR } from "@/lib/settings/day-cutoff-shared";
+import { getClientToday } from "@/lib/date-client";
 
 type SyncState = "offline" | "syncing" | "synced" | "idle";
 
@@ -36,20 +35,24 @@ const SYNCED_BANNER_MS = 2500;
 const BACKGROUND_SYNC_TAG = "sync-mutations";
 const LAST_SYNCED_AT_KEY = "justgo:last-synced-at";
 
+/** Routes with an action that doesn't depend on any previously-loaded data
+ * (starting a focus session, logging a transaction, adding/checking a
+ * task) — kept warm in the background whenever online so they're usable
+ * offline even the very first time they're opened, not just after a first
+ * visit. Deliberately NOT every route: sections whose whole value is
+ * showing past data (History, Stats, ...) have nothing useful to offer
+ * without it, so they keep the normal "must visit once" rule. Don't add a
+ * route here without that same justification. */
+const ALWAYS_WARM_ROUTES = ["/focus", "/finance", "/tasks"];
+
+function warmAlwaysAvailableRoutes(router: ReturnType<typeof useRouter>) {
+  for (const route of ALWAYS_WARM_ROUTES) router.prefetch(route);
+}
+
 function readLastSyncedAt(): number | null {
   if (typeof window === "undefined") return null;
   const raw = window.localStorage.getItem(LAST_SYNCED_AT_KEY);
   return raw ? Number(raw) : null;
-}
-
-/** Mirrors `getDayCutoffHour` (lib/settings/day-cutoff.ts), which can't be
- * imported here directly — it's `server-only`. The cookie itself is plain
- * (not httpOnly), so reading it from `document.cookie` is safe. */
-function readTodayClientSide(): string {
-  const match = document.cookie.match(new RegExp(`(?:^|; )${DAY_CUTOFF_COOKIE}=([^;]*)`));
-  const parsed = match ? Number(decodeURIComponent(match[1])) : NaN;
-  const cutoffHour = Number.isFinite(parsed) && parsed >= 0 && parsed <= 23 ? parsed : DEFAULT_DAY_CUTOFF_HOUR;
-  return getTodayDateString(cutoffHour);
 }
 
 function subscribeToConnectivity(callback: () => void) {
@@ -141,7 +144,8 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
       // user happens to revisit it. Runs on every successful drain, even
       // with nothing queued, so simply regaining connectivity is enough to
       // catch up on any writes made from another device meanwhile.
-      await refreshVisitedSections(cache, globalMutate, readTodayClientSide());
+      await refreshVisitedSections(cache, globalMutate, getClientToday());
+      warmAlwaysAvailableRoutes(router);
       const syncedAt = Date.now();
       setLastSyncedAt(syncedAt);
       window.localStorage.setItem(LAST_SYNCED_AT_KEY, String(syncedAt));

@@ -11,6 +11,7 @@ const DOMAIN_LABEL_KEY: Record<PendingDomain, string> = {
   tasks: "offline.domainTasks",
   finance: "offline.domainFinance",
   categories: "offline.domainCategories",
+  focus: "offline.domainFocus",
 };
 
 /** Sync status + manual "sync now", scoped to Settings — the global floating

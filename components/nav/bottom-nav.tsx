@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n/client";
 import { NAV_ITEMS } from "./nav-items";
+import { OfflineNavLink } from "./offline-nav-link";
 import { cn } from "@/lib/utils";
 
 export function BottomNav() {
@@ -20,7 +20,7 @@ export function BottomNav() {
         const active = item.activeWhen(pathname);
         const Icon = item.icon;
         return (
-          <Link
+          <OfflineNavLink
             key={item.key}
             href={item.href}
             aria-current={active ? "page" : undefined}
@@ -31,7 +31,7 @@ export function BottomNav() {
           >
             <Icon size={17} strokeWidth={2} aria-hidden />
             {t(item.dictKey)}
-          </Link>
+          </OfflineNavLink>
         );
       })}
     </nav>

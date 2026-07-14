@@ -2,7 +2,6 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { nanoid } from "nanoid";
 import { db } from "@/lib/db/client";
 import { categories, focusSessions, focusSettings, habits } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
@@ -14,6 +13,7 @@ import {
   applyFinalize,
   applyPause,
   applyResume,
+  resolveStartFocusValues,
   LIVE_STATUSES,
   type FocusSessionPatch,
   type FocusSessionRow,
@@ -69,7 +69,13 @@ async function resolveFocusAttribution(
   return { habitId: null, categoryId: await resolveCategoryId(userId, categoryId) };
 }
 
-export async function startFocusSession(input: StartFocusSessionValues): Promise<FocusSessionRow> {
+/**
+ * Core reused by the online form path (`startFocusSessionOnline`) and by
+ * the offline replay log — takes a client-generated `id` (same pattern as
+ * `createHabitCore`) instead of generating one itself, so a session
+ * started offline keeps the same id its "ghost" preview already used.
+ */
+export async function startFocusSessionCore(id: string, input: StartFocusSessionValues): Promise<FocusSessionRow> {
   const values = startFocusSessionSchema.parse(input);
   const userId = await getCurrentUserId();
 
@@ -83,39 +89,55 @@ export async function startFocusSession(input: StartFocusSessionValues): Promise
   const cutoffHour = await getDayCutoffHour();
   const today = getTodayDateString(cutoffHour, now);
   const { habitId, categoryId } = await resolveFocusAttribution(userId, values.habitId, values.categoryId);
-
-  const breaksEnabled = Boolean(values.breaksEnabled);
-  const breakIntervalMinutes = breaksEnabled ? values.breakIntervalMinutes ?? 25 : 25;
-  const breakDurationMinutes = breaksEnabled ? values.breakDurationMinutes ?? 5 : 5;
+  const resolved = resolveStartFocusValues(values);
+  // Settings remembers the duration the user actually chose, not the
+  // resolved default when they left it blank in stopwatch mode.
   const durationMinutes = values.mode === "countdown" ? values.durationMinutes ?? 25 : 25;
-  const plannedDurationSeconds = values.mode === "countdown" ? Math.round(durationMinutes * 60) : null;
-
-  const id = nanoid();
 
   await db.batch([
-    db.insert(focusSessions).values({
-      id,
-      userId,
-      habitId,
-      categoryId,
-      mode: values.mode,
-      plannedDurationSeconds,
-      status: "running",
-      startedAt: nowIso,
-      lastResumedAt: nowIso,
-      accumulatedActiveSeconds: 0,
-      breaksEnabled,
-      breakIntervalMinutes: breaksEnabled ? breakIntervalMinutes : null,
-      breakDurationMinutes: breaksEnabled ? breakDurationMinutes : null,
-      date: today,
-    }),
-    // What was just chosen is remembered as the default for next time.
+    // onConflictDoNothing: an interrupted offline replay retry shouldn't
+    // fail on an id collision (see createHabitCore for the same reasoning).
+    db
+      .insert(focusSessions)
+      .values({
+        id,
+        userId,
+        habitId,
+        categoryId,
+        mode: resolved.mode,
+        plannedDurationSeconds: resolved.plannedDurationSeconds,
+        status: "running",
+        startedAt: nowIso,
+        lastResumedAt: nowIso,
+        accumulatedActiveSeconds: 0,
+        breaksEnabled: resolved.breaksEnabled,
+        breakIntervalMinutes: resolved.breaksEnabled ? resolved.breakIntervalMinutes : null,
+        breakDurationMinutes: resolved.breaksEnabled ? resolved.breakDurationMinutes : null,
+        date: today,
+      })
+      .onConflictDoNothing(),
+    // What was just chosen is remembered as the default for next time —
+    // unlike the session row above, this keeps a numeric interval/duration
+    // even when breaks are off, so re-enabling them later starts sensible.
     db
       .insert(focusSettings)
-      .values({ userId, defaultMode: values.mode, defaultDurationMinutes: durationMinutes, breaksEnabled, breakIntervalMinutes, breakDurationMinutes })
+      .values({
+        userId,
+        defaultMode: resolved.mode,
+        defaultDurationMinutes: durationMinutes,
+        breaksEnabled: resolved.breaksEnabled,
+        breakIntervalMinutes: resolved.breakIntervalMinutes,
+        breakDurationMinutes: resolved.breakDurationMinutes,
+      })
       .onConflictDoUpdate({
         target: focusSettings.userId,
-        set: { defaultMode: values.mode, defaultDurationMinutes: durationMinutes, breaksEnabled, breakIntervalMinutes, breakDurationMinutes },
+        set: {
+          defaultMode: resolved.mode,
+          defaultDurationMinutes: durationMinutes,
+          breaksEnabled: resolved.breaksEnabled,
+          breakIntervalMinutes: resolved.breakIntervalMinutes,
+          breakDurationMinutes: resolved.breakDurationMinutes,
+        },
       }),
   ]);
 
@@ -147,14 +169,19 @@ export async function setFocusSoundEnabled(enabled: boolean): Promise<void> {
 
 export type StartFocusSessionFormState = { error?: string };
 
-/** Wrapper suited for `useActionState`/`<form action>`: validates the start form's FormData and delegates to startFocusSession. */
-export async function startFocusSessionForm(
+/**
+ * Online path for `useOfflineFormAction` (see `focus-start-form.tsx`):
+ * reads the client-generated id from the form and delegates to the core.
+ * Doesn't redirect — starting a session keeps you on /focus.
+ */
+export async function startFocusSessionOnline(
   _prevState: StartFocusSessionFormState,
   formData: FormData
 ): Promise<StartFocusSessionFormState> {
+  const id = String(formData.get("id") ?? "");
   const parsed = startFocusSessionSchema.safeParse(extractStartFocusSessionFields(formData));
-  if (!parsed.success) return { error: "invalid" };
-  await startFocusSession(parsed.data);
+  if (!id || !parsed.success) return { error: "invalid" };
+  await startFocusSessionCore(id, parsed.data);
   return {};
 }
 
