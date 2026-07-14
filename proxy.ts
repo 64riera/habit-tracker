@@ -20,6 +20,10 @@ const PUBLIC_PATHS = [
   "/manifest.webmanifest",
   "/api/auth/google",
   "/api/cron/",
+  // Temporary, see app/api/admin/repair-migration-ledger/route.ts —
+  // self-authenticates with its own secret header, same reasoning as
+  // /api/cron/. Remove both together.
+  "/api/admin/repair-migration-ledger",
 ];
 
 // Old domain (before the rebrand to "Just Go"): redirect permanently
