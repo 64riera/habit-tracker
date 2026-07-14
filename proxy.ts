@@ -7,7 +7,20 @@ const SESSION_COOKIE = "justgo_session";
 // /api/cron/* routes have no user session (they're called by an external
 // cron, see .github/workflows/push-reminders.yml) — each authenticates with
 // its own shared secret (CRON_SECRET) inside the route handler, not a cookie.
-const PUBLIC_PATHS = ["/login", "/signup", "/welcome", "/manifest.webmanifest", "/api/auth/google", "/api/cron/"];
+// /offline is the service worker's navigation fallback (see public/sw.js)
+// and gets precached at SW-install time, which can happen before any
+// login (RegisterServiceWorker mounts in the root layout). If it weren't
+// public, that precache fetch would follow the redirect to /login and
+// cache the login page under the "/offline" key instead.
+const PUBLIC_PATHS = [
+  "/login",
+  "/signup",
+  "/welcome",
+  "/offline",
+  "/manifest.webmanifest",
+  "/api/auth/google",
+  "/api/cron/",
+];
 
 // Old domain (before the rebrand to "Just Go"): redirect permanently
 // instead of serving the app there, so we don't break direct links or the
