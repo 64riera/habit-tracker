@@ -15,7 +15,7 @@ export function BottomNav() {
     // the scrolling <main>, it's already pinned to the bottom by the
     // flexbox layout itself, without relying on fixed/sticky over the
     // document's scroll.
-    <nav className="flex shrink-0 border-t border-border bg-bg px-1 md:hidden">
+    <nav className="flex shrink-0 border-t border-border bg-bg px-1 pb-[env(safe-area-inset-bottom)] md:hidden">
       {NAV_ITEMS.map((item) => {
         const active = item.activeWhen(pathname);
         const Icon = item.icon;

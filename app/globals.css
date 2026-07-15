@@ -57,6 +57,22 @@
   --header-shadow: rgba(0, 0, 0, 0.45);
 }
 
+/* Variante para pantallas OLED: negro puro en vez del oscuro cálido de
+   arriba, para el ahorro de batería real que solo dan los píxeles apagados.
+   Solo redefine bg/surface/header — texto, muted, border y accent se
+   heredan de .dark sin cambios (contraste de --color-muted contra negro
+   puro sube de ~4:1 a ~7.9:1, así que sigue siendo legible sin tocarlo).
+   El shadow del header ya casi no se nota contra fondos oscuros (ver nota
+   arriba); contra negro puro directamente desaparece, así que aquí el
+   hairline lleva todavía más peso. */
+.dark.oled {
+  --color-bg: #000000;
+  --color-surface: #0f0d0a;
+
+  --header-hairline: rgba(255, 255, 255, 0.12);
+  --header-shadow: rgba(0, 0, 0, 0.6);
+}
+
 @theme inline {
   --color-bg: var(--color-bg);
   --color-surface: var(--color-surface);

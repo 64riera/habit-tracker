@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `dark_variant` text DEFAULT 'oled' NOT NULL;

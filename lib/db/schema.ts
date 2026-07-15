@@ -18,6 +18,10 @@ export const users = sqliteTable(
     themePreference: text("theme_preference", { enum: ["light", "dark", "system"] })
       .notNull()
       .default("system"),
+    // Only takes visual effect while dark mode is active (explicitly or via
+    // "system"); independent of themePreference so next-themes keeps owning
+    // light/dark/system on its own. See .dark.oled in app/globals.css.
+    darkVariant: text("dark_variant", { enum: ["original", "oled"] }).notNull().default("oled"),
     localePreference: text("locale_preference", { enum: ["es", "en"] }).notNull().default("es"),
     currencyPreference: text("currency_preference", { enum: ["MXN", "USD"] }).notNull().default("MXN"),
     timezone: text("timezone"), // IANA, e.g. "America/Monterrey" — detected in the browser, see timezone-sync.tsx

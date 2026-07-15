@@ -8,7 +8,7 @@ import { DAY_CUTOFF_COOKIE, TIMEZONE_COOKIE } from "@/lib/settings/date-shared";
 import { db } from "@/lib/db/client";
 import { users } from "@/lib/db/schema";
 import { getCurrentUserId, getCurrentUserIdOrNull } from "@/lib/auth/session";
-import type { ThemePreference } from "@/lib/queries/user";
+import type { ThemePreference, DarkVariant } from "@/lib/queries/user";
 
 const YEAR_SECONDS = 60 * 60 * 24 * 365;
 
@@ -38,6 +38,17 @@ export async function setThemePreference(theme: string) {
   await db
     .update(users)
     .set({ themePreference: theme satisfies ThemePreference })
+    .where(eq(users.id, userId));
+}
+
+/** Saves the dark mode style on the account, so it follows the user across
+ * devices. Only takes visual effect while dark mode is active. */
+export async function setDarkVariant(variant: string) {
+  if (variant !== "original" && variant !== "oled") return;
+  const userId = await getCurrentUserId();
+  await db
+    .update(users)
+    .set({ darkVariant: variant satisfies DarkVariant })
     .where(eq(users.id, userId));
 }
 

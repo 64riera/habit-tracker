@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { users } from "@/lib/db/schema";
@@ -6,10 +7,13 @@ import { getCurrentUserIdOrNull } from "@/lib/auth/session";
 import type { Locale } from "@/lib/i18n/dictionaries";
 
 export type ThemePreference = "light" | "dark" | "system";
+export type DarkVariant = "original" | "oled";
 export type CurrencyPreference = "MXN" | "USD";
 
-/** Theme preference saved on the account. "system" if there's no session (e.g. /login). */
-export async function getThemePreference(): Promise<ThemePreference> {
+/** Theme preference saved on the account. "system" if there's no session
+ * (e.g. /login). Memoized with `cache()`: read from RootLayout,
+ * `generateViewport`, and `generateMetadata` in the same request. */
+export const getThemePreference = cache(async (): Promise<ThemePreference> => {
   const userId = await getCurrentUserIdOrNull();
   if (!userId) return "system";
   const [user] = await db
@@ -18,7 +22,21 @@ export async function getThemePreference(): Promise<ThemePreference> {
     .where(eq(users.id, userId))
     .limit(1);
   return user?.themePreference ?? "system";
-}
+});
+
+/** Dark mode style saved on the account — only visible while dark mode is
+ * active. "oled" if there's no session, matching the column default.
+ * Memoized with `cache()`, same reasoning as `getThemePreference`. */
+export const getDarkVariant = cache(async (): Promise<DarkVariant> => {
+  const userId = await getCurrentUserIdOrNull();
+  if (!userId) return "oled";
+  const [user] = await db
+    .select({ darkVariant: users.darkVariant })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return user?.darkVariant ?? "oled";
+});
 
 /** Language preference saved on the account. `null` if there's no session
  * (e.g. /login, /signup) — there the language is resolved through other
