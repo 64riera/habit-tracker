@@ -375,6 +375,8 @@
     "routinesManage": "Rutinas",
     "routinesManageSubtitle": "Plantillas de ejercicios para tus sesiones",
     "routinesEmpty": "Aún no tienes rutinas.",
+    "resetRoutine": "Restablecer a la versión por defecto",
+    "confirmResetRoutine": "¿Restablecer esta rutina a su versión por defecto? Perderás los cambios que le hayas hecho.",
     "addNewRoutine": "Agregar rutina nueva",
     "routineNamePlaceholder": "p. ej. Upper A",
     "routineTargetPlaceholder": "3x8–12",

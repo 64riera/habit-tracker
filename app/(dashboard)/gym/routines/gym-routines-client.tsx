@@ -1,16 +1,24 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Eye, EyeOff, Pencil, Plus, Trash2, X, Check } from "lucide-react";
+import { Eye, EyeOff, Pencil, Plus, RotateCcw, Trash2, X, Check } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { cn } from "@/lib/utils";
-import { createGymRoutine, updateGymRoutine, setGymRoutineHidden } from "@/lib/actions/gym-routines";
+import { CANONICAL_GYM_ROUTINES } from "@/lib/gym/canonical-routines";
+import {
+  createGymRoutine,
+  updateGymRoutine,
+  setGymRoutineHidden,
+  resetGymRoutineToCanonical,
+} from "@/lib/actions/gym-routines";
 import type { GymExerciseCatalogRow } from "@/lib/queries/gym-exercises";
 import type { GymRoutineRow } from "@/lib/queries/gym-routines";
 import type { RoutineExercise } from "@/lib/gym/types";
+
+const CANONICAL_ROUTINE_NAMES = new Set(CANONICAL_GYM_ROUTINES.map((r) => r.name));
 
 type ExerciseDraft = { exerciseId: string; note: string };
 
@@ -57,6 +65,23 @@ export function GymRoutinesClient({
     startTransition(async () => {
       const result = await createGymRoutine(name, exercisesPayload);
       if (result.error) setRows((prev) => prev.filter((r) => r.id !== optimisticId));
+    });
+  }
+
+  function handleReset(routine: GymRoutineRow) {
+    const canonical = CANONICAL_GYM_ROUTINES.find((r) => r.name === routine.name);
+    if (!canonical || !confirm(t("gym.confirmResetRoutine"))) return;
+
+    const byName = new Map(exercises.map((e) => [e.nameEs, e.id]));
+    const resolved: RoutineExercise[] = canonical.exercises.flatMap((e) => {
+      const exerciseId = byName.get(e.nameEs);
+      return exerciseId ? [{ exerciseId, note: e.note }] : [];
+    });
+    if (resolved.length === 0) return;
+
+    setRows((prev) => prev.map((r) => (r.id === routine.id ? { ...r, exercises: resolved } : r)));
+    startTransition(async () => {
+      await resetGymRoutineToCanonical(routine.id);
     });
   }
 
@@ -114,6 +139,17 @@ export function GymRoutinesClient({
                 >
                   <Pencil size={15} strokeWidth={2} aria-hidden />
                 </button>
+                {CANONICAL_ROUTINE_NAMES.has(routine.name) && (
+                  <button
+                    type="button"
+                    onClick={() => handleReset(routine)}
+                    aria-label={t("gym.resetRoutine")}
+                    title={t("gym.resetRoutine")}
+                    className="-m-2 shrink-0 rounded-full p-2 text-muted"
+                  >
+                    <RotateCcw size={15} strokeWidth={2} aria-hidden />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => handleToggleHidden(routine)}

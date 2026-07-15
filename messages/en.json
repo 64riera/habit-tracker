@@ -375,6 +375,8 @@
     "routinesManage": "Routines",
     "routinesManageSubtitle": "Exercise templates for your sessions",
     "routinesEmpty": "You don't have any routines yet.",
+    "resetRoutine": "Reset to default",
+    "confirmResetRoutine": "Reset this routine to its default version? Any changes you made to it will be lost.",
     "addNewRoutine": "Add new routine",
     "routineNamePlaceholder": "e.g. Upper A",
     "routineTargetPlaceholder": "3x8–12",
