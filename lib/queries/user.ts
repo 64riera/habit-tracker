@@ -64,6 +64,24 @@ export async function getMetronomeBpm(): Promise<number> {
   return user?.metronomeBpm ?? 120;
 }
 
+export type UserProfile = { username: string; name: string | null; email: string | null; avatarUrl: string | null };
+
+/** Account identity for display (Settings' profile header) — `name`/
+ * `avatarUrl` are only ever populated by a Google login (see
+ * app/api/auth/google/callback/route.ts) and stay `null` for an account
+ * that has never used it, so callers fall back to `username`. `null`
+ * entirely if there's no session. */
+export async function getUserProfile(): Promise<UserProfile | null> {
+  const userId = await getCurrentUserIdOrNull();
+  if (!userId) return null;
+  const [user] = await db
+    .select({ username: users.username, name: users.name, email: users.email, avatarUrl: users.avatarUrl })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return user ?? null;
+}
+
 /** Whether the install-suggestion modal after their first habit has
  * already been shown (and decided on) — see install-suggestion-modal.tsx.
  * `true` if there's no session, so it's never offered on public pages. */

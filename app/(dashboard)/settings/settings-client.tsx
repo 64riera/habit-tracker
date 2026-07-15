@@ -9,12 +9,13 @@ import { LangToggle } from "@/components/nav/lang-toggle";
 import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
 import { PushToggle } from "@/components/pwa/push-toggle";
 import { SyncPanel } from "@/components/settings/sync-panel";
+import { ProfileHeader } from "@/components/settings/profile-header";
 import { Select } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n/client";
 import { useInstallPrompt } from "@/lib/hooks/use-install-prompt";
 import { setDayCutoffHour, setCurrencyPreference } from "@/lib/actions/preferences";
 import type { FocusHeaderData } from "@/lib/queries/focus";
-import type { CurrencyPreference } from "@/lib/queries/user";
+import type { CurrencyPreference, UserProfile } from "@/lib/queries/user";
 
 const CUTOFF_HOURS = Array.from({ length: 24 }, (_, h) => ({
   value: String(h),
@@ -30,10 +31,12 @@ export function AjustesClient({
   cutoffHour,
   focusHeader,
   currency,
+  profile,
 }: {
   cutoffHour: number;
   focusHeader: FocusHeaderData;
   currency: CurrencyPreference;
+  profile: UserProfile | null;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -129,6 +132,7 @@ export function AjustesClient({
       />
 
       <div className="flex flex-col">
+        {profile && <ProfileHeader profile={profile} />}
         {rows.map((row) => (
           <div key={row.label} className="flex items-center justify-between border-b border-border py-3.5">
             <div>

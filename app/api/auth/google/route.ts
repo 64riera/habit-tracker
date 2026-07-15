@@ -14,6 +14,7 @@ export async function GET(request: Request) {
   const authorizationURL = getGoogleClient(googleCallbackURI(url)).createAuthorizationURL(state, codeVerifier, [
     "openid",
     "email",
+    "profile",
   ]);
 
   const store = await cookies();

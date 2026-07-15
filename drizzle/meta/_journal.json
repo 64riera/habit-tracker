@@ -127,6 +127,13 @@
       "when": 1784076150727,
       "tag": "0017_brainy_moonstone",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1784078331623,
+      "tag": "0018_equal_magik",
+      "breakpoints": true
     }
   ]
 }

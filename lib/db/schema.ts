@@ -9,6 +9,12 @@ export const users = sqliteTable(
     passwordHash: text("password_hash"),
     email: text("email"),
     googleId: text("google_id"),
+    // Both only ever populated from Google's ID token claims (see
+    // getGoogleProfile in lib/auth/google.ts) — null for accounts that have
+    // never logged in with Google. Refreshed on every Google login, so a
+    // name change or new photo on the Google account catches up here too.
+    name: text("name"),
+    avatarUrl: text("avatar_url"),
     themePreference: text("theme_preference", { enum: ["light", "dark", "system"] })
       .notNull()
       .default("system"),

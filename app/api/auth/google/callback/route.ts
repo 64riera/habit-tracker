@@ -27,16 +27,28 @@ function loginErrorRedirect(request: Request, next: string): string {
   return url.toString();
 }
 
+/** Name/photo are refreshed on every login (not just set once at signup),
+ * so a change on the Google account side — a new photo, a legal name
+ * change — shows up here too instead of freezing whatever was true the
+ * first time. Shared by both "already linked" branches below. */
+function profileFields(profile: GoogleProfile) {
+  return { name: profile.name, avatarUrl: profile.avatarUrl };
+}
+
 async function findOrCreateGoogleUser(profile: GoogleProfile): Promise<string> {
   const [byGoogleId] = await db.select().from(users).where(eq(users.googleId, profile.googleId)).limit(1);
   if (byGoogleId) {
+    await db.update(users).set(profileFields(profile)).where(eq(users.id, byGoogleId.id));
     await syncLocalePreferenceOnLogin(byGoogleId.id);
     return byGoogleId.id;
   }
 
   const [byEmail] = await db.select().from(users).where(eq(users.email, profile.email)).limit(1);
   if (byEmail) {
-    await db.update(users).set({ googleId: profile.googleId }).where(eq(users.id, byEmail.id));
+    await db
+      .update(users)
+      .set({ googleId: profile.googleId, ...profileFields(profile) })
+      .where(eq(users.id, byEmail.id));
     await syncLocalePreferenceOnLogin(byEmail.id);
     return byEmail.id;
   }
@@ -44,9 +56,14 @@ async function findOrCreateGoogleUser(profile: GoogleProfile): Promise<string> {
   const userId = nanoid();
   const username = await generateUniqueUsernameFromEmail(profile.email);
   const localePreference = await resolvePreAuthLocale();
-  await db
-    .insert(users)
-    .values({ id: userId, username, email: profile.email, googleId: profile.googleId, localePreference });
+  await db.insert(users).values({
+    id: userId,
+    username,
+    email: profile.email,
+    googleId: profile.googleId,
+    localePreference,
+    ...profileFields(profile),
+  });
   await seedDefaultCategories(userId);
   await seedDefaultFinanceCategories(userId);
   return userId;
