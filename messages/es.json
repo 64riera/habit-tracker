@@ -354,6 +354,22 @@
       "reps": "reps",
       "week": "semana",
       "weeks": "semanas"
+    },
+    "searchExercise": "Buscar ejercicio…",
+    "noExerciseMatch": "Ningún ejercicio coincide",
+    "exercisesManage": "Ejercicios",
+    "exercisesManageSubtitle": "Agrega, edita u oculta ejercicios de tu catálogo",
+    "exercisesEmpty": "Aún no tienes ejercicios en tu catálogo.",
+    "addNewExercise": "Agregar ejercicio nuevo",
+    "muscleGroupLabel": "Grupo muscular",
+    "muscleGroups": {
+      "chest": "Pecho",
+      "back": "Espalda",
+      "shoulders": "Hombros",
+      "arms": "Brazos",
+      "legs": "Piernas",
+      "core": "Core",
+      "cardio": "Cardio"
     }
   },
   "more": {

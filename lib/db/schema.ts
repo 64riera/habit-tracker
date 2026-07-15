@@ -258,6 +258,12 @@ export const gymExercises = sqliteTable(
     }).notNull(),
     sortOrder: integer("sort_order").notNull().default(0),
     hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
+    // false for rows inserted by the canonical-catalog backfill, true once a
+    // user adds their own or edits one of the canonical ones (see
+    // lib/queries/gym-exercises.ts) — lets a future catalog swap safely
+    // hide canonical rows that fell out of the list without ever touching
+    // anything the user created or renamed themselves.
+    isCustom: integer("is_custom", { mode: "boolean" }).notNull().default(false),
   },
   (t) => [
     index("gym_exercises_user_idx").on(t.userId),

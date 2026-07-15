@@ -354,6 +354,22 @@
       "reps": "reps",
       "week": "week",
       "weeks": "weeks"
+    },
+    "searchExercise": "Search exercise…",
+    "noExerciseMatch": "No exercise matches",
+    "exercisesManage": "Exercises",
+    "exercisesManageSubtitle": "Add, edit, or hide exercises in your catalog",
+    "exercisesEmpty": "You don't have any exercises in your catalog yet.",
+    "addNewExercise": "Add new exercise",
+    "muscleGroupLabel": "Muscle group",
+    "muscleGroups": {
+      "chest": "Chest",
+      "back": "Back",
+      "shoulders": "Shoulders",
+      "arms": "Arms",
+      "legs": "Legs",
+      "core": "Core",
+      "cardio": "Cardio"
     }
   },
   "more": {

@@ -6,7 +6,7 @@ import { nanoid } from "nanoid";
 import { Plus, Trash2, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName } from "@/lib/habits/describe";
-import { Select } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import type { GymSessionRow } from "@/lib/queries/gym";
 import type { GymExerciseCatalogRow } from "@/lib/queries/gym-exercises";
 import { createGymSession, updateGymSession } from "@/lib/actions/gym";
@@ -180,11 +180,13 @@ function ExerciseCard({
   return (
     <div className="rounded-lg border border-border p-3.5">
       <div className="flex items-center gap-2">
-        <Select
+        <SearchableSelect
           value={exercise.exerciseId}
           onValueChange={(exerciseId) => onChange({ exerciseId })}
           options={catalogOptions}
           ariaLabel={t("gym.exerciseLabel", { n: index + 1 })}
+          searchPlaceholder={t("gym.searchExercise")}
+          emptyLabel={t("gym.noExerciseMatch")}
           className="flex-1 font-semibold"
         />
         {canRemove && (
