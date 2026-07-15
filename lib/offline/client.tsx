@@ -9,7 +9,17 @@ import { replay } from "@/lib/offline/replay-registry";
 import { useAchievementToast, useToast } from "@/lib/toast/client";
 import { useI18n } from "@/lib/i18n/client";
 import { resyncEverything } from "@/lib/swr/resync-everything";
-import { REALTIME_SYNC_EVENT } from "@/lib/realtime/client";
+import { refreshVisitedSections } from "@/lib/swr/refresh-visited-sections";
+import { sectionRegistry } from "@/lib/swr/sections";
+import { getClientToday } from "@/lib/date-client";
+import { subscribeToRealtimeSync } from "@/lib/realtime/client";
+import type { RealtimeDomain } from "@/lib/realtime/domain";
+
+/** Domains a realtime push can arrive for that this device should react to
+ * with a targeted section refresh — "focus" isn't here because the live
+ * session isn't SWR-backed at all; it reacts to its own "focus" pushes
+ * directly (see useLiveFocusState), more cheaply than a section refresh. */
+const REALTIME_SECTION_DOMAINS: RealtimeDomain[] = ["habits", "finance"];
 
 type SyncState = "offline" | "syncing" | "synced" | "idle";
 
@@ -180,16 +190,26 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Another device just changed something (see lib/realtime/client.tsx) —
-    // reuses the exact same drainQueue this already runs on reconnect: it
-    // replays anything queued locally (a no-op if there's nothing) and then
-    // does the full resync, which is exactly what a remote change needs too.
-    function handleRealtimeSync() {
-      drainQueueRef.current();
-    }
-    window.addEventListener(REALTIME_SYNC_EVENT, handleRealtimeSync);
-    return () => window.removeEventListener(REALTIME_SYNC_EVENT, handleRealtimeSync);
-  }, []);
+    // Another device just changed something in a specific domain (see
+    // lib/realtime/client.tsx) — deliberately *not* the same path as
+    // reconnect: this device isn't catching up after being offline, it
+    // already knows exactly what changed and where, so it only refreshes
+    // that domain's already-visited sections (see sectionRegistry's
+    // `realtimeDomain` tags) instead of the whole app. No re-entrancy
+    // guard here on purpose — `refreshVisitedSections` is a cheap,
+    // idempotent read-and-overwrite, so letting two overlapping calls run
+    // concurrently is harmless, unlike drainQueue's replay loop above.
+    // Silently dropping a concurrent call the way that guard would have
+    // meant a rapid second change (pause right after start, from another
+    // device) could get lost until some unrelated later trigger.
+    const unsubscribes = REALTIME_SECTION_DOMAINS.map((domain) =>
+      subscribeToRealtimeSync(domain, () => {
+        const sections = sectionRegistry.filter((section) => section.realtimeDomain === domain);
+        refreshVisitedSections(cache, globalMutate, getClientToday(), sections);
+      })
+    );
+    return () => unsubscribes.forEach((unsubscribe) => unsubscribe());
+  }, [cache, globalMutate]);
 
   const runOrQueue = useCallback(
     async (mutation: QueuedMutation) => {

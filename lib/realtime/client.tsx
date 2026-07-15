@@ -3,13 +3,32 @@
 import { useEffect, useRef } from "react";
 import type PusherClient from "pusher-js";
 import { privateUserChannel } from "@/lib/realtime/channel";
+import type { RealtimeDomain } from "@/lib/realtime/domain";
 
 /** Dispatched on `window` whenever a push arrives confirming some device
- * (this one or another) changed something — consumers (OfflineProvider's
- * resync, the metronome's `useLiveTimer`) each decide what "catch up" means
- * for them. `RealtimeProvider` itself knows nothing about SWR, sections, or
- * timers — it only ever transports this one signal. */
+ * (this one or another) changed something in a given domain — `detail`
+ * carries which one (see lib/realtime/domain.ts), so a subscriber can
+ * react with a targeted, cheap refresh instead of resyncing the whole app
+ * for every message. Use `subscribeToRealtimeSync` below rather than
+ * listening for this directly — it already filters by domain.
+ * `RealtimeProvider` itself still knows nothing about SWR, sections, or
+ * timers — it only ever transports the signal. */
 export const REALTIME_SYNC_EVENT = "justgo:sync";
+
+/**
+ * Subscribes to realtime pushes for exactly one domain, returning an
+ * unsubscribe function — the one place that knows the event is a
+ * `CustomEvent<RealtimeDomain>` and how to filter it, so every consumer
+ * (OfflineProvider, useLiveFocusState) calls this instead of each
+ * re-implementing `window.addEventListener` + a manual domain check.
+ */
+export function subscribeToRealtimeSync(domain: RealtimeDomain, handler: () => void): () => void {
+  function onEvent(event: Event) {
+    if ((event as CustomEvent<RealtimeDomain>).detail === domain) handler();
+  }
+  window.addEventListener(REALTIME_SYNC_EVENT, onEvent);
+  return () => window.removeEventListener(REALTIME_SYNC_EVENT, onEvent);
+}
 
 const PUSHER_KEY = process.env.NEXT_PUBLIC_PUSHER_KEY;
 const PUSHER_CLUSTER = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
@@ -38,8 +57,8 @@ export function RealtimeProvider({ userId, children }: { userId: string | null; 
         });
         clientRef.current = client;
         const channel = client.subscribe(privateUserChannel(userId));
-        channel.bind("changed", () => {
-          window.dispatchEvent(new Event(REALTIME_SYNC_EVENT));
+        channel.bind("changed", (data: { domain: RealtimeDomain }) => {
+          window.dispatchEvent(new CustomEvent<RealtimeDomain>(REALTIME_SYNC_EVENT, { detail: data.domain }));
         });
       })
       .catch((err) => {

@@ -2,20 +2,20 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { gymSessions } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
-import { notifyDeviceSync } from "@/lib/realtime/notify";
 import { extractGymSessionFields, gymSessionFormSchema } from "@/lib/validation/gym";
 
 export type GymSessionFormState = { error?: string };
 
+// Not wired to realtime (see lib/realtime/domain.ts) — Gym isn't one of
+// the three domains where an instant cross-device push earns its cost;
+// it still catches up the normal way on reconnect/focus/manual sync.
 function revalidateGymPaths() {
   revalidatePath("/");
   revalidatePath("/gym");
-  after(() => notifyDeviceSync());
 }
 
 export async function createGymSession(

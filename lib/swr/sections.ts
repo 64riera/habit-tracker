@@ -1,5 +1,6 @@
 import type { Key } from "swr";
 import { swrKeys } from "@/lib/swr/keys";
+import type { RealtimeDomain } from "@/lib/realtime/domain";
 import { fetchTodayAction } from "@/lib/actions/today-read";
 import {
   fetchCategoriesAction,
@@ -26,14 +27,28 @@ const DEFAULT_HISTORY_RANGE_DAYS = 90;
  * lib/swr/refresh-visited-sections.ts). Filtered variants (e.g. history with
  * a specific habit/category) are intentionally not listed here — those only
  * ever get cached by actually visiting them, same as today.
+ *
+ * `realtimeDomain`, where set, is what lets a realtime push (see
+ * lib/realtime/domain.ts) refresh only the section(s) it actually affects
+ * instead of the whole registry — see OfflineProvider's use of
+ * `refreshVisitedSections` filtered by domain. Most sections have none: an
+ * instant push isn't worth it for data that only ever needed to catch up
+ * on reconnect/focus to begin with. The live Focus session itself isn't
+ * tagged either — it isn't SWR-backed (see useLiveFocusState), and reacts
+ * to "focus" pushes directly and more cheaply, with a single server action
+ * call instead of a section refresh.
  */
-export type SectionEntry = { key: (today: string) => Key; fetcher: (today: string) => Promise<unknown> };
+export type SectionEntry = {
+  key: (today: string) => Key;
+  fetcher: (today: string) => Promise<unknown>;
+  realtimeDomain?: RealtimeDomain;
+};
 
 export const sectionRegistry: SectionEntry[] = [
-  { key: (today) => swrKeys.todayHabits(today), fetcher: (today) => fetchTodayAction(today) },
-  { key: (today) => swrKeys.habitsList(today), fetcher: (today) => fetchHabitsListAction(today) },
+  { key: (today) => swrKeys.todayHabits(today), fetcher: (today) => fetchTodayAction(today), realtimeDomain: "habits" },
+  { key: (today) => swrKeys.habitsList(today), fetcher: (today) => fetchHabitsListAction(today), realtimeDomain: "habits" },
   { key: (today) => swrKeys.tasksList(today), fetcher: (today) => fetchTasksAction(today) },
-  { key: () => swrKeys.financeTransactions(), fetcher: () => fetchTransactionsAction() },
+  { key: () => swrKeys.financeTransactions(), fetcher: () => fetchTransactionsAction(), realtimeDomain: "finance" },
   { key: () => swrKeys.financeCategories(), fetcher: () => fetchFinanceCategoriesAction() },
   { key: () => swrKeys.gymSessions(), fetcher: () => fetchGymSessionsAction() },
   { key: () => swrKeys.gymExercises(), fetcher: () => fetchGymExercisesAction() },

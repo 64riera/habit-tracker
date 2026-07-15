@@ -14,6 +14,7 @@ import { usePageData } from "@/lib/swr/use-page-data";
 import { fetchFocusSupportingAction } from "@/lib/actions/focus-supporting-read";
 import { useOffline } from "@/lib/offline/client";
 import { pendingFocusSession } from "@/lib/offline/pending-selectors";
+import { useRealtimeDiscoveredSession } from "@/lib/focus/use-realtime-discovered-session";
 import type { FocusSessionRow, FocusSettingsRow } from "@/lib/queries/focus";
 import type { CategoryRow } from "@/lib/queries/habits";
 
@@ -39,7 +40,12 @@ export function FocusClient({
   // A queued start (possibly followed by pause/resume/...) previews as a
   // "ghost" session so Enfoque is usable even before it ever syncs.
   const pendingSession = useMemo(() => pendingFocusSession(pendingMutations, today), [pendingMutations, today]);
-  const effectiveSession = pendingSession !== undefined ? pendingSession : session;
+  // Picks up a session another device started while this screen was
+  // showing the start form — see the hook's own docs for why that gap
+  // exists and needs its own handling. Pending (this device's own
+  // unsynced intent) still wins over it, same precedence as always.
+  const realtimeSession = useRealtimeDiscoveredSession(session);
+  const effectiveSession = pendingSession !== undefined ? pendingSession : realtimeSession;
   const isLive = effectiveSession !== null && LIVE_STATUSES.includes(effectiveSession.status);
 
   const initialSupportingData = useMemo(

@@ -2,7 +2,6 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { after } from "next/server";
 import { db } from "@/lib/db/client";
 import { categories, focusSessions, focusSettings, habits } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
@@ -34,7 +33,7 @@ import {
  * the user navigates to afterward. */
 function revalidateFocusPaths() {
   revalidatePath("/", "layout");
-  after(() => notifyDeviceSync());
+  notifyDeviceSync("focus");
 }
 
 async function resolveHabit(userId: string, habitId: string | undefined | null) {

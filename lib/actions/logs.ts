@@ -2,7 +2,6 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { after } from "next/server";
 import { db } from "@/lib/db/client";
 import { habitLogs, habitStreaks } from "@/lib/db/schema";
 import { computeStreak, type HabitRow } from "@/lib/streaks/compute";
@@ -46,7 +45,7 @@ function revalidateCheckinPaths() {
   revalidatePath("/history");
   revalidatePath("/stats");
   revalidatePath("/habits");
-  after(() => notifyDeviceSync());
+  notifyDeviceSync("habits");
 }
 
 export async function logHabit(input: LogInput) {

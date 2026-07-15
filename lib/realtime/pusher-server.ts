@@ -1,6 +1,7 @@
 import "server-only";
 import Pusher from "pusher";
 import { privateUserChannel } from "@/lib/realtime/channel";
+import type { RealtimeDomain } from "@/lib/realtime/domain";
 
 /**
  * Lazily constructed, memoized once. `null` whenever any of the 4 required
@@ -38,12 +39,16 @@ function getPusherServer(): Pusher | null {
  * unreachable/erroring, both just mean the other device(s) fall back to
  * their existing resync-on-reconnect/focus behavior instead of an instant
  * push, which is the documented degradation guarantee for this feature.
+ *
+ * `domain` rides along in the payload so a subscriber can react with a
+ * targeted, cheap refresh (just that domain's data) instead of resyncing
+ * the whole app for every single message — see lib/realtime/client.tsx.
  */
-export async function publishChange(userId: string): Promise<void> {
+export async function publishChange(userId: string, domain: RealtimeDomain): Promise<void> {
   const client = getPusherServer();
   if (!client) return;
   try {
-    await client.trigger(privateUserChannel(userId), "changed", {});
+    await client.trigger(privateUserChannel(userId), "changed", { domain });
   } catch (err) {
     console.error("Pusher publish failed:", err);
   }

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { computeFocusState, type FocusSessionRow, type FocusStateView } from "@/lib/focus/compute";
 import type { FocusRewardTier } from "@/lib/focus/rewards";
+import { subscribeToRealtimeSync } from "@/lib/realtime/client";
 
 const TICK_MS = 1000;
 
@@ -28,6 +29,18 @@ export function useLiveFocusState(
   const [session, setSession] = useState(initialSession);
   const [now, setNow] = useState(() => new Date());
   const isResyncingRef = useRef(false);
+  // Set when a resync is requested *while one is already running* — e.g. a
+  // realtime push for a pause arrives mid-flight for the resync a start
+  // push just triggered. Without this, that second request would just be
+  // dropped (see the old `if (isResyncingRef.current) return` below),
+  // leaving this device showing a stale "running" session until some
+  // unrelated later trigger (a focus/online event, or the next push)
+  // happened to fire — exactly the "doesn't handle start/pause/stop well
+  // across devices" symptom this fixes. Now it instead runs one more full
+  // resync cycle immediately after the current one finishes, so whatever
+  // the *latest* server state is always eventually lands, never silently
+  // discarded.
+  const pendingResyncRef = useRef(false);
   const onUnlockedRef = useRef(onUnlocked);
   useEffect(() => {
     onUnlockedRef.current = onUnlocked;
@@ -45,13 +58,19 @@ export function useLiveFocusState(
   }
 
   const runResync = useCallback(async () => {
-    if (isResyncingRef.current) return;
+    if (isResyncingRef.current) {
+      pendingResyncRef.current = true;
+      return;
+    }
     isResyncingRef.current = true;
     try {
-      const { session: fresh, unlockedTiers } = await resync();
-      setSession(fresh);
-      setNow(new Date());
-      if (unlockedTiers.length > 0) onUnlockedRef.current?.(unlockedTiers);
+      do {
+        pendingResyncRef.current = false;
+        const { session: fresh, unlockedTiers } = await resync();
+        setSession(fresh);
+        setNow(new Date());
+        if (unlockedTiers.length > 0) onUnlockedRef.current?.(unlockedTiers);
+      } while (pendingResyncRef.current);
     } finally {
       isResyncingRef.current = false;
     }
@@ -69,9 +88,18 @@ export function useLiveFocusState(
     }
     document.addEventListener("visibilitychange", onVisibilityChange);
     window.addEventListener("online", runResync);
+    // A "focus" push (see lib/realtime/notify.ts) means some device —
+    // this one or another — started/paused/resumed/finished a session:
+    // resync immediately instead of waiting for the next focus/online
+    // event, which is what made another device's actions show up late (or
+    // not at all, before the trailing-resync fix above). A single direct
+    // server action call per push, not a whole-section refresh — the
+    // cheapest reaction available for this domain.
+    const unsubscribeRealtime = subscribeToRealtimeSync("focus", runResync);
     return () => {
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("online", runResync);
+      unsubscribeRealtime();
     };
   }, [runResync]);
 

@@ -2,7 +2,6 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { habits } from "@/lib/db/schema";
@@ -17,7 +16,7 @@ function revalidateHabitsPaths(habitId?: string) {
   revalidatePath("/");
   revalidatePath("/habits");
   if (habitId) revalidatePath(`/habits/${habitId}`);
-  after(() => notifyDeviceSync());
+  notifyDeviceSync("habits");
 }
 
 /**

@@ -11,6 +11,7 @@ import { formatClock } from "@/lib/focus/format";
 import { LIVE_STATUSES, type FocusSessionRow } from "@/lib/focus/compute";
 import { useOffline } from "@/lib/offline/client";
 import { pendingFocusSession } from "@/lib/offline/pending-selectors";
+import { useRealtimeDiscoveredSession } from "@/lib/focus/use-realtime-discovered-session";
 import { getClientToday } from "@/lib/date-client";
 import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
 
@@ -35,7 +36,10 @@ export function FocusHeaderChip({
     () => pendingFocusSession(pendingMutations, getClientToday()),
     [pendingMutations]
   );
-  const effectiveSession = pendingSession !== undefined ? pendingSession : session;
+  // Picks up a session another device started while this chip had nothing
+  // to show — see the hook's docs for why that gap needs its own handling.
+  const realtimeSession = useRealtimeDiscoveredSession(session);
+  const effectiveSession = pendingSession !== undefined ? pendingSession : realtimeSession;
   if (!effectiveSession) return null;
   return (
     <ActiveChip

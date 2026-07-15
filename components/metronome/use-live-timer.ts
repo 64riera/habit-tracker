@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { remainingSeconds, isFinished, type TimerRow } from "@/lib/metronome/timer-compute";
-import { REALTIME_SYNC_EVENT } from "@/lib/realtime/client";
 
 /**
  * Displays a timer whose real state lives server-side (see
@@ -40,19 +39,20 @@ export function useLiveTimer(initialTimer: TimerRow | null, resync: () => Promis
   }, [resync]);
 
   useEffect(() => {
+    // Not subscribed to realtime pushes: the metronome timer isn't one of
+    // the three domains realtime is scoped to (see lib/realtime/domain.ts)
+    // — a personal countdown/kitchen-timer utility isn't worth an instant
+    // cross-device push for, and it already stays correct across devices
+    // on the next focus/reconnect, same as before realtime existed.
     function onVisibilityChange() {
       if (document.visibilityState === "visible") runResync();
     }
     window.addEventListener("focus", runResync);
     window.addEventListener("online", runResync);
-    // Another device started/paused/cancelled the timer (see
-    // lib/realtime/client.tsx) — same resync, one more trigger source.
-    window.addEventListener(REALTIME_SYNC_EVENT, runResync);
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       window.removeEventListener("focus", runResync);
       window.removeEventListener("online", runResync);
-      window.removeEventListener(REALTIME_SYNC_EVENT, runResync);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [runResync]);

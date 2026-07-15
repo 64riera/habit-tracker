@@ -2,22 +2,22 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { taskCompletions, tasks } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { getServerToday } from "@/lib/settings/date-server";
-import { notifyDeviceSync } from "@/lib/realtime/notify";
 import { buildTaskRecurrenceConfig } from "@/lib/tasks/recurrence";
 import { extractTaskFields, taskFormSchema } from "@/lib/validation/task";
 
 export type TaskFormState = { error?: string };
 
+// Not wired to realtime (see lib/realtime/domain.ts) — Tasks isn't one of
+// the three domains where an instant cross-device push earns its cost; it
+// still catches up the normal way on reconnect/focus/manual sync.
 function revalidateTaskPaths() {
   revalidatePath("/");
   revalidatePath("/tasks");
-  after(() => notifyDeviceSync());
 }
 
 export async function createTask(_prevState: TaskFormState, formData: FormData): Promise<TaskFormState> {
