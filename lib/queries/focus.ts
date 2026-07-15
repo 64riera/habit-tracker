@@ -235,19 +235,23 @@ export const getTodayFocusProgress = cache(async (
 export type FocusRewardProgress = {
   totalCompletedSeconds: number;
   completedSessionCount: number;
-  unlockedTiers: FocusRewardTier[];
+  unlockedTiers: { tier: FocusRewardTier; unlockedAt: string }[];
 };
 
-/** For the /focus/forest screen: lifetime totals + which tiers are already unlocked. */
+/** For the /focus/forest screen: lifetime totals + which tiers are already
+ * unlocked, each with the date it was unlocked (drives the tier timeline). */
 export const getFocusRewardProgress = cache(async (): Promise<FocusRewardProgress> => {
   const userId = await getCurrentUserId();
   const [{ totalSeconds, count }, unlockedRows] = await Promise.all([
     getFocusRewardLifetimeTotals(userId),
-    db.select({ tier: focusRewardTiers.tier }).from(focusRewardTiers).where(eq(focusRewardTiers.userId, userId)),
+    db
+      .select({ tier: focusRewardTiers.tier, unlockedAt: focusRewardTiers.unlockedAt })
+      .from(focusRewardTiers)
+      .where(eq(focusRewardTiers.userId, userId)),
   ]);
   return {
     totalCompletedSeconds: totalSeconds,
     completedSessionCount: count,
-    unlockedTiers: unlockedRows.map((r) => r.tier as FocusRewardTier),
+    unlockedTiers: unlockedRows.map((r) => ({ tier: r.tier as FocusRewardTier, unlockedAt: r.unlockedAt })),
   };
 });

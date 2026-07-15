@@ -54,3 +54,25 @@ export function computeNewRewardTiers({
   }
   return unlocked;
 }
+
+/** Same 5-step scale as the HOUR_TIERS icon set, but sized by a single
+ * session's own length instead of lifetime accumulated hours — this is what
+ * lets one focus session in a week/month view render as "a tree" using the
+ * same icon vocabulary as a lifetime milestone. */
+export type TreeSize = "seed" | "sprout" | "sapling" | "young_tree" | "mature_tree";
+
+const SESSION_SIZE_THRESHOLDS_MIN: { size: TreeSize; minMinutes: number }[] = [
+  { size: "seed", minMinutes: 0 },
+  { size: "sprout", minMinutes: 15 },
+  { size: "sapling", minMinutes: 30 },
+  { size: "young_tree", minMinutes: 60 },
+  { size: "mature_tree", minMinutes: 120 },
+];
+
+export function treeSizeForSessionMinutes(minutes: number): TreeSize {
+  let size: TreeSize = "seed";
+  for (const t of SESSION_SIZE_THRESHOLDS_MIN) {
+    if (minutes >= t.minMinutes) size = t.size;
+  }
+  return size;
+}

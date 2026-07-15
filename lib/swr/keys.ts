@@ -36,4 +36,5 @@ export const swrKeys = {
   focusHistoryPage: (habitId: string, categoryId: string, pageIndex: number) =>
     ["focus:history-page", habitId, categoryId, pageIndex] as const,
   focusStats: (today: string) => ["focus:stats", today] as const,
+  focusForest: (today: string) => ["focus:forest", today] as const,
 } as const;

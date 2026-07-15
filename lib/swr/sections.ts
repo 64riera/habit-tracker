@@ -18,6 +18,7 @@ import { fetchStatsAction } from "@/lib/actions/stats-read";
 import { fetchRoutinesAction } from "@/lib/actions/routines-read";
 import { fetchFocusHistoryAction } from "@/lib/actions/focus-history-read";
 import { fetchFocusStatsAction } from "@/lib/actions/focus-stats-read";
+import { fetchFocusForestAction } from "@/lib/actions/focus-forest-read";
 
 const DEFAULT_HISTORY_RANGE_DAYS = 90;
 
@@ -61,6 +62,7 @@ export const sectionRegistry: SectionEntry[] = [
   { key: (today) => swrKeys.routines(today), fetcher: (today) => fetchRoutinesAction(today) },
   { key: () => swrKeys.focusHistoryList("", ""), fetcher: () => fetchFocusHistoryAction("", "") },
   { key: (today) => swrKeys.focusStats(today), fetcher: (today) => fetchFocusStatsAction(today) },
+  { key: (today) => swrKeys.focusForest(today), fetcher: (today) => fetchFocusForestAction(today) },
   { key: () => swrKeys.categories(), fetcher: () => fetchCategoriesAction() },
   { key: () => swrKeys.habitNames(), fetcher: () => fetchHabitNamesAction() },
   { key: () => swrKeys.focusHeader(), fetcher: () => fetchFocusHeaderAction() },

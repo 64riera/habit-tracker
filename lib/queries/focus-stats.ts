@@ -16,7 +16,7 @@ import { getFocusSettings } from "@/lib/queries/focus";
  * consistent with the rest of the codebase and avoids extra maintenance.
  */
 
-async function sessionsInDateRange(userId: string, from: string, to: string) {
+export async function sessionsInDateRange(userId: string, from: string, to: string) {
   return db
     .select({
       habitId: focusSessions.habitId,
@@ -106,7 +106,7 @@ export type FocusPeriodComparison = {
   minutesChange: number;
 };
 
-async function computeFocusPeriodSummary(userId: string, from: string, to: string): Promise<FocusPeriodSummary> {
+export async function computeFocusPeriodSummary(userId: string, from: string, to: string): Promise<FocusPeriodSummary> {
   const rows = await sessionsInDateRange(userId, from, to);
   const completed = rows.filter((r) => r.status === "completed");
   const totalSeconds = completed.reduce((sum, r) => sum + r.accumulatedActiveSeconds, 0);

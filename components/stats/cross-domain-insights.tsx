@@ -4,19 +4,9 @@ import { useI18n } from "@/lib/i18n/client";
 import { MetricSummaryCard } from "@/components/stats/metric-summary-card";
 import { formatCurrency, type Currency } from "@/lib/finance/format";
 import { formatMinutesShort } from "@/lib/focus/format";
+import { formatDeltaValue, percentDelta } from "@/lib/format/delta";
 import type { CrossDomainInsights as CrossDomainInsightsData } from "@/lib/queries/insights";
 import type { BucketComparison } from "@/lib/insights/compute";
-
-/** % change from `base` to `compared` — null when base is 0, since a ratio
- * against zero (e.g. $0 average spend) isn't a meaningful percentage. */
-function percentDelta(base: number, compared: number): number | null {
-  if (base === 0) return null;
-  return Math.round(((compared - base) / base) * 100);
-}
-
-function formatDeltaValue(pct: number): string {
-  return `${pct > 0 ? "+" : ""}${pct}%`;
-}
 
 type InsightSpec = {
   key: string;
