@@ -20,6 +20,7 @@ export const swrKeys = {
   financeTransactions: () => ["finance:transactions"] as const,
   financeCategories: () => ["finance:categories"] as const,
   financeBudgets: () => ["finance:budgets"] as const,
+  financeRecurring: () => ["finance:recurring"] as const,
 
   gymSessions: () => ["gym:sessions"] as const,
   gymExercises: () => ["gym:exercises"] as const,

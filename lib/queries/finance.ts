@@ -1,15 +1,17 @@
 import "server-only";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db/client";
-import { financeBudgets, financeCategories, transactions } from "@/lib/db/schema";
+import { financeBudgets, financeCategories, recurringTransactions, transactions } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { CANONICAL_FINANCE_CATEGORIES } from "@/lib/finance/canonical-categories";
+import { dueOccurrences } from "@/lib/finance/recurring";
 
 export type FinanceCategoryRow = typeof financeCategories.$inferSelect;
 export type TransactionRow = typeof transactions.$inferSelect;
 export type TransactionWithCategory = TransactionRow & { category: FinanceCategoryRow | null };
 export type FinanceBudgetRow = typeof financeBudgets.$inferSelect;
+export type RecurringTransactionRow = typeof recurringTransactions.$inferSelect;
 
 /** Expense categories are a fixed set (see lib/finance/canonical-categories.ts):
  * this self-heals any account that's still missing one — created before
@@ -78,4 +80,64 @@ export async function getTransactions(categories: FinanceCategoryRow[]): Promise
 export async function getFinanceBudgets(): Promise<FinanceBudgetRow[]> {
   const userId = await getCurrentUserId();
   return db.select().from(financeBudgets).where(eq(financeBudgets.userId, userId));
+}
+
+/** Every recurring rule on the account, active and paused alike — the
+ * management screen needs both to offer resume; only active ones are
+ * actually materialized (see materializeDueRecurringTransactions). */
+export async function getRecurringTransactions(): Promise<RecurringTransactionRow[]> {
+  const userId = await getCurrentUserId();
+  return db.select().from(recurringTransactions).where(eq(recurringTransactions.userId, userId));
+}
+
+/**
+ * Turns any due occurrence of every active recurring rule into a real
+ * transaction row, then advances that rule's cursor to `today` — called
+ * once per Finance page load (see app/(dashboard)/finance/page.tsx),
+ * mirroring the same self-healing-on-read pattern the rest of this app
+ * uses for canonical catalogs (getFinanceCategories, getGymExercises,
+ * getGymRoutines), just generating ledger rows instead of catalog rows.
+ *
+ * Idempotent by construction: each generated transaction's id is
+ * deterministic (`${ruleId}:${date}`) and inserted with onConflictDoNothing,
+ * so re-running this for a range that was already (partially) processed —
+ * e.g. an interrupted request — can never double-insert, even without a
+ * surrounding DB transaction.
+ */
+export async function materializeDueRecurringTransactions(today: string): Promise<void> {
+  const userId = await getCurrentUserId();
+  const rules = await db
+    .select()
+    .from(recurringTransactions)
+    .where(and(eq(recurringTransactions.userId, userId), eq(recurringTransactions.active, true)));
+
+  for (const rule of rules) {
+    const dates = dueOccurrences(rule, today);
+    if (dates.length > 0) {
+      await db
+        .insert(transactions)
+        .values(
+          dates.map((date) => ({
+            id: `${rule.id}:${date}`,
+            userId,
+            type: rule.type,
+            categoryId: rule.categoryId,
+            amount: rule.amount,
+            note: rule.note,
+            date,
+            recurringTransactionId: rule.id,
+          }))
+        )
+        .onConflictDoNothing({ target: transactions.id });
+    }
+    // Skips the write once a rule is already caught up to today (the
+    // common case: opening Finance more than once in the same day)
+    // instead of an unconditional UPDATE on every single page load.
+    if (!rule.lastGeneratedDate || rule.lastGeneratedDate < today) {
+      await db
+        .update(recurringTransactions)
+        .set({ lastGeneratedDate: today })
+        .where(eq(recurringTransactions.id, rule.id));
+    }
+  }
 }

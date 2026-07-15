@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Repeat } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { categoryDisplayName } from "@/lib/habits/describe";
@@ -43,6 +44,9 @@ export function TransactionRow({
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5 truncate text-[13.5px] font-semibold">
           <span className="truncate">{label}</span>
+          {transaction.recurringTransactionId && (
+            <Repeat size={11} strokeWidth={2} className="shrink-0 text-muted" aria-label={t("finance.recurring.badge")} />
+          )}
           {isPendingSync && <PendingSyncBadge />}
         </span>
         {transaction.note && <span className="mt-0.5 block truncate text-[11px] text-muted">{transaction.note}</span>}

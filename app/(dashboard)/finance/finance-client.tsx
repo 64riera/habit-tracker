@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useSWRConfig } from "swr";
-import { PiggyBank, Plus, Trash2 } from "lucide-react";
+import { PiggyBank, Plus, Repeat, Trash2 } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { SwipeableRow, SwipeableListProvider } from "@/components/ui/swipeable-row";
 import { PeriodSelector } from "@/components/finance/period-selector";
@@ -157,7 +157,11 @@ export function FinanceClient({
     <div>
       <ContentHeader titleKey="screens.finance.title" subtitleKey="screens.finance.subtitle" />
 
-      <div className="mb-4 flex items-center justify-end">
+      <div className="mb-4 flex items-center justify-end gap-3">
+        <Link href="/finance/recurring" className="flex items-center gap-1.5 text-[12px] text-muted">
+          <Repeat size={13} strokeWidth={2} aria-hidden />
+          {t("finance.recurring.manage")}
+        </Link>
         <Link href="/finance/budgets" className="flex items-center gap-1.5 text-[12px] text-muted">
           <PiggyBank size={13} strokeWidth={2} aria-hidden />
           {t("finance.budgets.manage")}

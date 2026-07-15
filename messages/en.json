@@ -323,6 +323,22 @@
       "limitLabel": "Monthly limit for {category}",
       "warning": "{pct}% used — approaching the limit",
       "over": "Over by {amount} ({pct}%)"
+    },
+    "recurring": {
+      "manage": "Recurring",
+      "manageSubtitle": "Rent, subscriptions, and anything else that repeats on its own",
+      "addNew": "Add recurring transaction",
+      "empty": "No recurring transactions yet.",
+      "pause": "Pause",
+      "resume": "Resume",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "monthlyOn": "Monthly on day {day}",
+      "yearlyOn": "Yearly on {month} {day}",
+      "month": "Month",
+      "day": "Day",
+      "startDate": "Starts on",
+      "badge": "Auto-generated"
     }
   },
   "gym": {

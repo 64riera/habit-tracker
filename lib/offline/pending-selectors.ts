@@ -276,6 +276,9 @@ export function buildGhostTransaction(
     id,
     userId: "",
     createdAt: new Date().toISOString(),
+    // A transaction created offline through this app's own form is, by
+    // definition, never one a recurring rule auto-generated server-side.
+    recurringTransactionId: null,
     ...transactionEditableFields(values, categories),
   };
 }

@@ -323,6 +323,22 @@
       "limitLabel": "Límite mensual de {category}",
       "warning": "{pct}% usado — cerca del límite",
       "over": "Excedido por {amount} ({pct}%)"
+    },
+    "recurring": {
+      "manage": "Recurrentes",
+      "manageSubtitle": "Rentas, suscripciones y demás movimientos que se repiten solos",
+      "addNew": "Agregar movimiento recurrente",
+      "empty": "Aún no tienes movimientos recurrentes.",
+      "pause": "Pausar",
+      "resume": "Reanudar",
+      "monthly": "Cada mes",
+      "yearly": "Cada año",
+      "monthlyOn": "Cada mes el día {day}",
+      "yearlyOn": "Cada año el {day} de {month}",
+      "month": "Mes",
+      "day": "Día",
+      "startDate": "Empieza el",
+      "badge": "Generado automáticamente"
     }
   },
   "gym": {
