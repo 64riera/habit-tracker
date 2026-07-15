@@ -6,9 +6,7 @@ import { ContentHeader } from "@/components/nav/content-header";
 import { DeleteTransactionButton } from "./delete-transaction-button";
 
 export default async function MovimientoDetallePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const today = await getServerToday();
-  const categories = await getFinanceCategories();
+  const [{ id }, today, categories] = await Promise.all([params, getServerToday(), getFinanceCategories()]);
   const transactions = await getTransactions(categories);
   const transaction = transactions.find((tx) => tx.id === id);
   if (!transaction) notFound();

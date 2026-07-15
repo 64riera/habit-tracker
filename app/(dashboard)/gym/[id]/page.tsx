@@ -7,10 +7,10 @@ import { ContentHeader } from "@/components/nav/content-header";
 import { DeleteGymSessionButton } from "./delete-gym-session-button";
 
 export default async function SesionGymDetallePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
   // includeHidden: true — editing must still be able to show/select the
   // session's already-assigned exercise even if it's since been hidden.
-  const [sessions, exercises, today] = await Promise.all([
+  const [{ id }, sessions, exercises, today] = await Promise.all([
+    params,
     getGymSessions(),
     getGymExercises(true),
     getServerToday(),

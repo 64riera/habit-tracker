@@ -5,8 +5,7 @@ import { ContentHeader } from "@/components/nav/content-header";
 import { DeleteTaskButton } from "./delete-task-button";
 
 export default async function TareaDetallePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const tasks = await getTasks();
+  const [{ id }, tasks] = await Promise.all([params, getTasks()]);
   const task = tasks.find((t) => t.id === id);
   if (!task) notFound();
 

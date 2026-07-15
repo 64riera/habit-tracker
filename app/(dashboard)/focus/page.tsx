@@ -8,16 +8,17 @@ export default async function EnfoquePage({
 }: {
   searchParams: Promise<{ habitId?: string }>;
 }) {
-  const { habitId } = await searchParams;
-  const today = await getServerToday();
-
-  const session = await getActiveFocusSession();
-  const [settings, habitOptions, categories, progress] = await Promise.all([
+  const [{ habitId }, today, session, settings, habitOptions, categories] = await Promise.all([
+    searchParams,
+    getServerToday(),
+    getActiveFocusSession(),
     getFocusSettings(),
     getHabitNames(),
     getCategories(),
-    getTodayFocusProgress(today, session),
   ]);
+  // Depends on `session`, so it can't join the batch above — everything
+  // else there is independent of it and no longer waits behind it.
+  const progress = await getTodayFocusProgress(today, session);
 
   return (
     <FocusClient

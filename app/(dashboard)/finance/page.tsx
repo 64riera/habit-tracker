@@ -10,15 +10,17 @@ import { FinanceClient } from "./finance-client";
 
 export default async function FinancePage() {
   const today = await getServerToday();
+  // Fired alongside the batch below (it touches recurringTransactions/
+  // transactions, not categories/currency/budgets, so it doesn't need to
+  // wait behind them) and only awaited once getTransactions actually needs
+  // its result — see lib/finance/recurring.ts.
+  const materializePromise = materializeDueRecurringTransactions(today);
   const [categories, currency, budgets] = await Promise.all([
     getFinanceCategories(),
     getCurrencyPreference(),
     getFinanceBudgets(),
   ]);
-  // Before reading the ledger, so any transaction a recurring rule (rent,
-  // subscriptions — see lib/finance/recurring.ts) generated today or since
-  // the last visit is already included below, not one page load behind.
-  await materializeDueRecurringTransactions(today);
+  await materializePromise;
   const transactions = await getTransactions(categories);
 
   return (

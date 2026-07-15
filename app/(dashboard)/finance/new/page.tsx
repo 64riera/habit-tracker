@@ -4,8 +4,7 @@ import { TransactionForm } from "@/components/finance/transaction-form";
 import { ContentHeader } from "@/components/nav/content-header";
 
 export default async function NuevoMovimientoPage() {
-  const today = await getServerToday();
-  const categories = await getFinanceCategories();
+  const [today, categories] = await Promise.all([getServerToday(), getFinanceCategories()]);
 
   return (
     <div className="flex flex-1 flex-col">

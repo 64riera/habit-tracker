@@ -10,8 +10,7 @@ export default async function HistorialPage({
 }: {
   searchParams: Promise<{ habit?: string; category?: string; range?: string }>;
 }) {
-  const { habit: habitId, category: categoryId, range } = await searchParams;
-  const today = await getServerToday();
+  const [{ habit: habitId, category: categoryId, range }, today] = await Promise.all([searchParams, getServerToday()]);
   const rangeDays = range === "30" ? 30 : range === "365" ? 365 : 90;
   const filters = { habitId, categoryId };
 

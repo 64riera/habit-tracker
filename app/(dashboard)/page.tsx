@@ -24,10 +24,8 @@ export default async function TodayPage({
 }: {
   searchParams: Promise<{ fecha?: string }>;
 }) {
-  const { fecha } = await searchParams;
-  const today = await getServerToday();
+  const [{ fecha }, today, focusHeader] = await Promise.all([searchParams, getServerToday(), getFocusHeaderData()]);
   const date = resolveViewedDate(fecha, today);
-  const focusHeader = await getFocusHeaderData();
 
   return (
     <TodaySummaryProvider>

@@ -8,7 +8,11 @@ import { CANONICAL_FINANCE_CATEGORIES } from "@/lib/finance/canonical-categories
 import { dueOccurrences } from "@/lib/finance/recurring";
 
 export type FinanceCategoryRow = typeof financeCategories.$inferSelect;
-export type TransactionRow = typeof transactions.$inferSelect;
+// userId is never read once scoped server-side (see getTransactions below,
+// which already excludes it from the SELECT) — narrower than the raw
+// inferred row so that omission is a type-checked guarantee, not just a
+// convention at the one call site.
+export type TransactionRow = Omit<typeof transactions.$inferSelect, "userId">;
 export type TransactionWithCategory = TransactionRow & { category: FinanceCategoryRow | null };
 export type FinanceBudgetRow = typeof financeBudgets.$inferSelect;
 export type RecurringTransactionRow = typeof recurringTransactions.$inferSelect;
@@ -66,7 +70,19 @@ export async function getFinanceCategories(): Promise<FinanceCategoryRow[]> {
  */
 export async function getTransactions(categories: FinanceCategoryRow[]): Promise<TransactionWithCategory[]> {
   const userId = await getCurrentUserId();
-  const rows = await db.select().from(transactions).where(eq(transactions.userId, userId));
+  const rows = await db
+    .select({
+      id: transactions.id,
+      type: transactions.type,
+      categoryId: transactions.categoryId,
+      amount: transactions.amount,
+      note: transactions.note,
+      date: transactions.date,
+      recurringTransactionId: transactions.recurringTransactionId,
+      createdAt: transactions.createdAt,
+    })
+    .from(transactions)
+    .where(eq(transactions.userId, userId));
   const catById = new Map(categories.map((c) => [c.id, c]));
   return rows
     .map((r) => ({ ...r, category: r.categoryId ? (catById.get(r.categoryId) ?? null) : null }))

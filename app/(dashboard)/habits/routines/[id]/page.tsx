@@ -10,8 +10,7 @@ export default async function RutinaDetallePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
-  const [routines, habits] = await Promise.all([getRoutines(), getHabitNames()]);
+  const [{ id }, routines, habits] = await Promise.all([params, getRoutines(), getHabitNames()]);
   const routine = routines.find((r) => r.id === id);
   if (!routine) notFound();
 

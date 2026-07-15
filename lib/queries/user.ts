@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { users } from "@/lib/db/schema";
 import { getCurrentUserIdOrNull } from "@/lib/auth/session";
+import { resizeGoogleAvatarUrl } from "@/lib/auth/google";
 import type { Locale } from "@/lib/i18n/dictionaries";
 
 export type ThemePreference = "light" | "dark" | "system";
@@ -97,7 +98,11 @@ export const getUserProfile = cache(async (): Promise<UserProfile | null> => {
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
-  return user ?? null;
+  if (!user) return null;
+  // Resized here too (not just at login, see getGoogleProfile), so an
+  // account whose avatarUrl was stored before this existed also benefits
+  // without needing to log in again — idempotent on an already-resized URL.
+  return user.avatarUrl ? { ...user, avatarUrl: resizeGoogleAvatarUrl(user.avatarUrl) } : user;
 });
 
 /** Whether the install-suggestion modal after their first habit has

@@ -14,8 +14,7 @@ export default async function HabitoDetallePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
-  const today = await getServerToday();
+  const [{ id }, today] = await Promise.all([params, getServerToday()]);
   const [categories, habit, monthSummary, bestMonth] = await Promise.all([
     getCategories(),
     getHabitById(id),

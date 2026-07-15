@@ -274,7 +274,6 @@ export function buildGhostTransaction(
 ): TransactionWithCategory {
   return {
     id,
-    userId: "",
     createdAt: new Date().toISOString(),
     // A transaction created offline through this app's own form is, by
     // definition, never one a recurring rule auto-generated server-side.

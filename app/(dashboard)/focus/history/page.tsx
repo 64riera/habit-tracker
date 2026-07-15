@@ -11,8 +11,7 @@ export default async function FocusHistorialPage({
 }: {
   searchParams: Promise<{ habit?: string; category?: string }>;
 }) {
-  const { habit: habitId, category: categoryId } = await searchParams;
-  const today = await getServerToday();
+  const [{ habit: habitId, category: categoryId }, today] = await Promise.all([searchParams, getServerToday()]);
 
   const [sessions, summary, habitNames, categories] = await Promise.all([
     getFocusHistory({ habitId, categoryId, limit: PAGE_SIZE }),

@@ -104,11 +104,17 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const locale = await getCurrentLocale();
+  // Runs on every single page load in the app — none of these four depend
+  // on each other's result (each internally re-derives the session-based
+  // userId it needs, deduped for free within this request by their own
+  // cache() wrapping), so there's no reason to wait on them one at a time.
+  const [locale, themePreference, darkVariant, userId] = await Promise.all([
+    getCurrentLocale(),
+    getThemePreference(),
+    getDarkVariant(),
+    getCurrentUserIdOrNull(),
+  ]);
   const dict = getDictionary(locale);
-  const themePreference = await getThemePreference();
-  const darkVariant = await getDarkVariant();
-  const userId = await getCurrentUserIdOrNull();
 
   // Present regardless of whether dark ends up active (next-themes decides
   // that, possibly client-side for "system") — the CSS only applies it via
