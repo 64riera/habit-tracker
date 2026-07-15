@@ -11,14 +11,13 @@ export const CANONICAL_GYM_ROUTINES: { name: string; exercises: { nameEs: string
   {
     name: "Upper A",
     exercises: [
-      { nameEs: "Press inclinado en máquina", note: "3x6–10" },
-      { nameEs: "Remo en máquina (pecho apoyado)", note: "3x8–12" },
-      { nameEs: "Jalón al pecho", note: "3x8–12" },
-      { nameEs: "Peck deck", note: "2x12–15" },
-      { nameEs: "Press militar de hombros (máquina)", note: "4x12" },
-      { nameEs: "Curl de bíceps (máquina o barra Z)", note: "3x10–15" },
-      { nameEs: "Extensión de tríceps en polea", note: "3x10–15" },
-      { nameEs: "Face pull / reverse pec deck", note: "2x15–20" },
+      { nameEs: "Press inclinado en máquina" },
+      { nameEs: "Jalón al pecho" },
+      { nameEs: "Peck deck" },
+      { nameEs: "Remo sentado en polea" },
+      { nameEs: "Press militar de hombros (máquina)" },
+      { nameEs: "Extensión de tríceps en polea" },
+      { nameEs: "Curl predicador (máquina)" },
     ],
   },
   {
@@ -37,13 +36,13 @@ export const CANONICAL_GYM_ROUTINES: { name: string; exercises: { nameEs: string
   {
     name: "Upper B",
     exercises: [
-      { nameEs: "Jalón al pecho", note: "3x6–10" },
-      { nameEs: "Chest press plano", note: "3x8–12" },
-      { nameEs: "Remo sentado en polea", note: "3x8–12" },
-      { nameEs: "Peck deck", note: "2x12–15" },
-      { nameEs: "Elevaciones laterales", note: "3–4x12–20" },
-      { nameEs: "Tríceps overhead en polea", note: "3x10–15" },
-      { nameEs: "Curl martillo", note: "3x10–15" },
+      { nameEs: "Jalón al pecho" },
+      { nameEs: "Chest press plano" },
+      { nameEs: "Remo unilateral" },
+      { nameEs: "Face pull / reverse pec deck" },
+      { nameEs: "Elevaciones laterales" },
+      { nameEs: "Curl inclinado" },
+      { nameEs: "Tríceps overhead en polea" },
     ],
   },
   {

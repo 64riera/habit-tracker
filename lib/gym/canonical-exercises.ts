@@ -25,6 +25,7 @@ export const CANONICAL_GYM_EXERCISES: { nameEs: string; nameEn: string; muscleGr
   // Espalda / Back
   { nameEs: "Remo en máquina (pecho apoyado)", nameEn: "Chest-supported row machine", muscleGroup: "back" },
   { nameEs: "Remo sentado en polea", nameEn: "Seated cable row", muscleGroup: "back" },
+  { nameEs: "Remo unilateral", nameEn: "Single-arm row", muscleGroup: "back" },
   { nameEs: "Jalón al pecho", nameEn: "Lat pulldown", muscleGroup: "back" },
   { nameEs: "Face pull / reverse pec deck", nameEn: "Face pull / reverse pec deck", muscleGroup: "back" },
 

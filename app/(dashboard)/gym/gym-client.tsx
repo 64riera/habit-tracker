@@ -83,30 +83,6 @@ export function GymClient({
     <div>
       <ContentHeader titleKey="screens.gym.title" subtitleKey="screens.gym.subtitle" />
 
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <Link href="/gym/stats" className="flex items-center gap-1.5 text-[12px] text-muted">
-            <TrendingUp size={13} strokeWidth={2} aria-hidden />
-            {t("gym.stats.viewLink")}
-          </Link>
-          <Link href="/gym/exercises" className="flex items-center gap-1.5 text-[12px] text-muted">
-            <Dumbbell size={13} strokeWidth={2} aria-hidden />
-            {t("gym.exercisesManage")}
-          </Link>
-          <Link href="/gym/routines" className="flex items-center gap-1.5 text-[12px] text-muted">
-            <ListChecks size={13} strokeWidth={2} aria-hidden />
-            {t("gym.routinesManage")}
-          </Link>
-        </div>
-        <Link
-          href="/gym/new"
-          className="flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1.5 text-[11px] text-muted"
-        >
-          <Plus size={13} strokeWidth={2} aria-hidden />
-          {t("gym.newSession")}
-        </Link>
-      </div>
-
       <SwipeableListProvider>
         <div className="flex flex-col gap-0.5">
           {groups.map((group) => (
@@ -138,6 +114,37 @@ export function GymClient({
           {groups.length === 0 && <p className="py-2 text-sm text-muted">{t("gym.empty")}</p>}
         </div>
       </SwipeableListProvider>
+
+      <div className="mt-3.5 grid grid-cols-2 gap-2.5">
+        <Link
+          href="/gym/new"
+          className="flex items-center justify-center gap-1.5 rounded-xl bg-text py-2.5 text-center text-xs font-semibold text-surface"
+        >
+          <Plus size={14} strokeWidth={2} aria-hidden />
+          {t("gym.newSession")}
+        </Link>
+        <Link
+          href="/gym/stats"
+          className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-center text-xs text-muted"
+        >
+          <TrendingUp size={14} strokeWidth={2} aria-hidden />
+          {t("gym.stats.viewLink")}
+        </Link>
+        <Link
+          href="/gym/exercises"
+          className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-center text-xs text-muted"
+        >
+          <Dumbbell size={14} strokeWidth={2} aria-hidden />
+          {t("gym.exercisesManage")}
+        </Link>
+        <Link
+          href="/gym/routines"
+          className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-center text-xs text-muted"
+        >
+          <ListChecks size={14} strokeWidth={2} aria-hidden />
+          {t("gym.routinesManage")}
+        </Link>
+      </div>
     </div>
   );
 }
