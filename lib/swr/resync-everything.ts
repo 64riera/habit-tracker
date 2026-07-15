@@ -19,7 +19,16 @@ import { getClientToday } from "@/lib/date-client";
  * their own guarantee above would be unreachable in practice. */
 const ALWAYS_WARM_ROUTES = ["/focus", "/finance", "/tasks", "/gym", "/metronome", "/more"];
 
+// Module-level, not per-call: these routes only need prefetching once to be
+// usable offline for the rest of the tab's lifetime (until a full reload,
+// which re-runs this module and resets the flag) — resyncEverything used to
+// re-prefetch all six on every single reconnect blip, which on a flaky
+// connection meant repeated RSC/DB reads for routes the user may never open.
+let hasWarmedRoutes = false;
+
 function warmAlwaysAvailableRoutes(router: ReturnType<typeof useRouter>) {
+  if (hasWarmedRoutes) return;
+  hasWarmedRoutes = true;
   for (const route of ALWAYS_WARM_ROUTES) router.prefetch(route);
 }
 
@@ -39,16 +48,17 @@ type ResyncDeps = {
  *  - `RealtimeProvider`, on an incoming push notifying that some other
  *    device just changed something.
  *
- * Always runs all four steps unconditionally (no longer gated on "was
- * anything queued locally", unlike the code this was extracted from) —
- * revalidating the whole SWR cache and refreshing the Server Component
- * tree are what actually pick up a *remote* change for content that isn't
- * one of the explicitly visited `sectionRegistry` entries, which matters
- * now that this also runs in response to another device's write.
+ * Only refreshes visited sections — `sectionRegistry` (lib/swr/sections.ts)
+ * already covers every SWR-backed data surface in the app, so a blanket
+ * `mutate(() => true)` (re-fetch every mounted key) and `router.refresh()`
+ * (re-render the whole Server Component tree) used to redundantly re-read
+ * the exact same data a second and third time on every single reconnect.
+ * The little that's server-rendered outside `sectionRegistry` (account
+ * preferences, mostly) changes rarely enough that picking it up on the
+ * next normal navigation is a fine tradeoff against that redundant read
+ * volume.
  */
 export async function resyncEverything({ cache, mutate, router }: ResyncDeps): Promise<void> {
-  mutate(() => true);
-  router.refresh();
   await refreshVisitedSections(cache, mutate, getClientToday());
   warmAlwaysAvailableRoutes(router);
 }

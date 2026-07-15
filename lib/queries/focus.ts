@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db/client";
@@ -134,24 +135,31 @@ export async function reconcileAndPersist(
  * expired while nobody was watching. This is the chokepoint that makes
  * focus "keep running" even if the browser was closed.
  */
-export async function getActiveFocusSessionWithRewards(): Promise<{
-  session: FocusSessionRow;
-  unlockedTiers: FocusRewardTier[];
-} | null> {
-  const userId = await getCurrentUserId();
-  const [row] = await db
-    .select()
-    .from(focusSessions)
-    .where(and(eq(focusSessions.userId, userId), inArray(focusSessions.status, LIVE_STATUSES)))
-    .limit(1);
-  if (!row) return null;
-  return reconcileAndPersist(row, new Date());
-}
+// Memoized with cache(): reconcileAndPersist can write to the row (status
+// transitions, habit auto-completion, reward unlocks) as a side effect, so
+// beyond saving a redundant read, this also avoids reconciling — and
+// writing — the same session twice in one request just because both a
+// layout and its page (or several sections) ask for it independently.
+export const getActiveFocusSessionWithRewards = cache(
+  async (): Promise<{
+    session: FocusSessionRow;
+    unlockedTiers: FocusRewardTier[];
+  } | null> => {
+    const userId = await getCurrentUserId();
+    const [row] = await db
+      .select()
+      .from(focusSessions)
+      .where(and(eq(focusSessions.userId, userId), inArray(focusSessions.status, LIVE_STATUSES)))
+      .limit(1);
+    if (!row) return null;
+    return reconcileAndPersist(row, new Date());
+  }
+);
 
-export async function getActiveFocusSession(): Promise<FocusSessionRow | null> {
+export const getActiveFocusSession = cache(async (): Promise<FocusSessionRow | null> => {
   const result = await getActiveFocusSessionWithRewards();
   return result?.session ?? null;
-}
+});
 
 /**
  * Minimal data any screen needs to display the ongoing focus state — via
@@ -162,16 +170,16 @@ export async function getActiveFocusSession(): Promise<FocusSessionRow | null> {
  */
 export type FocusHeaderData = { session: FocusSessionRow | null; soundEnabled: boolean };
 
-export async function getFocusHeaderData(): Promise<FocusHeaderData> {
+export const getFocusHeaderData = cache(async (): Promise<FocusHeaderData> => {
   const [session, settings] = await Promise.all([getActiveFocusSession(), getFocusSettings()]);
   return { session, soundEnabled: settings.soundEnabled };
-}
+});
 
-export async function getFocusSettings(): Promise<FocusSettingsRow> {
+export const getFocusSettings = cache(async (): Promise<FocusSettingsRow> => {
   const userId = await getCurrentUserId();
   const [row] = await db.select().from(focusSettings).where(eq(focusSettings.userId, userId)).limit(1);
   return row ?? { userId, ...DEFAULT_FOCUS_SETTINGS };
-}
+});
 
 export async function getFocusHistory(params: {
   habitId?: string;

@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { getTodayDateString } from "@/lib/date";
 import { getTimezonePreference } from "@/lib/queries/user";
@@ -47,7 +48,7 @@ export async function getUserTimezone(): Promise<string> {
  * `getTodayDateString()` by hand, so there's exactly one place that
  * decides how those two settings combine.
  */
-export async function getServerToday(now: Date = new Date()): Promise<string> {
+export const getServerToday = cache(async (now: Date = new Date()): Promise<string> => {
   const [cutoffHour, timezone] = await Promise.all([getDayCutoffHour(), getUserTimezone()]);
   return getTodayDateString(cutoffHour, timezone, now);
-}
+});

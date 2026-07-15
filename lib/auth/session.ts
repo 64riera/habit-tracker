@@ -61,8 +61,12 @@ export const getCurrentUserId = cache(async (): Promise<string> => {
 });
 
 /** Like getCurrentUserId(), but for places like the root layout that also
- * render /login and /signup, where there may be no session. */
-export async function getCurrentUserIdOrNull(): Promise<string | null> {
+ * render /login and /signup, where there may be no session. Memoized with
+ * `cache()` for the same reason as getCurrentUserId() — it's the innermost
+ * call of nearly every uncached query in lib/queries/user.ts, so leaving it
+ * unmemoized meant every one of them re-read and re-verified the cookie
+ * independently on the same request. */
+export const getCurrentUserIdOrNull = cache(async (): Promise<string | null> => {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
@@ -72,7 +76,7 @@ export async function getCurrentUserIdOrNull(): Promise<string | null> {
   } catch {
     return null;
   }
-}
+});
 
 /** Avoids open redirects: only allows internal routes (starting with "/"). */
 export function safeNextPath(next: string): string {

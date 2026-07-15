@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { and, eq, gte, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { habitLogs, habits, categories, habitStreaks } from "@/lib/db/schema";
@@ -8,6 +9,18 @@ import { overLimitSkipDates, keepsStreakOn } from "@/lib/habits/status";
 import { getCurrentUserId } from "@/lib/auth/session";
 import type { HabitRow } from "@/lib/queries/habits";
 
+/** Memoized: every stats view below needs the same active-habit list, and
+ * they're always fetched together (see stats-read.ts) — without this each
+ * one would issue its own identical `SELECT ... FROM habits` on the same
+ * request. */
+const getActiveHabits = cache(async (): Promise<HabitRow[]> => {
+  const userId = await getCurrentUserId();
+  return db
+    .select()
+    .from(habits)
+    .where(and(eq(habits.userId, userId), eq(habits.status, "active")));
+});
+
 async function logsSince(habitIds: string[], from: string) {
   if (habitIds.length === 0) return [];
   return db
@@ -15,6 +28,27 @@ async function logsSince(habitIds: string[], from: string) {
     .from(habitLogs)
     .where(and(inArray(habitLogs.habitId, habitIds), gte(habitLogs.date, from)));
 }
+
+/** Widest window any stats view below needs (90 days, for pct90 and the
+ * stat cards). Narrower views (7/14/30-day trend, category %) just look up
+ * dates within this same map instead of re-querying a smaller range — a log
+ * entry outside the narrower window is simply never read, so serving every
+ * view off one superset changes nothing about their results. Memoized per
+ * `today` since getOverallStats/getTrend/getCategoryStats/getHabitStatCards
+ * are always called together (see stats-read.ts) with the same value. */
+const getRecentHabitLogsByHabit = cache(async (today: string): Promise<Map<string, Map<string, string>>> => {
+  const activeHabits = await getActiveHabits();
+  const ids = activeHabits.map((h) => h.id);
+  const from90 = addDays(today, -89);
+  const logs = await logsSince(ids, from90);
+
+  const byHabit = new Map<string, Map<string, string>>();
+  for (const log of logs) {
+    if (!byHabit.has(log.habitId)) byHabit.set(log.habitId, new Map());
+    byHabit.get(log.habitId)!.set(log.date, log.status);
+  }
+  return byHabit;
+});
 
 function completionRatio(
   habit: HabitRow,
@@ -42,23 +76,10 @@ export type HabitStatCard = {
 };
 
 export async function getHabitStatCards(today: string): Promise<HabitStatCard[]> {
-  const userId = await getCurrentUserId();
-  const activeHabits = await db
-    .select()
-    .from(habits)
-    .where(and(eq(habits.userId, userId), eq(habits.status, "active")));
+  const [activeHabits, byHabit] = await Promise.all([getActiveHabits(), getRecentHabitLogsByHabit(today)]);
   const ids = activeHabits.map((h) => h.id);
   const from90 = addDays(today, -89);
-  const [logs, streaks] = await Promise.all([
-    logsSince(ids, from90),
-    ids.length ? db.select().from(habitStreaks).where(inArray(habitStreaks.habitId, ids)) : [],
-  ]);
-
-  const byHabit = new Map<string, Map<string, string>>();
-  for (const log of logs) {
-    if (!byHabit.has(log.habitId)) byHabit.set(log.habitId, new Map());
-    byHabit.get(log.habitId)!.set(log.date, log.status);
-  }
+  const streaks = ids.length ? await db.select().from(habitStreaks).where(inArray(habitStreaks.habitId, ids)) : [];
   const streakByHabit = new Map(streaks.map((s) => [s.habitId, s]));
 
   return activeHabits.map((h) => {
@@ -77,19 +98,8 @@ export async function getHabitStatCards(today: string): Promise<HabitStatCard[]>
 }
 
 export async function getOverallStats(today: string) {
-  const userId = await getCurrentUserId();
-  const activeHabits = await db
-    .select()
-    .from(habits)
-    .where(and(eq(habits.userId, userId), eq(habits.status, "active")));
-  const ids = activeHabits.map((h) => h.id);
+  const [activeHabits, byHabit] = await Promise.all([getActiveHabits(), getRecentHabitLogsByHabit(today)]);
   const from90 = addDays(today, -89);
-  const logs = await logsSince(ids, from90);
-  const byHabit = new Map<string, Map<string, string>>();
-  for (const log of logs) {
-    if (!byHabit.has(log.habitId)) byHabit.set(log.habitId, new Map());
-    byHabit.get(log.habitId)!.set(log.date, log.status);
-  }
 
   function avgRatio(from: string) {
     if (activeHabits.length === 0) return 0;
@@ -108,21 +118,13 @@ export async function getOverallStats(today: string) {
 
 export type TrendPoint = { date: string; pct: number };
 
+/** `days` must stay <= 90 — logs are read from the shared 90-day map above
+ * (see getRecentHabitLogsByHabit), so a wider window would silently look
+ * like a lower completion rate instead of erroring. Both current callers
+ * (stats-read.ts) pass 14. */
 export async function getTrend(today: string, days: number): Promise<TrendPoint[]> {
-  const userId = await getCurrentUserId();
-  const activeHabits = await db
-    .select()
-    .from(habits)
-    .where(and(eq(habits.userId, userId), eq(habits.status, "active")));
-  const ids = activeHabits.map((h) => h.id);
+  const [activeHabits, byHabit] = await Promise.all([getActiveHabits(), getRecentHabitLogsByHabit(today)]);
   const from = addDays(today, -(days - 1));
-  const logs = await logsSince(ids, from);
-
-  const byHabit = new Map<string, Map<string, string>>();
-  for (const log of logs) {
-    if (!byHabit.has(log.habitId)) byHabit.set(log.habitId, new Map());
-    byHabit.get(log.habitId)!.set(log.date, log.status);
-  }
 
   const overLimitByHabit = new Map<string, Set<string>>();
   for (const h of activeHabits) {
@@ -151,25 +153,16 @@ export type CategoryStat = {
   pct: number;
 };
 
+/** Same <= 90-day constraint as getTrend above. Both current callers
+ * (stats-read.ts) pass 30. */
 export async function getCategoryStats(today: string, days = 30): Promise<CategoryStat[]> {
   const userId = await getCurrentUserId();
-  const cats = await db
-    .select()
-    .from(categories)
-    .where(eq(categories.userId, userId))
-    .orderBy(categories.sortOrder);
-  const activeHabits = await db
-    .select()
-    .from(habits)
-    .where(and(eq(habits.userId, userId), eq(habits.status, "active")));
-  const ids = activeHabits.map((h) => h.id);
+  const [cats, activeHabits, byHabit] = await Promise.all([
+    db.select().from(categories).where(eq(categories.userId, userId)).orderBy(categories.sortOrder),
+    getActiveHabits(),
+    getRecentHabitLogsByHabit(today),
+  ]);
   const from = addDays(today, -(days - 1));
-  const logs = await logsSince(ids, from);
-  const byHabit = new Map<string, Map<string, string>>();
-  for (const log of logs) {
-    if (!byHabit.has(log.habitId)) byHabit.set(log.habitId, new Map());
-    byHabit.get(log.habitId)!.set(log.date, log.status);
-  }
 
   return cats
     .map((c) => {

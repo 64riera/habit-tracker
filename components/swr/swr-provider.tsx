@@ -32,7 +32,20 @@ export function SWRConfigProvider({ userId, children }: { userId: string | null;
   const [{ cache, hydrate }] = useState(() => createIndexedDBSWRProvider(userId));
 
   return (
-    <SWRConfig value={{ provider: () => cache }}>
+    <SWRConfig
+      value={{
+        provider: () => cache,
+        // Reconnect and (for realtime-tagged sections) remote-change
+        // revalidation are already handled explicitly by OfflineProvider +
+        // RealtimeProvider (see lib/swr/resync-everything.ts and
+        // lib/offline/client.tsx) — those know exactly which keys actually
+        // need a fresh read. Leaving these on their SWR defaults meant
+        // every mounted key re-fetched again on top of that, on every tab
+        // focus and every reconnect.
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+      }}
+    >
       <HydrationBroadcaster hydrate={hydrate} />
       {children}
     </SWRConfig>

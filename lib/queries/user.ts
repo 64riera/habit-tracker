@@ -41,7 +41,7 @@ export const getDarkVariant = cache(async (): Promise<DarkVariant> => {
 /** Language preference saved on the account. `null` if there's no session
  * (e.g. /login, /signup) — there the language is resolved through other
  * means, see `getCurrentLocale()` in lib/i18n/locale.ts. */
-export async function getLocalePreference(): Promise<Locale | null> {
+export const getLocalePreference = cache(async (): Promise<Locale | null> => {
   const userId = await getCurrentUserIdOrNull();
   if (!userId) return null;
   const [user] = await db
@@ -50,10 +50,10 @@ export async function getLocalePreference(): Promise<Locale | null> {
     .where(eq(users.id, userId))
     .limit(1);
   return user?.localePreference ?? null;
-}
+});
 
 /** Currency preference saved on the account. "MXN" if there's no session. */
-export async function getCurrencyPreference(): Promise<CurrencyPreference> {
+export const getCurrencyPreference = cache(async (): Promise<CurrencyPreference> => {
   const userId = await getCurrentUserIdOrNull();
   if (!userId) return "MXN";
   const [user] = await db
@@ -62,25 +62,25 @@ export async function getCurrencyPreference(): Promise<CurrencyPreference> {
     .where(eq(users.id, userId))
     .limit(1);
   return user?.currencyPreference ?? "MXN";
-}
+});
 
 /** IANA timezone saved on the account (detected in the browser, see
  * `timezone-sync.tsx`). `null` if there's no session or it hasn't been detected yet. */
-export async function getTimezonePreference(): Promise<string | null> {
+export const getTimezonePreference = cache(async (): Promise<string | null> => {
   const userId = await getCurrentUserIdOrNull();
   if (!userId) return null;
   const [user] = await db.select({ timezone: users.timezone }).from(users).where(eq(users.id, userId)).limit(1);
   return user?.timezone ?? null;
-}
+});
 
 /** Last BPM used in the metronome (see app/(dashboard)/metronome). 120 —
  * a common default tempo — if there's no session. */
-export async function getMetronomeBpm(): Promise<number> {
+export const getMetronomeBpm = cache(async (): Promise<number> => {
   const userId = await getCurrentUserIdOrNull();
   if (!userId) return 120;
   const [user] = await db.select({ metronomeBpm: users.metronomeBpm }).from(users).where(eq(users.id, userId)).limit(1);
   return user?.metronomeBpm ?? 120;
-}
+});
 
 export type UserProfile = { username: string; name: string | null; email: string | null; avatarUrl: string | null };
 
@@ -89,7 +89,7 @@ export type UserProfile = { username: string; name: string | null; email: string
  * app/api/auth/google/callback/route.ts) and stay `null` for an account
  * that has never used it, so callers fall back to `username`. `null`
  * entirely if there's no session. */
-export async function getUserProfile(): Promise<UserProfile | null> {
+export const getUserProfile = cache(async (): Promise<UserProfile | null> => {
   const userId = await getCurrentUserIdOrNull();
   if (!userId) return null;
   const [user] = await db
@@ -98,12 +98,12 @@ export async function getUserProfile(): Promise<UserProfile | null> {
     .where(eq(users.id, userId))
     .limit(1);
   return user ?? null;
-}
+});
 
 /** Whether the install-suggestion modal after their first habit has
  * already been shown (and decided on) — see install-suggestion-modal.tsx.
  * `true` if there's no session, so it's never offered on public pages. */
-export async function getInstallPromptSeen(): Promise<boolean> {
+export const getInstallPromptSeen = cache(async (): Promise<boolean> => {
   const userId = await getCurrentUserIdOrNull();
   if (!userId) return true;
   const [user] = await db
@@ -112,4 +112,4 @@ export async function getInstallPromptSeen(): Promise<boolean> {
     .where(eq(users.id, userId))
     .limit(1);
   return user?.installPromptSeen ?? true;
-}
+});
