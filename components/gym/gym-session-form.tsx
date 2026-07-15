@@ -9,6 +9,7 @@ import { categoryDisplayName } from "@/lib/habits/describe";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import type { GymSessionRow } from "@/lib/queries/gym";
 import type { GymExerciseCatalogRow } from "@/lib/queries/gym-exercises";
+import type { GymRoutineRow } from "@/lib/queries/gym-routines";
 import { createGymSession, updateGymSession } from "@/lib/actions/gym";
 import { gymSessionFormSchema, extractGymSessionFields } from "@/lib/validation/gym";
 import { useOfflineFormAction } from "@/lib/offline/form";
@@ -31,10 +32,12 @@ export function GymSessionForm({
   session,
   today,
   exercises: catalog,
+  routines = [],
 }: {
   session?: GymSessionRow;
   today: string;
   exercises: GymExerciseCatalogRow[];
+  routines?: GymRoutineRow[];
 }) {
   const { t, locale } = useI18n();
   const [id] = useState(() => session?.id ?? nanoid());
@@ -45,6 +48,15 @@ export function GymSessionForm({
     () => catalog.map((e) => ({ value: e.id, label: categoryDisplayName(e, locale) })),
     [catalog, locale]
   );
+
+  // Only offered when logging a brand new session — editing an existing
+  // one already has real exercises/sets, so replacing them from a template
+  // would just be a confusing way to lose data already typed in.
+  function startFromRoutine(routine: GymRoutineRow) {
+    setExercises(
+      routine.exercises.map((e) => ({ exerciseId: e.exerciseId, note: e.note ?? "", sets: [{ weight: "", reps: "" }] }))
+    );
+  }
 
   const action = useOfflineFormAction({
     schema: gymSessionFormSchema,
@@ -123,6 +135,23 @@ export function GymSessionForm({
           className="w-full rounded-lg border border-border bg-transparent px-3.5 py-2 text-sm outline-none focus:border-text md:w-fit"
         />
       </Field>
+
+      {!session && routines.length > 0 && (
+        <Field label={t("gym.startFromRoutine")}>
+          <div className="flex flex-wrap gap-1.5">
+            {routines.map((routine) => (
+              <button
+                type="button"
+                key={routine.id}
+                onClick={() => startFromRoutine(routine)}
+                className="rounded-full border border-dashed border-border px-3 py-1.5 text-[11.5px] font-medium text-muted"
+              >
+                {routine.name}
+              </button>
+            ))}
+          </div>
+        </Field>
+      )}
 
       <div className="flex flex-col gap-3">
         {exercises.map((exercise, i) => (

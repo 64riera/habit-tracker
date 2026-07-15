@@ -362,6 +362,13 @@
     "exercisesEmpty": "Aún no tienes ejercicios en tu catálogo.",
     "addNewExercise": "Agregar ejercicio nuevo",
     "muscleGroupLabel": "Grupo muscular",
+    "startFromRoutine": "Empezar desde una rutina",
+    "routinesManage": "Rutinas",
+    "routinesManageSubtitle": "Plantillas de ejercicios para tus sesiones",
+    "routinesEmpty": "Aún no tienes rutinas.",
+    "addNewRoutine": "Agregar rutina nueva",
+    "routineNamePlaceholder": "p. ej. Upper A",
+    "routineTargetPlaceholder": "3x8–12",
     "muscleGroups": {
       "chest": "Pecho",
       "back": "Espalda",

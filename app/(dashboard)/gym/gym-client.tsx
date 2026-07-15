@@ -3,7 +3,7 @@
 import { useMemo, useTransition } from "react";
 import Link from "next/link";
 import { useSWRConfig } from "swr";
-import { Dumbbell, Plus, Trash2, TrendingUp } from "lucide-react";
+import { Dumbbell, ListChecks, Plus, Trash2, TrendingUp } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { SwipeableRow, SwipeableListProvider } from "@/components/ui/swipeable-row";
 import { GymSessionRow } from "@/components/gym/gym-session-row";
@@ -92,6 +92,10 @@ export function GymClient({
           <Link href="/gym/exercises" className="flex items-center gap-1.5 text-[12px] text-muted">
             <Dumbbell size={13} strokeWidth={2} aria-hidden />
             {t("gym.exercisesManage")}
+          </Link>
+          <Link href="/gym/routines" className="flex items-center gap-1.5 text-[12px] text-muted">
+            <ListChecks size={13} strokeWidth={2} aria-hidden />
+            {t("gym.routinesManage")}
           </Link>
         </div>
         <Link

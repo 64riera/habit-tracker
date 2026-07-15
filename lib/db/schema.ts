@@ -288,6 +288,29 @@ export const gymSessions = sqliteTable(
   (t) => [index("gym_sessions_user_idx").on(t.userId), index("gym_sessions_user_date_idx").on(t.userId, t.date)]
 );
 
+// A named template of exercises (e.g. "Upper A") that pre-fills a new gym
+// session instead of starting blank — see RoutineExercise in
+// lib/gym/types.ts and lib/gym/canonical-routines.ts for the seeded set.
+// Unlike gymExercises there's no `isCustom` flag: every routine here was
+// either seeded once from the canonical list or created by the user
+// through the same actions (lib/actions/gym-routines.ts), so there's
+// nothing for a future catalog swap to distinguish or clean up.
+export const gymRoutines = sqliteTable(
+  "gym_routines",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    exercises: text("exercises").notNull(), // JSON, RoutineExercise[]
+    sortOrder: integer("sort_order").notNull().default(0),
+    hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
+  },
+  (t) => [
+    index("gym_routines_user_idx").on(t.userId),
+    uniqueIndex("gym_routines_user_name_idx").on(t.userId, t.name),
+  ]
+);
+
 export const focusSessions = sqliteTable(
   "focus_sessions",
   {

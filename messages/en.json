@@ -362,6 +362,13 @@
     "exercisesEmpty": "You don't have any exercises in your catalog yet.",
     "addNewExercise": "Add new exercise",
     "muscleGroupLabel": "Muscle group",
+    "startFromRoutine": "Start from a routine",
+    "routinesManage": "Routines",
+    "routinesManageSubtitle": "Exercise templates for your sessions",
+    "routinesEmpty": "You don't have any routines yet.",
+    "addNewRoutine": "Add new routine",
+    "routineNamePlaceholder": "e.g. Upper A",
+    "routineTargetPlaceholder": "3x8–12",
     "muscleGroups": {
       "chest": "Chest",
       "back": "Back",
