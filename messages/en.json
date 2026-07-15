@@ -314,6 +314,15 @@
         "6": "Saturdays",
         "7": "Sundays"
       }
+    },
+    "budgets": {
+      "manage": "Budgets",
+      "manageSubtitle": "Set a monthly spending limit per category",
+      "title": "Budgets",
+      "noLimit": "No limit",
+      "limitLabel": "Monthly limit for {category}",
+      "warning": "{pct}% used — approaching the limit",
+      "over": "Over by {amount} ({pct}%)"
     }
   },
   "gym": {

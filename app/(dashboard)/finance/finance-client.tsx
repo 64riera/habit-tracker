@@ -3,12 +3,13 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useSWRConfig } from "swr";
-import { Plus, Trash2 } from "lucide-react";
+import { PiggyBank, Plus, Trash2 } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { SwipeableRow, SwipeableListProvider } from "@/components/ui/swipeable-row";
 import { PeriodSelector } from "@/components/finance/period-selector";
 import { PeriodSummary } from "@/components/finance/period-summary";
 import { CategoryBreakdown } from "@/components/finance/category-breakdown";
+import { BudgetProgress } from "@/components/finance/budget-progress";
 import { TrendChart } from "@/components/finance/trend-chart";
 import { TransactionRow } from "@/components/finance/transaction-row";
 import { FinanceInsights } from "@/components/finance/finance-insights";
@@ -21,7 +22,7 @@ import {
   buildGhostTransaction,
   applyPendingTransactionEdit,
 } from "@/lib/offline/pending-selectors";
-import { addDays, daysBetween, groupByDate, parseISODate } from "@/lib/date";
+import { addDays, daysBetween, endOfMonth, groupByDate, parseISODate, startOfMonth } from "@/lib/date";
 import {
   periodRange,
   previousPeriodRange,
@@ -39,18 +40,24 @@ import {
 } from "@/lib/finance/aggregate";
 import { swrKeys } from "@/lib/swr/keys";
 import { usePageData } from "@/lib/swr/use-page-data";
-import { fetchFinanceCategoriesAction, fetchTransactionsAction } from "@/lib/actions/finance-read";
-import type { FinanceCategoryRow, TransactionWithCategory } from "@/lib/queries/finance";
+import {
+  fetchFinanceBudgetsAction,
+  fetchFinanceCategoriesAction,
+  fetchTransactionsAction,
+} from "@/lib/actions/finance-read";
+import type { FinanceBudgetRow, FinanceCategoryRow, TransactionWithCategory } from "@/lib/queries/finance";
 import type { Currency } from "@/lib/finance/format";
 
 export function FinanceClient({
   transactions: initialTransactions,
   categories: initialCategories,
+  budgets: initialBudgets,
   currency,
   today,
 }: {
   transactions: TransactionWithCategory[];
   categories: FinanceCategoryRow[];
+  budgets: FinanceBudgetRow[];
   currency: Currency;
   today: string;
 }) {
@@ -58,6 +65,7 @@ export function FinanceClient({
   const { mutate } = useSWRConfig();
   const { data: transactions } = usePageData(swrKeys.financeTransactions(), fetchTransactionsAction, initialTransactions);
   const { data: categories } = usePageData(swrKeys.financeCategories(), fetchFinanceCategoriesAction, initialCategories);
+  const { data: budgets } = usePageData(swrKeys.financeBudgets(), fetchFinanceBudgetsAction, initialBudgets);
   const { pendingMutations, runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
 
@@ -107,6 +115,17 @@ export function FinanceClient({
   const buckets = useMemo(() => bucketTransactions(inRange, bucketForPeriod(period)), [inRange, period]);
   const groups = useMemo(() => groupByDate(inRange), [inRange]);
 
+  // Budgets are always tracked against the current calendar month, not
+  // whatever period the ledger view is filtered to (a "week" or "year"
+  // view of spend wouldn't make sense against a monthly limit) — see
+  // lib/finance/budgets.ts.
+  const spentByCategory = useMemo(() => {
+    const monthFrom = startOfMonth(today);
+    const monthTo = endOfMonth(today);
+    const monthTotals = summarizeTransactions(filterByRange(allTransactions, monthFrom, monthTo));
+    return new Map(monthTotals.byCategory.map((c) => [c.categoryId, c.total]));
+  }, [allTransactions, today]);
+
   // Everything the collapsed "more stats" panel needs — derived from the
   // same inRange/totals already computed above, plus one extra slice for
   // the previous-period comparison. Kept as plain useMemo values (not a
@@ -138,6 +157,13 @@ export function FinanceClient({
     <div>
       <ContentHeader titleKey="screens.finance.title" subtitleKey="screens.finance.subtitle" />
 
+      <div className="mb-4 flex items-center justify-end">
+        <Link href="/finance/budgets" className="flex items-center gap-1.5 text-[12px] text-muted">
+          <PiggyBank size={13} strokeWidth={2} aria-hidden />
+          {t("finance.budgets.manage")}
+        </Link>
+      </div>
+
       <div className="mb-5">
         <PeriodSelector
           period={period}
@@ -151,6 +177,15 @@ export function FinanceClient({
       <div className="mb-3">
         <PeriodSummary totals={totals} currency={currency} />
       </div>
+
+      {budgets.length > 0 && (
+        <div className="mb-6">
+          <h2 className="mb-2.5 text-[11px] font-semibold tracking-wide text-muted uppercase">
+            {t("finance.budgets.title")}
+          </h2>
+          <BudgetProgress budgets={budgets} spentByCategory={spentByCategory} categories={categories} currency={currency} />
+        </div>
+      )}
 
       <div className="mb-6">
         <FinanceInsights

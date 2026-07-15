@@ -241,6 +241,28 @@ export const transactions = sqliteTable(
   ]
 );
 
+// Optional monthly spending limit per expense category. One row per
+// (user, category) — absence of a row means "no budget set" for that
+// category, not a budget of 0. Deliberately month-only (v1): the "spent
+// so far" side is always computed against the current calendar month
+// (see budgetStatus() in lib/finance/budgets.ts), independent of whatever
+// period the ledger view happens to be filtered to.
+export const financeBudgets = sqliteTable(
+  "finance_budgets",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    categoryId: text("category_id")
+      .notNull()
+      .references(() => financeCategories.id, { onDelete: "cascade" }),
+    monthlyLimit: real("monthly_limit").notNull(),
+  },
+  (t) => [
+    index("finance_budgets_user_idx").on(t.userId),
+    uniqueIndex("finance_budgets_user_category_idx").on(t.userId, t.categoryId),
+  ]
+);
+
 // Fixed catalog of exercises every account gets (see
 // lib/gym/canonical-exercises.ts), same taxonomy shape as habits'/finance's
 // categories — sessions reference an exercise by id instead of typing its

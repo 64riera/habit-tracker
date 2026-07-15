@@ -42,6 +42,12 @@
      for the amount itself (income vs. expense) across the finance section. */
   --color-income: oklch(0.56 0.14 152);
   --color-expense: var(--color-text);
+
+  /* Budget "approaching limit" state (see lib/finance/budgets.ts). Only
+     "over limit" needs a color — the app already treats --color-cat-fitness
+     (the same red used for swipe-to-delete) as its de facto danger tone, so
+     that's reused as-is rather than adding a second red. One new hue only. */
+  --color-warning: oklch(0.72 0.15 75);
 }
 
 .dark {
@@ -102,6 +108,7 @@
   --color-cat-other: var(--cat-other);
   --color-income: var(--color-income);
   --color-expense: var(--color-expense);
+  --color-warning: var(--color-warning);
 
   --font-serif: var(--font-newsreader);
   --font-sans: var(--font-public-sans);

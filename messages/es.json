@@ -314,6 +314,15 @@
         "6": "sábados",
         "7": "domingos"
       }
+    },
+    "budgets": {
+      "manage": "Presupuestos",
+      "manageSubtitle": "Define un límite de gasto mensual por categoría",
+      "title": "Presupuestos",
+      "noLimit": "Sin límite",
+      "limitLabel": "Límite mensual de {category}",
+      "warning": "{pct}% usado — cerca del límite",
+      "over": "Excedido por {amount} ({pct}%)"
     }
   },
   "gym": {

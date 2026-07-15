@@ -2,13 +2,14 @@ import "server-only";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db/client";
-import { financeCategories, transactions } from "@/lib/db/schema";
+import { financeBudgets, financeCategories, transactions } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { CANONICAL_FINANCE_CATEGORIES } from "@/lib/finance/canonical-categories";
 
 export type FinanceCategoryRow = typeof financeCategories.$inferSelect;
 export type TransactionRow = typeof transactions.$inferSelect;
 export type TransactionWithCategory = TransactionRow & { category: FinanceCategoryRow | null };
+export type FinanceBudgetRow = typeof financeBudgets.$inferSelect;
 
 /** Expense categories are a fixed set (see lib/finance/canonical-categories.ts):
  * this self-heals any account that's still missing one — created before
@@ -68,4 +69,13 @@ export async function getTransactions(categories: FinanceCategoryRow[]): Promise
   return rows
     .map((r) => ({ ...r, category: r.categoryId ? (catById.get(r.categoryId) ?? null) : null }))
     .sort((a, b) => (a.date === b.date ? b.createdAt.localeCompare(a.createdAt) : b.date.localeCompare(a.date)));
+}
+
+/** One row per category that has a monthly limit set — absence of a row
+ * means "no budget", not a limit of 0 (see the financeBudgets column
+ * comment in lib/db/schema.ts). No canonical/self-heal step here: unlike
+ * categories, budgets are opt-in per account, so there's nothing to backfill. */
+export async function getFinanceBudgets(): Promise<FinanceBudgetRow[]> {
+  const userId = await getCurrentUserId();
+  return db.select().from(financeBudgets).where(eq(financeBudgets.userId, userId));
 }
