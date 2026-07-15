@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { and, eq, gte, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { habitLogs, habits, routines } from "@/lib/db/schema";
@@ -33,7 +34,7 @@ function parseHabitIds(raw: string): string[] {
   }
 }
 
-export async function getRoutines(): Promise<RoutineWithHabits[]> {
+export const getRoutines = cache(async (): Promise<RoutineWithHabits[]> => {
   const userId = await getCurrentUserId();
   const rows = await db
     .select()
@@ -59,12 +60,12 @@ export async function getRoutines(): Promise<RoutineWithHabits[]> {
       habits: ids.map((id) => habitById.get(id)).filter((h): h is RoutineHabitSummary => !!h),
     };
   });
-}
+});
 
 export type RoutineToday = RoutineWithHabits & { doneToday: number; totalToday: number };
 
 /** Routines with active habits and how many are already checked today, for the quick tap on Home. */
-export async function getRoutinesForToday(date: string): Promise<RoutineToday[]> {
+export const getRoutinesForToday = cache(async (date: string): Promise<RoutineToday[]> => {
   const base = (await getRoutines()).filter((r) => r.habits.length > 0);
   if (base.length === 0) return [];
 
@@ -83,12 +84,12 @@ export async function getRoutinesForToday(date: string): Promise<RoutineToday[]>
       return !!status && KEEPS_STREAK_STATUSES.has(status);
     }).length,
   }));
-}
+});
 
 export type RoutineWithStats = RoutineWithHabits & { completionPct30: number };
 
 /** Routine completion as a whole: % of days (last 30) where ALL of its habits were kept. */
-export async function getRoutinesWithStats(today: string): Promise<RoutineWithStats[]> {
+export const getRoutinesWithStats = cache(async (today: string): Promise<RoutineWithStats[]> => {
   const base = await getRoutines();
   if (base.length === 0) return [];
 
@@ -142,4 +143,4 @@ export async function getRoutinesWithStats(today: string): Promise<RoutineWithSt
       completionPct30: applicableDays > 0 ? Math.round((fullyCompletedDays / applicableDays) * 100) : 0,
     };
   });
-}
+});

@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { gymSessions } from "@/lib/db/schema";
@@ -22,10 +23,10 @@ function parseExercises(raw: string): GymExercise[] {
  * enough to fetch once per page load, and this section is meant to work
  * offline so there's no separate paginated/filtered query to keep in sync.
  */
-export async function getGymSessions(): Promise<GymSessionRow[]> {
+export const getGymSessions = cache(async (): Promise<GymSessionRow[]> => {
   const userId = await getCurrentUserId();
   const rows = await db.select().from(gymSessions).where(eq(gymSessions.userId, userId));
   return rows
     .map((r) => ({ ...r, exercises: parseExercises(r.exercises) }))
     .sort((a, b) => (a.date === b.date ? b.createdAt.localeCompare(a.createdAt) : b.date.localeCompare(a.date)));
-}
+});

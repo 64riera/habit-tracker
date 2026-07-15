@@ -27,9 +27,13 @@ export const swrKeys = {
 
   history: (today: string, habitId: string, categoryId: string, rangeDays: number) =>
     ["history", today, habitId, categoryId, rangeDays] as const,
+  logPage: (today: string, habitId: string, categoryId: string, pageIndex: number) =>
+    ["history:log-page", today, habitId, categoryId, pageIndex] as const,
   stats: (today: string) => ["stats", today] as const,
 
   focusSupporting: (today: string) => ["focus:supporting", today] as const,
   focusHistoryList: (habitId: string, categoryId: string) => ["focus:history-list", habitId, categoryId] as const,
+  focusHistoryPage: (habitId: string, categoryId: string, pageIndex: number) =>
+    ["focus:history-page", habitId, categoryId, pageIndex] as const,
   focusStats: (today: string) => ["focus:stats", today] as const,
 } as const;

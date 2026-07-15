@@ -181,12 +181,12 @@ export const getFocusSettings = cache(async (): Promise<FocusSettingsRow> => {
   return row ?? { userId, ...DEFAULT_FOCUS_SETTINGS };
 });
 
-export async function getFocusHistory(params: {
+export const getFocusHistory = cache(async (params: {
   habitId?: string;
   categoryId?: string;
   limit?: number;
   offset?: number;
-} = {}): Promise<FocusSessionRow[]> {
+} = {}): Promise<FocusSessionRow[]> => {
   const { habitId, categoryId, limit = 30, offset = 0 } = params;
   const userId = await getCurrentUserId();
   const conditions = [eq(focusSessions.userId, userId), inArray(focusSessions.status, ["completed", "cancelled"])];
@@ -199,7 +199,7 @@ export async function getFocusHistory(params: {
     .orderBy(desc(focusSessions.startedAt))
     .limit(limit)
     .offset(offset);
-}
+});
 
 /**
  * Daily goal progress. Receives the active session already resolved by the
@@ -210,10 +210,10 @@ export async function getFocusHistory(params: {
  * persisted) is added to the already-completed total, so today's goal
  * advances live while the session keeps running.
  */
-export async function getTodayFocusProgress(
+export const getTodayFocusProgress = cache(async (
   date: string,
   activeSession: FocusSessionRow | null
-): Promise<{ completedSeconds: number; goalMinutes: number }> {
+): Promise<{ completedSeconds: number; goalMinutes: number }> => {
   const userId = await getCurrentUserId();
   const [rows, settings] = await Promise.all([
     db
@@ -230,7 +230,7 @@ export async function getTodayFocusProgress(
       ? computeFocusState(activeSession, new Date()).activeSeconds
       : 0;
   return { completedSeconds: completedSeconds + liveSeconds, goalMinutes: settings.dailyGoalMinutes };
-}
+});
 
 export type FocusRewardProgress = {
   totalCompletedSeconds: number;
@@ -239,7 +239,7 @@ export type FocusRewardProgress = {
 };
 
 /** For the /focus/forest screen: lifetime totals + which tiers are already unlocked. */
-export async function getFocusRewardProgress(): Promise<FocusRewardProgress> {
+export const getFocusRewardProgress = cache(async (): Promise<FocusRewardProgress> => {
   const userId = await getCurrentUserId();
   const [{ totalSeconds, count }, unlockedRows] = await Promise.all([
     getFocusRewardLifetimeTotals(userId),
@@ -250,4 +250,4 @@ export async function getFocusRewardProgress(): Promise<FocusRewardProgress> {
     completedSessionCount: count,
     unlockedTiers: unlockedRows.map((r) => r.tier as FocusRewardTier),
   };
-}
+});

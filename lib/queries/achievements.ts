@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { achievements, habits } from "@/lib/db/schema";
@@ -19,7 +20,7 @@ export type HabitAchievements = {
   badges: { type: AchievementType; unlockedAt: string | null }[];
 };
 
-export async function getAchievementsByHabit(): Promise<HabitAchievements[]> {
+export const getAchievementsByHabit = cache(async (): Promise<HabitAchievements[]> => {
   const userId = await getCurrentUserId();
   const [allHabits, unlocked] = await Promise.all([
     db
@@ -44,4 +45,4 @@ export async function getAchievementsByHabit(): Promise<HabitAchievements[]> {
       unlockedAt: byHabit.get(h.id)?.get(type) ?? null,
     })),
   }));
-}
+});

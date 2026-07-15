@@ -75,7 +75,7 @@ export type HabitStatCard = {
   longestStreak: number;
 };
 
-export async function getHabitStatCards(today: string): Promise<HabitStatCard[]> {
+export const getHabitStatCards = cache(async (today: string): Promise<HabitStatCard[]> => {
   const [activeHabits, byHabit] = await Promise.all([getActiveHabits(), getRecentHabitLogsByHabit(today)]);
   const ids = activeHabits.map((h) => h.id);
   const from90 = addDays(today, -89);
@@ -95,9 +95,9 @@ export async function getHabitStatCards(today: string): Promise<HabitStatCard[]>
       longestStreak: streak?.longestStreak ?? 0,
     };
   });
-}
+});
 
-export async function getOverallStats(today: string) {
+export const getOverallStats = cache(async (today: string) => {
   const [activeHabits, byHabit] = await Promise.all([getActiveHabits(), getRecentHabitLogsByHabit(today)]);
   const from90 = addDays(today, -89);
 
@@ -114,7 +114,7 @@ export async function getOverallStats(today: string) {
     pct30: avgRatio(addDays(today, -29)),
     pct90: avgRatio(from90),
   };
-}
+});
 
 export type TrendPoint = { date: string; pct: number };
 
@@ -122,7 +122,7 @@ export type TrendPoint = { date: string; pct: number };
  * (see getRecentHabitLogsByHabit), so a wider window would silently look
  * like a lower completion rate instead of erroring. Both current callers
  * (stats-read.ts) pass 14. */
-export async function getTrend(today: string, days: number): Promise<TrendPoint[]> {
+export const getTrend = cache(async (today: string, days: number): Promise<TrendPoint[]> => {
   const [activeHabits, byHabit] = await Promise.all([getActiveHabits(), getRecentHabitLogsByHabit(today)]);
   const from = addDays(today, -(days - 1));
 
@@ -143,7 +143,7 @@ export async function getTrend(today: string, days: number): Promise<TrendPoint[
     }).length;
     return { date, pct: Math.round((kept / applicable.length) * 100) };
   });
-}
+});
 
 export type CategoryStat = {
   categoryId: string;
@@ -155,7 +155,7 @@ export type CategoryStat = {
 
 /** Same <= 90-day constraint as getTrend above. Both current callers
  * (stats-read.ts) pass 30. */
-export async function getCategoryStats(today: string, days = 30): Promise<CategoryStat[]> {
+export const getCategoryStats = cache(async (today: string, days = 30): Promise<CategoryStat[]> => {
   const userId = await getCurrentUserId();
   const [cats, activeHabits, byHabit] = await Promise.all([
     db.select().from(categories).where(eq(categories.userId, userId)).orderBy(categories.sortOrder),
@@ -175,4 +175,4 @@ export async function getCategoryStats(today: string, days = 30): Promise<Catego
       return { categoryId: c.id, nameEs: c.nameEs, nameEn: c.nameEn, color: c.color, pct };
     })
     .filter((c): c is CategoryStat => c !== null);
-}
+});

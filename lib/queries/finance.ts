@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { and, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db/client";
@@ -21,7 +22,7 @@ export type RecurringTransactionRow = typeof recurringTransactions.$inferSelect;
  * this self-heals any account that's still missing one — created before
  * that category existed — instead of requiring a one-off data migration.
  * Same pattern as getCategories() for habits. */
-export async function getFinanceCategories(): Promise<FinanceCategoryRow[]> {
+export const getFinanceCategories = cache(async (): Promise<FinanceCategoryRow[]> => {
   const userId = await getCurrentUserId();
   let rows = await db
     .select()
@@ -52,7 +53,7 @@ export async function getFinanceCategories(): Promise<FinanceCategoryRow[]> {
   }
 
   return rows;
-}
+});
 
 /**
  * Every transaction on the account, most recent first — no date filter.
@@ -68,7 +69,7 @@ export async function getFinanceCategories(): Promise<FinanceCategoryRow[]> {
  * it twice in the same Promise.all raced the backfill insert and produced
  * duplicate rows. Call getFinanceCategories() once per request and share it.
  */
-export async function getTransactions(categories: FinanceCategoryRow[]): Promise<TransactionWithCategory[]> {
+export const getTransactions = cache(async (categories: FinanceCategoryRow[]): Promise<TransactionWithCategory[]> => {
   const userId = await getCurrentUserId();
   const rows = await db
     .select({
@@ -87,24 +88,24 @@ export async function getTransactions(categories: FinanceCategoryRow[]): Promise
   return rows
     .map((r) => ({ ...r, category: r.categoryId ? (catById.get(r.categoryId) ?? null) : null }))
     .sort((a, b) => (a.date === b.date ? b.createdAt.localeCompare(a.createdAt) : b.date.localeCompare(a.date)));
-}
+});
 
 /** One row per category that has a monthly limit set — absence of a row
  * means "no budget", not a limit of 0 (see the financeBudgets column
  * comment in lib/db/schema.ts). No canonical/self-heal step here: unlike
  * categories, budgets are opt-in per account, so there's nothing to backfill. */
-export async function getFinanceBudgets(): Promise<FinanceBudgetRow[]> {
+export const getFinanceBudgets = cache(async (): Promise<FinanceBudgetRow[]> => {
   const userId = await getCurrentUserId();
   return db.select().from(financeBudgets).where(eq(financeBudgets.userId, userId));
-}
+});
 
 /** Every recurring rule on the account, active and paused alike — the
  * management screen needs both to offer resume; only active ones are
  * actually materialized (see materializeDueRecurringTransactions). */
-export async function getRecurringTransactions(): Promise<RecurringTransactionRow[]> {
+export const getRecurringTransactions = cache(async (): Promise<RecurringTransactionRow[]> => {
   const userId = await getCurrentUserId();
   return db.select().from(recurringTransactions).where(eq(recurringTransactions.userId, userId));
-}
+});
 
 /**
  * Turns any due occurrence of every active recurring rule into a real

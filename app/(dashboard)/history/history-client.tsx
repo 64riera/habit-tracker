@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import useSWRInfinite from "swr/infinite";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Download, Pencil } from "lucide-react";
@@ -17,12 +18,13 @@ import { addDays, formatTimeOfDay, groupByDate, parseISODate } from "@/lib/date"
 import { swrKeys } from "@/lib/swr/keys";
 import { usePageData } from "@/lib/swr/use-page-data";
 import { fetchCategoriesAction, fetchFocusHeaderAction } from "@/lib/actions/habits-read";
-import { fetchHistoryAction } from "@/lib/actions/history-read";
+import { fetchHistoryAction, fetchLogPageAction } from "@/lib/actions/history-read";
 import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
 import type { CalendarCell, DayCell, LogEntry } from "@/lib/queries/history";
 import type { FocusHeaderData } from "@/lib/queries/focus";
 
 const MOOD_EMOJI = ["😞", "🙁", "😐", "🙂", "😄"];
+const LOG_PAGE_SIZE = 20;
 
 export function HistorialClient({
   habits: initialHabits,
@@ -62,20 +64,33 @@ export function HistorialClient({
   const { data: categories } = usePageData(swrKeys.categories(), fetchCategoriesAction, initialCategories);
   const { data: focusHeader } = usePageData(swrKeys.focusHeader(), fetchFocusHeaderAction, initialFocusHeader);
   const { habits, heatmap, calendar, log } = data;
-  const [entries, setEntries] = useState(log);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [exhausted, setExhausted] = useState(log.length < 20);
-  // `entries` is local paginated state (loadMore appends beyond what SWR's
-  // key covers), seeded from `log` — when the SWR key itself produces a new
-  // `log` (filters/range changed, or a revalidation refreshed today's data),
-  // reset the pagination to match instead of showing a stale mix. Adjusting
-  // state during render (React's documented pattern for this) instead of an
-  // effect avoids an extra, cascading re-render on every `log` change.
-  const [prevLog, setPrevLog] = useState(log);
-  if (log !== prevLog) {
-    setPrevLog(log);
-    setEntries(log);
-    setExhausted(log.length < 20);
+
+  // Pages beyond the first (which `log` above already owns and caches) —
+  // `initialSize: 0` keeps them unfetched until the user actually asks for
+  // more, same behavior as before this was SWR-backed. Resetting to 0 again
+  // when the filters/day change (skipping the very first mount, where it's
+  // already 0) throws away extra pages that belonged to the previous filter
+  // instead of mixing them with the new one.
+  const { data: extraPages, size, setSize, isValidating: loadingMore } = useSWRInfinite(
+    (pageIndex) => swrKeys.logPage(today, selectedHabit, selectedCategory, pageIndex),
+    (key) => fetchLogPageAction(key[2], key[3], key[4]),
+    { initialSize: 0 }
+  );
+  const isFirstFilterRender = useRef(true);
+  useEffect(() => {
+    if (isFirstFilterRender.current) {
+      isFirstFilterRender.current = false;
+      return;
+    }
+    setSize(0);
+  }, [today, selectedHabit, selectedCategory, setSize]);
+
+  const entries = useMemo(() => [...log, ...(extraPages ?? []).flatMap((p) => p.log)], [log, extraPages]);
+  const lastExtraPage = extraPages && extraPages.length > 0 ? extraPages[extraPages.length - 1] : null;
+  const exhausted = log.length < LOG_PAGE_SIZE || (lastExtraPage !== null && lastExtraPage.log.length < LOG_PAGE_SIZE);
+
+  function loadMore() {
+    setSize(size + 1);
   }
 
   const groups = useMemo(() => groupByDate(entries), [entries]);
@@ -112,18 +127,6 @@ export function HistorialClient({
     if (range && range !== "90") params.set("range", range);
     const qs = params.toString();
     router.push(qs ? `/history?${qs}` : "/history");
-  }
-
-  async function loadMore() {
-    setLoadingMore(true);
-    const params = new URLSearchParams({ offset: String(entries.length) });
-    if (selectedHabit) params.set("habit", selectedHabit);
-    if (selectedCategory) params.set("category", selectedCategory);
-    const res = await fetch(`/api/log?${params.toString()}`);
-    const data = await res.json();
-    setEntries((prev) => [...prev, ...data.log]);
-    if (data.log.length < 20) setExhausted(true);
-    setLoadingMore(false);
   }
 
   const exportParams = new URLSearchParams();

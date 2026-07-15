@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db/client";
@@ -25,7 +26,7 @@ export type HabitWithExtras = HabitRow & {
  * management screen, where a user needs to see (and re-enable) categories
  * they previously hid; everywhere else (habit form, focus category chips)
  * should only ever offer the visible ones. */
-export async function getCategories(options: { includeHidden?: boolean } = {}): Promise<CategoryRow[]> {
+export const getCategories = cache(async (options: { includeHidden?: boolean } = {}): Promise<CategoryRow[]> => {
   const userId = await getCurrentUserId();
   let rows = await db.select().from(categories).where(eq(categories.userId, userId)).orderBy(categories.sortOrder);
 
@@ -48,26 +49,26 @@ export async function getCategories(options: { includeHidden?: boolean } = {}): 
   }
 
   return options.includeHidden ? rows : rows.filter((c) => !c.hidden);
-}
+});
 
 /** Total number of habits on the account (includes archived/paused: it's
  * about the creation event, not how many are active today) — used to
  * detect "this is the first habit" and offer to install the PWA, see
  * install-suggestion-modal.tsx. */
-export async function getHabitCount(): Promise<number> {
+export const getHabitCount = cache(async (): Promise<number> => {
   const userId = await getCurrentUserId();
   const [row] = await db.select({ count: sql<number>`count(*)` }).from(habits).where(eq(habits.userId, userId));
   return Number(row?.count ?? 0);
-}
+});
 
-export async function getHabitNames(): Promise<{ id: string; name: string; categoryId: string | null }[]> {
+export const getHabitNames = cache(async (): Promise<{ id: string; name: string; categoryId: string | null }[]> => {
   const userId = await getCurrentUserId();
   return db
     .select({ id: habits.id, name: habits.name, categoryId: habits.categoryId })
     .from(habits)
     .where(eq(habits.userId, userId))
     .orderBy(habits.sortOrder);
-}
+});
 
 async function attachExtras(rows: HabitRow[], date: string, userId: string): Promise<HabitWithExtras[]> {
   if (rows.length === 0) return [];
@@ -98,7 +99,7 @@ async function attachExtras(rows: HabitRow[], date: string, userId: string): Pro
   }));
 }
 
-export async function getHabitsForToday(date: string): Promise<HabitWithExtras[]> {
+export const getHabitsForToday = cache(async (date: string): Promise<HabitWithExtras[]> => {
   const userId = await getCurrentUserId();
   const active = await db
     .select()
@@ -110,9 +111,9 @@ export async function getHabitsForToday(date: string): Promise<HabitWithExtras[]
     if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
     return a.sortOrder - b.sortOrder;
   });
-}
+});
 
-export async function getActiveHabits(date: string): Promise<HabitWithExtras[]> {
+export const getActiveHabits = cache(async (date: string): Promise<HabitWithExtras[]> => {
   const userId = await getCurrentUserId();
   const active = await db
     .select()
@@ -123,16 +124,16 @@ export async function getActiveHabits(date: string): Promise<HabitWithExtras[]> 
     if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
     return a.sortOrder - b.sortOrder;
   });
-}
+});
 
-export async function getAllHabitsForManagement(date: string): Promise<HabitWithExtras[]> {
+export const getAllHabitsForManagement = cache(async (date: string): Promise<HabitWithExtras[]> => {
   const userId = await getCurrentUserId();
   const all = await db.select().from(habits).where(eq(habits.userId, userId));
   const withExtras = await attachExtras(all, date, userId);
   return withExtras.sort((a, b) => a.sortOrder - b.sortOrder);
-}
+});
 
-export async function getHabitById(id: string): Promise<HabitWithExtras | null> {
+export const getHabitById = cache(async (id: string): Promise<HabitWithExtras | null> => {
   const userId = await getCurrentUserId();
   const [habit] = await db
     .select()
@@ -142,4 +143,4 @@ export async function getHabitById(id: string): Promise<HabitWithExtras | null> 
   if (!habit) return null;
   const [withExtras] = await attachExtras([habit], "9999-99-99", userId);
   return withExtras;
-}
+});

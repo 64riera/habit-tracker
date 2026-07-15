@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { and, eq, gte, inArray, lte } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { habitLogs, habitStreaks, habits } from "@/lib/db/schema";
@@ -70,39 +71,39 @@ async function computePeriodSummary(from: string, to: string, habitId?: string):
 
 export type PeriodComparison = { current: PeriodSummary; previous: PeriodSummary; pctChange: number };
 
-export async function getWeekSummary(today: string): Promise<PeriodComparison> {
+export const getWeekSummary = cache(async (today: string): Promise<PeriodComparison> => {
   const weekStart = startOfWeek(today);
   const current = await computePeriodSummary(weekStart, today);
   const prevWeekEnd = addDays(weekStart, -1);
   const prevWeekStart = startOfWeek(prevWeekEnd);
   const previous = await computePeriodSummary(prevWeekStart, prevWeekEnd);
   return { current, previous, pctChange: current.pct - previous.pct };
-}
+});
 
-export async function getMonthSummary(today: string): Promise<PeriodComparison> {
+export const getMonthSummary = cache(async (today: string): Promise<PeriodComparison> => {
   const monthStart = startOfMonth(today);
   const current = await computePeriodSummary(monthStart, today);
   const prevMonthEnd = addDays(monthStart, -1);
   const prevMonthStart = startOfMonth(prevMonthEnd);
   const previous = await computePeriodSummary(prevMonthStart, prevMonthEnd);
   return { current, previous, pctChange: current.pct - previous.pct };
-}
+});
 
-export async function getHabitMonthSummary(habitId: string, today: string): Promise<PeriodComparison> {
+export const getHabitMonthSummary = cache(async (habitId: string, today: string): Promise<PeriodComparison> => {
   const monthStart = startOfMonth(today);
   const current = await computePeriodSummary(monthStart, today, habitId);
   const prevMonthEnd = addDays(monthStart, -1);
   const prevMonthStart = startOfMonth(prevMonthEnd);
   const previous = await computePeriodSummary(prevMonthStart, prevMonthEnd, habitId);
   return { current, previous, pctChange: current.pct - previous.pct };
-}
+});
 
 export type BestMonthCheck = { currentPct: number; monthStart: string; isBestSoFar: boolean } | null;
 
 const MIN_DAYS_ELAPSED_TO_COMPARE = 5;
 
 /** Is the current month (so far) the habit's best completion month yet? */
-export async function getBestMonthCheck(habitId: string, today: string): Promise<BestMonthCheck> {
+export const getBestMonthCheck = cache(async (habitId: string, today: string): Promise<BestMonthCheck> => {
   const userId = await getCurrentUserId();
   const [habit] = await db
     .select()
@@ -144,4 +145,4 @@ export async function getBestMonthCheck(habitId: string, today: string): Promise
 
   if (bestPrev < 0) return null;
   return { currentPct, monthStart: currentMonthStart, isBestSoFar: currentPct > bestPrev };
-}
+});

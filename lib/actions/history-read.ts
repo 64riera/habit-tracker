@@ -17,3 +17,17 @@ export async function fetchHistoryAction(today: string, habitId: string, categor
   ]);
   return { habits, heatmap, calendar, log };
 }
+
+const LOG_PAGE_SIZE = 20;
+
+/**
+ * Pages beyond the first (which `fetchHistoryAction` above already owns) for
+ * the "load more" list on /history — `pageIndex` 0 here means the *second*
+ * page overall (offset 20), so this never re-fetches or duplicates the rows
+ * `fetchHistoryAction`'s `log` already caches.
+ */
+export async function fetchLogPageAction(habitId: string, categoryId: string, pageIndex: number) {
+  const filters = { habitId: habitId || undefined, categoryId: categoryId || undefined };
+  const log = await getRecentLog(LOG_PAGE_SIZE, filters, LOG_PAGE_SIZE * (pageIndex + 1));
+  return { log };
+}

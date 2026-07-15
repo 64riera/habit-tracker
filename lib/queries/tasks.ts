@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { taskCompletions, tasks } from "@/lib/db/schema";
@@ -8,10 +9,10 @@ import { currentPeriodKey } from "@/lib/tasks/recurrence";
 export type TaskRow = typeof tasks.$inferSelect;
 export type TaskWithStatus = TaskRow & { isDone: boolean; periodKey: string };
 
-export async function getTasks(): Promise<TaskRow[]> {
+export const getTasks = cache(async (): Promise<TaskRow[]> => {
   const userId = await getCurrentUserId();
   return db.select().from(tasks).where(eq(tasks.userId, userId)).orderBy(tasks.createdAt);
-}
+});
 
 /**
  * Tasks with whether each is done for its own current period — a task is
@@ -20,7 +21,7 @@ export async function getTasks(): Promise<TaskRow[]> {
  * there's no separate reset step. Sorted pending-first, then by creation
  * order, matching the usual checklist feel.
  */
-export async function getTasksWithStatus(today: string): Promise<TaskWithStatus[]> {
+export const getTasksWithStatus = cache(async (today: string): Promise<TaskWithStatus[]> => {
   const rows = await getTasks();
   if (rows.length === 0) return [];
 
@@ -35,4 +36,4 @@ export async function getTasksWithStatus(today: string): Promise<TaskWithStatus[
   return withPeriod
     .map(({ task, periodKey }) => ({ ...task, periodKey, isDone: doneIds.has(`${task.id}:${periodKey}`) }))
     .sort((a, b) => Number(a.isDone) - Number(b.isDone));
-}
+});

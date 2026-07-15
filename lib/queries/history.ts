@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { and, desc, eq, gte, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { habitLogs, habits } from "@/lib/db/schema";
@@ -29,11 +30,11 @@ async function getApplicableHabits(filters: HistoryFilters) {
 }
 
 /** Generates per-day completion levels for the heatmap, optionally filtered. */
-export async function getHeatmapRange(
+export const getHeatmapRange = cache(async (
   from: string,
   to: string,
   filters: HistoryFilters = {}
-): Promise<DayCell[]> {
+): Promise<DayCell[]> => {
   const relevantHabits = await getApplicableHabits(filters);
   const habitIds = relevantHabits.map((h) => h.id);
 
@@ -91,7 +92,7 @@ export async function getHeatmapRange(
 
     return { date, level, status: singleStatus, allJustified };
   });
-}
+});
 
 export type CalendarCell = {
   date: string;
@@ -101,11 +102,11 @@ export type CalendarCell = {
   allJustified: boolean;
 };
 
-export async function getCalendarMonth(
+export const getCalendarMonth = cache(async (
   monthStart: string,
   today: string,
   filters: HistoryFilters = {}
-): Promise<CalendarCell[]> {
+): Promise<CalendarCell[]> => {
   const monthDate = new Date(monthStart);
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
@@ -126,7 +127,7 @@ export async function getCalendarMonth(
     isToday: date === today,
     allJustified: heatByDate.get(date)?.allJustified ?? false,
   }));
-}
+});
 
 export type LogEntry = {
   id: string;
@@ -141,11 +142,11 @@ export type LogEntry = {
   completedAt: string | null;
 };
 
-export async function getRecentLog(
+export const getRecentLog = cache(async (
   limit: number,
   filters: HistoryFilters = {},
   offset = 0
-): Promise<LogEntry[]> {
+): Promise<LogEntry[]> => {
   const userId = await getCurrentUserId();
   const conditions = [eq(habits.userId, userId)];
   if (filters.habitId) conditions.push(eq(habitLogs.habitId, filters.habitId));
@@ -171,4 +172,4 @@ export async function getRecentLog(
     .offset(offset);
 
   return rows;
-}
+});

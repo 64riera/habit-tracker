@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { and, gte, inArray } from "drizzle-orm";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
@@ -12,7 +13,7 @@ const MIN_SAMPLES_PER_WEEKDAY = 3;
 export type WorstWeekday = { weekday: number; missRate: number } | null;
 
 /** ISO weekday (1=Monday..7=Sunday) with the highest proportion of habits marked "missed". */
-export async function getWorstWeekday(today: string, days = 90): Promise<WorstWeekday> {
+export const getWorstWeekday = cache(async (today: string, days = 90): Promise<WorstWeekday> => {
   const userId = await getCurrentUserId();
   const activeHabits = await db
     .select()
@@ -57,7 +58,7 @@ export async function getWorstWeekday(today: string, days = 90): Promise<WorstWe
     if (!worst || missRate > worst.missRate) worst = { weekday, missRate };
   }
   return worst && worst.missRate > 0 ? worst : null;
-}
+});
 
 export type MoodCorrelation = {
   lowMoodMissRate: number;
@@ -66,7 +67,7 @@ export type MoodCorrelation = {
 } | null;
 
 /** Simple aggregation: do low-mood entries (1-2) miss more often than high-mood ones (4-5)? */
-export async function getMoodCorrelation(today: string, days = 90): Promise<MoodCorrelation> {
+export const getMoodCorrelation = cache(async (today: string, days = 90): Promise<MoodCorrelation> => {
   const userId = await getCurrentUserId();
   const from = addDays(today, -(days - 1));
   const logs = await db
@@ -87,4 +88,4 @@ export async function getMoodCorrelation(today: string, days = 90): Promise<Mood
     highMoodMissRate: missRate(high),
     sampleSize: withMood.length,
   };
-}
+});

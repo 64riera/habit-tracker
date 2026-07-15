@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import useSWRInfinite from "swr/infinite";
 import { useRouter } from "next/navigation";
 import { Coffee } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
@@ -13,7 +14,7 @@ import { categoryDisplayName } from "@/lib/habits/describe";
 import { swrKeys } from "@/lib/swr/keys";
 import { usePageData } from "@/lib/swr/use-page-data";
 import { fetchCategoriesAction, fetchHabitNamesAction } from "@/lib/actions/habits-read";
-import { fetchFocusHistoryAction } from "@/lib/actions/focus-history-read";
+import { fetchFocusHistoryAction, fetchFocusHistoryPageAction } from "@/lib/actions/focus-history-read";
 import type { FocusSessionRow } from "@/lib/queries/focus";
 import type { FocusHistorySummary } from "@/lib/queries/focus-stats";
 import type { CategoryRow } from "@/lib/queries/habits";
@@ -56,20 +57,36 @@ export function FocusHistorialClient({
   const { data: habitNames } = usePageData(swrKeys.habitNames(), fetchHabitNamesAction, initialHabitNames);
   const { data: categories } = usePageData(swrKeys.categories(), fetchCategoriesAction, initialCategories);
   const { sessions, summary } = data;
-  const [entries, setEntries] = useState(sessions);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [exhausted, setExhausted] = useState(sessions.length < PAGE_SIZE);
-  // Filters navigate to a new URL, but React may keep this same component
-  // instance (same underlying bug as I18nProvider: `useState` only looks at
-  // its initial value on first mount, not on every props change) —
-  // reconciled by comparing against the previous filters and reseeding the
-  // state during render.
-  const filterKey = `${selectedHabit}|${selectedCategory}`;
-  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
-  if (filterKey !== prevFilterKey) {
-    setPrevFilterKey(filterKey);
-    setEntries(sessions);
-    setExhausted(sessions.length < PAGE_SIZE);
+
+  // Pages beyond the first (which `sessions` above already owns and caches)
+  // — `initialSize: 0` keeps them unfetched until the user actually asks
+  // for more, same behavior as before this was SWR-backed. Resetting to 0
+  // again when the filters change (skipping the very first mount, where
+  // it's already 0) throws away extra pages that belonged to the previous
+  // filter instead of mixing them with the new one.
+  const { data: extraPages, size, setSize, isValidating: loadingMore } = useSWRInfinite(
+    (pageIndex) => swrKeys.focusHistoryPage(selectedHabit, selectedCategory, pageIndex),
+    (key) => fetchFocusHistoryPageAction(key[1], key[2], key[3]),
+    { initialSize: 0 }
+  );
+  const isFirstFilterRender = useRef(true);
+  useEffect(() => {
+    if (isFirstFilterRender.current) {
+      isFirstFilterRender.current = false;
+      return;
+    }
+    setSize(0);
+  }, [selectedHabit, selectedCategory, setSize]);
+
+  const entries = useMemo(
+    () => [...sessions, ...(extraPages ?? []).flatMap((p) => p.sessions)],
+    [sessions, extraPages]
+  );
+  const lastExtraPage = extraPages && extraPages.length > 0 ? extraPages[extraPages.length - 1] : null;
+  const exhausted = sessions.length < PAGE_SIZE || (lastExtraPage !== null && lastExtraPage.sessions.length < PAGE_SIZE);
+
+  function loadMore() {
+    setSize(size + 1);
   }
 
   const groups = useMemo(() => groupByDate(entries), [entries]);
@@ -96,18 +113,6 @@ export function FocusHistorialClient({
     if (category) params.set("category", category);
     const qs = params.toString();
     router.push(qs ? `/focus/history?${qs}` : "/focus/history");
-  }
-
-  async function loadMore() {
-    setLoadingMore(true);
-    const params = new URLSearchParams({ offset: String(entries.length) });
-    if (selectedHabit) params.set("habit", selectedHabit);
-    if (selectedCategory) params.set("category", selectedCategory);
-    const res = await fetch(`/api/focus-history?${params.toString()}`);
-    const data = await res.json();
-    setEntries((prev) => [...prev, ...data.sessions]);
-    if (data.sessions.length < PAGE_SIZE) setExhausted(true);
-    setLoadingMore(false);
   }
 
   const summaryCards = [

@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { and, eq, gte, inArray, isNotNull, lte, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { categories, focusSessions, habits } from "@/lib/db/schema";
@@ -40,7 +41,7 @@ export type FocusOverallTotals = { minutes7: number; minutes30: number; minutes9
 /** A single 90-day fetch, same as `getOverallStats` for habits — the 7/30
  * day windows are filtered in memory instead of running three separate
  * queries. */
-export async function getFocusOverallTotals(today: string): Promise<FocusOverallTotals> {
+export const getFocusOverallTotals = cache(async (today: string): Promise<FocusOverallTotals> => {
   const userId = await getCurrentUserId();
   const from90 = addDays(today, -89);
   const from30 = addDays(today, -29);
@@ -70,11 +71,11 @@ export async function getFocusOverallTotals(today: string): Promise<FocusOverall
     minutes30: Math.round(seconds30 / 60),
     minutes90: Math.round(seconds90 / 60),
   };
-}
+});
 
 export type FocusTrendPoint = { date: string; minutes: number };
 
-export async function getFocusTrend(today: string, days = 14): Promise<FocusTrendPoint[]> {
+export const getFocusTrend = cache(async (today: string, days = 14): Promise<FocusTrendPoint[]> => {
   const userId = await getCurrentUserId();
   const from = addDays(today, -(days - 1));
   const rows = await sessionsInDateRange(userId, from, today);
@@ -85,7 +86,7 @@ export async function getFocusTrend(today: string, days = 14): Promise<FocusTren
     minutesByDate.set(r.date, (minutesByDate.get(r.date) ?? 0) + r.accumulatedActiveSeconds / 60);
   }
   return dateRange(from, today).map((date) => ({ date, minutes: Math.round(minutesByDate.get(date) ?? 0) }));
-}
+});
 
 export type FocusPeriodSummary = {
   from: string;
@@ -124,7 +125,7 @@ async function computeFocusPeriodSummary(userId: string, from: string, to: strin
   };
 }
 
-export async function getFocusWeekSummary(today: string): Promise<FocusPeriodComparison> {
+export const getFocusWeekSummary = cache(async (today: string): Promise<FocusPeriodComparison> => {
   const userId = await getCurrentUserId();
   const weekStart = startOfWeek(today);
   const current = await computeFocusPeriodSummary(userId, weekStart, today);
@@ -132,9 +133,9 @@ export async function getFocusWeekSummary(today: string): Promise<FocusPeriodCom
   const prevWeekStart = startOfWeek(prevWeekEnd);
   const previous = await computeFocusPeriodSummary(userId, prevWeekStart, prevWeekEnd);
   return { current, previous, minutesChange: current.totalMinutes - previous.totalMinutes };
-}
+});
 
-export async function getFocusMonthSummary(today: string): Promise<FocusPeriodComparison> {
+export const getFocusMonthSummary = cache(async (today: string): Promise<FocusPeriodComparison> => {
   const userId = await getCurrentUserId();
   const monthStart = startOfMonth(today);
   const current = await computeFocusPeriodSummary(userId, monthStart, today);
@@ -142,11 +143,11 @@ export async function getFocusMonthSummary(today: string): Promise<FocusPeriodCo
   const prevMonthStart = startOfMonth(prevMonthEnd);
   const previous = await computeFocusPeriodSummary(userId, prevMonthStart, prevMonthEnd);
   return { current, previous, minutesChange: current.totalMinutes - previous.totalMinutes };
-}
+});
 
 export type FocusHabitStat = { habitId: string; habitName: string; totalMinutes: number; sessionCount: number };
 
-export async function getFocusHabitBreakdown(today: string, days = 30): Promise<FocusHabitStat[]> {
+export const getFocusHabitBreakdown = cache(async (today: string, days = 30): Promise<FocusHabitStat[]> => {
   const userId = await getCurrentUserId();
   const from = addDays(today, -(days - 1));
   const rows = await db
@@ -186,7 +187,7 @@ export async function getFocusHabitBreakdown(today: string, days = 30): Promise<
       sessionCount: v.sessionCount,
     }))
     .sort((a, b) => b.totalMinutes - a.totalMinutes);
-}
+});
 
 export type FocusCategoryStat = {
   categoryId: string;
@@ -201,7 +202,7 @@ export type FocusCategoryStat = {
  * by categoryId and then resolves name/color in a single separate query,
  * instead of a join — this way the aggregate doesn't need to bring back a
  * category row for every session. */
-export async function getFocusCategoryBreakdown(today: string, days = 30): Promise<FocusCategoryStat[]> {
+export const getFocusCategoryBreakdown = cache(async (today: string, days = 30): Promise<FocusCategoryStat[]> => {
   const userId = await getCurrentUserId();
   const from = addDays(today, -(days - 1));
   const rows = await db
@@ -246,7 +247,7 @@ export async function getFocusCategoryBreakdown(today: string, days = 30): Promi
       };
     })
     .sort((a, b) => b.totalMinutes - a.totalMinutes);
-}
+});
 
 export type FocusTimeOfDaySample = { startedAt: string; minutes: number };
 
@@ -259,7 +260,7 @@ export type FocusTimeOfDaySample = { startedAt: string; minutes: number };
  * Bucketing via `bucketHourOfDay` is done in the client component, over
  * `new Date(startedAt).getHours()` evaluated in the browser.
  */
-export async function getFocusTimeOfDaySamples(today: string, days = 30): Promise<FocusTimeOfDaySample[]> {
+export const getFocusTimeOfDaySamples = cache(async (today: string, days = 30): Promise<FocusTimeOfDaySample[]> => {
   const userId = await getCurrentUserId();
   const from = addDays(today, -(days - 1));
   const rows = await db
@@ -275,7 +276,7 @@ export async function getFocusTimeOfDaySamples(today: string, days = 30): Promis
     );
 
   return rows.map((r) => ({ startedAt: r.startedAt, minutes: r.accumulatedActiveSeconds / 60 }));
-}
+});
 
 export type FocusHistorySummary = { totalMinutes: number; sessionCount: number; completionRatePct: number };
 
@@ -283,7 +284,7 @@ export type FocusHistorySummary = { totalMinutes: number; sessionCount: number; 
  * (not bounded by date, only by the habit filter if there is one) — a
  * single query aggregated in SQL instead of fetching every row, because
  * here it can indeed grow without the 90-day cap the other queries use. */
-export async function getFocusHistorySummary(habitId?: string, categoryId?: string): Promise<FocusHistorySummary> {
+export const getFocusHistorySummary = cache(async (habitId?: string, categoryId?: string): Promise<FocusHistorySummary> => {
   const userId = await getCurrentUserId();
   const conditions = [eq(focusSessions.userId, userId), inArray(focusSessions.status, ["completed", "cancelled"])];
   if (habitId) conditions.push(eq(focusSessions.habitId, habitId));
@@ -305,11 +306,11 @@ export async function getFocusHistorySummary(habitId?: string, categoryId?: stri
     sessionCount,
     completionRatePct: sessionCount > 0 ? Math.round((completedCount / sessionCount) * 100) : 0,
   };
-}
+});
 
 const STREAK_LOOKBACK_DAYS = 120;
 
-export async function getFocusStreak(today: string): Promise<{ current: number; longest: number }> {
+export const getFocusStreak = cache(async (today: string): Promise<{ current: number; longest: number }> => {
   const userId = await getCurrentUserId();
   const from = addDays(today, -(STREAK_LOOKBACK_DAYS - 1));
   const [rows, settings] = await Promise.all([
@@ -332,4 +333,4 @@ export async function getFocusStreak(today: string): Promise<{ current: number; 
     minutesByDate.set(r.date, (minutesByDate.get(r.date) ?? 0) + r.accumulatedActiveSeconds / 60);
   }
   return computeFocusStreak(minutesByDate, settings.dailyGoalMinutes, today);
-}
+});
