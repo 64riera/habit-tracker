@@ -119,7 +119,14 @@ export const achievements = sqliteTable(
     }).notNull(),
     unlockedAt: text("unlocked_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
-  (t) => [index("achievements_user_idx").on(t.userId)]
+  (t) => [
+    index("achievements_user_idx").on(t.userId),
+    // Guards against duplicate unlock rows (and duplicate toasts) if the
+    // same milestone is inserted twice — e.g. an offline-queued `logHabit`
+    // replay retried after a dropped ack, both reading the same
+    // "not yet unlocked" snapshot before either write lands.
+    uniqueIndex("achievements_user_habit_type_idx").on(t.userId, t.habitId, t.type),
+  ]
 );
 
 export const routines = sqliteTable(

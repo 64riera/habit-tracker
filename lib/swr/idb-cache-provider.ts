@@ -2,7 +2,7 @@
 
 import type { Cache, State } from "swr";
 
-const DB_NAME = "justgo-swr-cache";
+const DB_PREFIX = "justgo-swr-cache";
 const STORE_NAME = "cache";
 const RECORD_ID = "cache";
 const FLUSH_DEBOUNCE_MS = 400;
@@ -18,9 +18,26 @@ export function hydrateCache(entries: CacheEntry[]): Map<string, State> {
   return new Map(entries);
 }
 
-function openDb(): Promise<IDBDatabase> {
+/**
+ * The database itself is scoped by account (`justgo-swr-cache:<userId>`,
+ * or `:anon` for a logged-out visitor) — not a single shared name. Two
+ * accounts used on the same browser (a shared/family device, or logging
+ * out and back in as someone else) each get their own IndexedDB database,
+ * so there's no way for one account's cached habits/tasks/finance/gym/
+ * focus data to render — even briefly, even stale — under the other
+ * account. A single shared name plus a "clear on logout" step would cover
+ * the explicit-logout path, but not e.g. a session that just expires and
+ * a different person logs in directly; per-account scoping closes that
+ * gap structurally instead of relying on every login/logout path
+ * remembering to clean up after itself.
+ */
+function dbNameFor(userId: string | null): string {
+  return `${DB_PREFIX}:${userId ?? "anon"}`;
+}
+
+function openDb(userId: string | null): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1);
+    const request = indexedDB.open(dbNameFor(userId), 1);
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -32,8 +49,8 @@ function openDb(): Promise<IDBDatabase> {
   });
 }
 
-async function readPersistedCache(): Promise<CacheEntry[]> {
-  const db = await openDb();
+async function readPersistedCache(userId: string | null): Promise<CacheEntry[]> {
+  const db = await openDb(userId);
   const result = await new Promise<{ id: string; entries: CacheEntry[] } | undefined>((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readonly");
     const request = tx.objectStore(STORE_NAME).get(RECORD_ID);
@@ -44,8 +61,8 @@ async function readPersistedCache(): Promise<CacheEntry[]> {
   return result?.entries ?? [];
 }
 
-async function writePersistedCache(entries: CacheEntry[]): Promise<void> {
-  const db = await openDb();
+async function writePersistedCache(userId: string | null, entries: CacheEntry[]): Promise<void> {
+  const db = await openDb(userId);
   await new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
     tx.objectStore(STORE_NAME).put({ id: RECORD_ID, entries });
@@ -65,7 +82,7 @@ async function writePersistedCache(entries: CacheEntry[]): Promise<void> {
  * starts empty and is hydrated from IndexedDB shortly after, then broadcast
  * to already-mounted hooks by the caller (see components/swr/swr-provider.tsx).
  */
-export function createIndexedDBSWRProvider(): { cache: Cache; hydrate: () => Promise<void> } {
+export function createIndexedDBSWRProvider(userId: string | null): { cache: Cache; hydrate: () => Promise<void> } {
   const map = new Map<string, State>();
   let flushTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -76,7 +93,7 @@ export function createIndexedDBSWRProvider(): { cache: Cache; hydrate: () => Pro
 
   function flush() {
     flushTimer = null;
-    writePersistedCache(serializeCache(map)).catch(() => {
+    writePersistedCache(userId, serializeCache(map)).catch(() => {
       // Best-effort: a lost flush just means the next hydration is a bit stale.
     });
   }
@@ -102,7 +119,7 @@ export function createIndexedDBSWRProvider(): { cache: Cache; hydrate: () => Pro
   };
 
   async function hydrate() {
-    const entries = await readPersistedCache();
+    const entries = await readPersistedCache(userId);
     for (const [key, value] of hydrateCache(entries)) map.set(key, value);
   }
 

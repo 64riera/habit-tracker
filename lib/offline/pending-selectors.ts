@@ -294,14 +294,17 @@ export function applyPendingTransactionEdit(
 /** Builds a "good enough" `FocusSessionRow` to display a session started
  * offline that hasn't synced yet. `habitId`/`categoryId` are used as-is
  * from the form (no server-side habit→category resolution possible
- * offline) — self-corrects once the real sync happens. */
+ * offline) — self-corrects once the real sync happens. `at` is the real
+ * moment the "start" mutation was queued, not render time — see
+ * `applyFocusMutation` below for why that distinction matters. */
 export function buildGhostFocusSession(
   id: string,
   values: StartFocusSessionValues,
-  today: string
+  today: string,
+  at: Date = new Date()
 ): FocusSessionRow {
   const resolved = resolveStartFocusValues(values);
-  const nowIso = new Date().toISOString();
+  const atIso = at.toISOString();
   return {
     id,
     userId: "",
@@ -310,8 +313,8 @@ export function buildGhostFocusSession(
     mode: resolved.mode,
     plannedDurationSeconds: resolved.plannedDurationSeconds,
     status: "running",
-    startedAt: nowIso,
-    lastResumedAt: nowIso,
+    startedAt: atIso,
+    lastResumedAt: atIso,
     accumulatedActiveSeconds: 0,
     breaksEnabled: resolved.breaksEnabled,
     breakIntervalMinutes: resolved.breaksEnabled ? resolved.breakIntervalMinutes : null,
@@ -322,7 +325,7 @@ export function buildGhostFocusSession(
     completedAt: null,
     autoCompleted: false,
     date: today,
-    createdAt: nowIso,
+    createdAt: atIso,
   };
 }
 
@@ -342,22 +345,30 @@ const FOCUS_MUTATION_TYPES: ReadonlySet<QueuedRecord["type"]> = new Set([
  * synced result agree. Returns `undefined` when there's no pending focus
  * mutation at all (the caller should trust the real server session), or
  * `null` once a finish/cancel closes the session (no longer active).
+ *
+ * Each step is anchored to *that mutation's own* `createdAt` (set once, at
+ * `enqueueMutation` time — see lib/offline/db.ts), not to the current
+ * wall-clock time: this fold re-runs on every render once per queued
+ * mutation (see this function's `useMemo` callers), and a shared "now"
+ * would silently push `startedAt`/`lastResumedAt` forward on every re-fold
+ * — e.g. a session started 5 minutes ago would be reconstructed as if it
+ * had just started the moment a later "pause" gets queued, losing those 5
+ * elapsed minutes. Per-mutation timestamps make the fold idempotent
+ * regardless of how many times or when it re-runs (same fix already
+ * applied to the metronome timer's ghost fold, see
+ * applyMetronomeTimerMutation below).
  */
-function applyFocusMutation(
-  session: FocusSessionRow | null,
-  mutation: QueuedRecord,
-  today: string,
-  now: Date
-): FocusSessionRow | null {
+function applyFocusMutation(session: FocusSessionRow | null, mutation: QueuedRecord, today: string): FocusSessionRow | null {
+  const at = new Date(mutation.createdAt);
   switch (mutation.type) {
     case "startFocusSession":
-      return buildGhostFocusSession(mutation.id, mutation.values, today);
+      return buildGhostFocusSession(mutation.id, mutation.values, today, at);
     case "pauseFocusSession":
-      return session ? { ...session, ...applyFocusPause(session, now) } : session;
+      return session ? { ...session, ...applyFocusPause(session, at) } : session;
     case "resumeFocusSession":
-      return session ? { ...session, ...applyFocusResume(now) } : session;
+      return session ? { ...session, ...applyFocusResume(at) } : session;
     case "endBreakEarly":
-      return session ? { ...session, ...applyEndBreakEarly(now) } : session;
+      return session ? { ...session, ...applyEndBreakEarly(at) } : session;
     case "finishFocusSession":
     case "cancelFocusSession":
       return null;
@@ -370,9 +381,8 @@ export function pendingFocusSession(queue: QueuedRecord[], today: string): Focus
   const focusMutations = queue.filter((m) => FOCUS_MUTATION_TYPES.has(m.type));
   if (focusMutations.length === 0) return undefined;
 
-  const now = new Date();
   return focusMutations.reduce<FocusSessionRow | null>(
-    (session, mutation) => applyFocusMutation(session, mutation, today, now),
+    (session, mutation) => applyFocusMutation(session, mutation, today),
     null
   );
 }

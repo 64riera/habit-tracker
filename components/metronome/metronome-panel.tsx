@@ -5,6 +5,8 @@ import { Play, Pause, Minus, Plus } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { Select } from "@/components/ui/select";
 import { setMetronomeBpm } from "@/lib/actions/preferences";
+import { useOffline } from "@/lib/offline/client";
+import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
 import { METRONOME_SOUNDS, DEFAULT_METRONOME_SOUND, type MetronomeSoundId } from "@/lib/metronome/sounds";
 
 const MIN_BPM = 40;
@@ -17,12 +19,25 @@ const TEMPO_APPLY_DEBOUNCE_MS = 150;
 
 export function MetronomePanel({ initialBpm }: { initialBpm: number }) {
   const { t } = useI18n();
+  const { isOnline } = useOffline();
   const [bpm, setBpm] = useState(initialBpm);
   const [soundId, setSoundId] = useState<MetronomeSoundId>(DEFAULT_METRONOME_SOUND);
   const [playing, setPlaying] = useState(false);
   const [pulse, setPulse] = useState(false);
+  // Surfaces what used to be a silent failure: a save that errored (offline,
+  // a transient write failure) or never got the chance to fire (the tab
+  // closed inside the debounce window below) used to leave the DB holding
+  // the old BPM forever, with the slider still showing the new one as if it
+  // had saved. `saveFailedBpm` remembers which value didn't make it, so it
+  // can both show `PendingSyncBadge` and retry that exact value once back
+  // online, instead of silently reverting on the next visit.
+  const [saveFailedBpm, setSaveFailedBpm] = useState<number | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const persistTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bpmRef = useRef(bpm);
+  useEffect(() => {
+    bpmRef.current = bpm;
+  });
 
   // The tempo actually driving the ticking loop, plus whether the slider is
   // actively being moved right now — deliberately NOT the same as `bpm`
@@ -58,20 +73,43 @@ export function MetronomePanel({ initialBpm }: { initialBpm: number }) {
   const sound = useMemo(() => METRONOME_SOUNDS.find((s) => s.id === soundId) ?? METRONOME_SOUNDS[0], [soundId]);
   const soundOptions = useMemo(() => METRONOME_SOUNDS.map((s) => ({ value: s.id, label: t(s.labelKey) })), [t]);
 
+  // Best-effort: the metronome itself never depends on this succeeding
+  // (it's pure Web Audio, no network involved) — but unlike before, a
+  // failure is remembered (see `saveFailedBpm`) instead of vanishing.
+  function persistBpm(value: number) {
+    setMetronomeBpm(value)
+      .then(() => setSaveFailedBpm((current) => (current === value ? null : current)))
+      .catch(() => setSaveFailedBpm(value));
+  }
+
   function changeBpm(next: number) {
     const clamped = Math.round(Math.min(MAX_BPM, Math.max(MIN_BPM, next)));
     setBpm(clamped);
     // Debounced, not on every step: dragging the slider or tapping ±
-    // repeatedly would otherwise fire a write per tick. Best-effort: the
-    // metronome itself never depends on this succeeding (it's pure Web
-    // Audio, no network involved), so a failed write while offline is
-    // swallowed rather than surfacing as a console error — the next
-    // successful change picks up the persistence again.
+    // repeatedly would otherwise fire a write per tick.
     if (persistTimeoutRef.current) clearTimeout(persistTimeoutRef.current);
-    persistTimeoutRef.current = setTimeout(() => {
-      setMetronomeBpm(clamped).catch(() => {});
-    }, PERSIST_DEBOUNCE_MS);
+    persistTimeoutRef.current = setTimeout(() => persistBpm(clamped), PERSIST_DEBOUNCE_MS);
   }
+
+  // Flushes a still-pending debounced save immediately on unmount — without
+  // this, closing the tab/app inside the `PERSIST_DEBOUNCE_MS` window after
+  // the last slider move meant the timer never got to fire at all, and the
+  // change was lost even though nothing ever "failed".
+  useEffect(() => {
+    return () => {
+      if (!persistTimeoutRef.current) return;
+      clearTimeout(persistTimeoutRef.current);
+      persistBpm(bpmRef.current);
+    };
+  }, []);
+
+  // Retries a save that failed (offline, transient error) the moment the
+  // connection comes back, so it doesn't just sit reverted until the user
+  // happens to nudge the BPM again.
+  useEffect(() => {
+    if (isOnline && saveFailedBpm !== null) persistBpm(saveFailedBpm);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOnline]);
 
   // The ticking loop itself — silent while `isAdjusting` (see above), and
   // restarts on every *committed* tempo change or sound change so the new
@@ -115,7 +153,10 @@ export function MetronomePanel({ initialBpm }: { initialBpm: number }) {
 
         <div className="text-center">
           <div className="font-serif-italic text-[52px] leading-none font-semibold tabular-nums">{bpm}</div>
-          <div className="mt-1.5 text-[10px] tracking-wide text-muted uppercase">{t("metronome.bpm")}</div>
+          <div className="mt-1.5 flex items-center justify-center gap-1 text-[10px] tracking-wide text-muted uppercase">
+            {t("metronome.bpm")}
+            {saveFailedBpm !== null && <PendingSyncBadge />}
+          </div>
         </div>
 
         <div className="flex w-full max-w-xs items-center gap-2.5">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useSWRConfig } from "swr";
 import { useI18n } from "@/lib/i18n/client";
@@ -25,14 +25,33 @@ export function TaskCheckRow({
   const { runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
   const [isDone, setIsDone] = useState(task.isDone);
+  // Two rapid taps used to fire two independent, unsequenced
+  // `toggleTaskCore` calls (an insert and a delete) that could resolve out
+  // of order — whichever happened to finish last on the server won, not
+  // necessarily the user's actual last tap. `pendingRef` sequences them:
+  // a tap while a call is already in flight just updates `desired`
+  // instead of firing its own call, and the in-flight call re-checks
+  // `desired` once it settles, so at most one request is ever in flight
+  // and it always ends up reflecting the true final state.
+  const pendingRef = useRef(false);
+  const desiredRef = useRef<boolean | null>(null);
 
   const visual = getStatusVisual(isDone ? "done" : null);
 
   function toggle() {
     const next = !isDone;
     setIsDone(next);
+    desiredRef.current = next;
+    if (pendingRef.current) return;
+
+    pendingRef.current = true;
     startTransition(async () => {
-      await runOrQueue({ type: "toggleTask", taskId: task.id, periodKey: task.periodKey, done: next });
+      while (desiredRef.current !== null) {
+        const done = desiredRef.current;
+        desiredRef.current = null;
+        await runOrQueue({ type: "toggleTask", taskId: task.id, periodKey: task.periodKey, done });
+      }
+      pendingRef.current = false;
       mutate(swrKeys.tasksList(today));
     });
   }

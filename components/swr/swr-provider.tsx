@@ -22,11 +22,14 @@ function HydrationBroadcaster({ hydrate }: { hydrate: () => Promise<void> }) {
   return null;
 }
 
-export function SWRConfigProvider({ children }: { children: React.ReactNode }) {
+export function SWRConfigProvider({ userId, children }: { userId: string | null; children: React.ReactNode }) {
   // Lazy initializer: runs once per mounted instance, unlike a plain
-  // `useState(createIndexedDBSWRProvider())` call which would re-run the
-  // factory (harmlessly, but pointlessly) on every render.
-  const [{ cache, hydrate }] = useState(() => createIndexedDBSWRProvider());
+  // `useState(createIndexedDBSWRProvider(userId))` call which would re-run
+  // the factory (harmlessly, but pointlessly) on every render. `userId`
+  // scopes which IndexedDB database this provider reads/writes (see
+  // lib/swr/idb-cache-provider.ts) so one account's cached data can never
+  // render under another account on a shared device.
+  const [{ cache, hydrate }] = useState(() => createIndexedDBSWRProvider(userId));
 
   return (
     <SWRConfig value={{ provider: () => cache }}>

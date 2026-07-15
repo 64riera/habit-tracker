@@ -46,7 +46,18 @@ export function applyLogChange(logs: LogStatusRow[], date: string, newStatus: st
 }
 
 export function achievementInsertStatements(userId: string, habitId: string, unlocked: AchievementType[]) {
-  return unlocked.map((type) => db.insert(achievements).values({ id: nanoid(), userId, habitId, type }));
+  // onConflictDoNothing: `logHabit` is replayed by the offline queue (see
+  // lib/offline/replay-registry.ts) — a retried replay after a dropped ack
+  // would otherwise read the same "not yet unlocked" snapshot twice and
+  // insert a duplicate row (and duplicate unlock toast) for the same
+  // milestone. The unique index on (userId, habitId, type) is what this
+  // targets — same pattern as createHabitCore/startFocusSessionCore.
+  return unlocked.map((type) =>
+    db
+      .insert(achievements)
+      .values({ id: nanoid(), userId, habitId, type })
+      .onConflictDoNothing({ target: [achievements.userId, achievements.habitId, achievements.type] })
+  );
 }
 
 /**

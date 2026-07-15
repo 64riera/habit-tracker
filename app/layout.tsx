@@ -81,7 +81,7 @@ export default async function RootLayout({
         <ThemeProvider attribute="class" defaultTheme={themePreference} enableSystem>
           <I18nProvider locale={locale} dict={dict}>
             <ToastProvider>
-              <SWRConfigProvider>
+              <SWRConfigProvider userId={userId}>
                 <RealtimeProvider userId={userId}>
                   <OfflineProvider>
                     <RegisterServiceWorker />

@@ -55,8 +55,15 @@ function rewriteLegacyPath(pathname: string): string | null {
   return null;
 }
 
+// Throws rather than falling back to an empty-string key, matching
+// lib/auth/session.ts's secretKey() — an unset APP_JWT_SECRET must fail
+// closed (every request treated as unauthenticated, see the try/catch in
+// hasValidSession below) rather than silently verifying JWTs against a
+// known, guessable HMAC key that anyone could forge a session with.
 function secretKey() {
-  return new TextEncoder().encode(process.env.APP_JWT_SECRET ?? "");
+  const secret = process.env.APP_JWT_SECRET;
+  if (!secret) throw new Error("APP_JWT_SECRET is not configured");
+  return new TextEncoder().encode(secret);
 }
 
 async function hasValidSession(request: NextRequest) {
