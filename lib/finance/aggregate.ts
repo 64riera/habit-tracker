@@ -73,6 +73,18 @@ export function previousPeriodRange(period: Period, today: string, custom?: { fr
 
 export type TransactionLike = { date: string; type: "income" | "expense"; amount: number; categoryId: string | null };
 
+/** Amounts are stored as IEEE-754 floats (dollars/pesos, not integer
+ * cents), so summing many rows can accumulate binary representation error
+ * (the classic 0.1 + 0.2 !== 0.3 case) — `formatCurrency` already rounds
+ * for *display*, but a raw aggregate returned from here can flow into
+ * further arithmetic (savingsRate, topCategoryShare's percentage) before
+ * ever being formatted. Since every real amount is an exact multiple of
+ * one cent, rounding the final sum back to the nearest cent is lossless
+ * for legitimate values and just discards the accumulated float noise. */
+function roundCents(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
 export type PeriodTotals = {
   income: number;
   expense: number;
@@ -95,10 +107,10 @@ export function summarizeTransactions(rows: TransactionLike[]): PeriodTotals {
   }
 
   return {
-    income,
-    expense,
-    balance: income - expense,
-    byCategory: Array.from(byCategory, ([categoryId, total]) => ({ categoryId, total })).sort(
+    income: roundCents(income),
+    expense: roundCents(expense),
+    balance: roundCents(income - expense),
+    byCategory: Array.from(byCategory, ([categoryId, total]) => ({ categoryId, total: roundCents(total) })).sort(
       (a, b) => b.total - a.total
     ),
   };
@@ -130,7 +142,9 @@ export function bucketTransactions(rows: TransactionLike[], bucket: Bucket): Buc
     else entry.expense += row.amount;
     totals.set(key, entry);
   }
-  return Array.from(totals, ([key, v]) => ({ key, ...v })).sort((a, b) => a.key.localeCompare(b.key));
+  return Array.from(totals, ([key, v]) => ({ key, income: roundCents(v.income), expense: roundCents(v.expense) })).sort(
+    (a, b) => a.key.localeCompare(b.key)
+  );
 }
 
 /** Chart granularity that makes sense for each period — a year view with
@@ -145,7 +159,7 @@ export function bucketForPeriod(period: Period): Bucket {
 export function dailyAverageExpense(rows: TransactionLike[], from: string, to: string): number {
   const totalExpense = rows.filter((r) => r.type === "expense").reduce((sum, r) => sum + r.amount, 0);
   const days = daysBetween(from, to) + 1;
-  return days > 0 ? totalExpense / days : 0;
+  return days > 0 ? roundCents(totalExpense / days) : 0;
 }
 
 /** Share of income actually kept, as a percentage — `null` (not 0) when
@@ -184,8 +198,8 @@ export function transactionStats(rows: TransactionLike[]): TransactionStats {
   const sum = (arr: TransactionLike[]) => arr.reduce((s, r) => s + r.amount, 0);
   return {
     count: rows.length,
-    avgExpense: expenseRows.length > 0 ? sum(expenseRows) / expenseRows.length : 0,
-    avgIncome: incomeRows.length > 0 ? sum(incomeRows) / incomeRows.length : 0,
+    avgExpense: expenseRows.length > 0 ? roundCents(sum(expenseRows) / expenseRows.length) : 0,
+    avgIncome: incomeRows.length > 0 ? roundCents(sum(incomeRows) / incomeRows.length) : 0,
   };
 }
 
@@ -201,5 +215,5 @@ export function weekdayExpenseBreakdown(rows: TransactionLike[]): WeekdayExpense
     const wd = isoWeekday(row.date);
     totals.set(wd, (totals.get(wd) ?? 0) + row.amount);
   }
-  return Array.from({ length: 7 }, (_, i) => ({ weekday: i + 1, total: totals.get(i + 1) ?? 0 }));
+  return Array.from({ length: 7 }, (_, i) => ({ weekday: i + 1, total: roundCents(totals.get(i + 1) ?? 0) }));
 }

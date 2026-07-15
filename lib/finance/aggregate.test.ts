@@ -8,6 +8,7 @@ import {
   transactionStats,
   weekdayExpenseBreakdown,
   summarizeTransactions,
+  bucketTransactions,
 } from "./aggregate";
 
 // 2026-07-13 is a Monday.
@@ -109,6 +110,35 @@ describe("transactionStats", () => {
       { date: TODAY, type: "income" as const, amount: 100, categoryId: null },
     ];
     expect(transactionStats(rows)).toEqual({ count: 3, avgExpense: 20, avgIncome: 100 });
+  });
+});
+
+describe("summarizeTransactions — float drift", () => {
+  it("does not accumulate binary floating-point error across many rows", () => {
+    // Amounts are stored/summed as plain IEEE-754 floats, not integer
+    // cents — 0.1 + 0.2 famously isn't exactly 0.3 in floating point, and
+    // that error compounds across many rows. Ten rows of 0.10 should sum
+    // to exactly 1.00, not 0.9999999999999999 or similar.
+    const rows = Array.from({ length: 10 }, () => ({
+      date: TODAY,
+      type: "expense" as const,
+      amount: 0.1,
+      categoryId: "a",
+    }));
+    const totals = summarizeTransactions(rows);
+    expect(totals.expense).toBe(1);
+    expect(totals.byCategory[0].total).toBe(1);
+  });
+
+  it("rounds bucketed totals the same way", () => {
+    const rows = Array.from({ length: 3 }, () => ({
+      date: TODAY,
+      type: "income" as const,
+      amount: 0.1,
+      categoryId: null,
+    }));
+    const buckets = bucketTransactions(rows, "day");
+    expect(buckets[0].income).toBe(0.3);
   });
 });
 

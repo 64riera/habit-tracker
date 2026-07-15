@@ -148,14 +148,20 @@ export async function togglePinHabit(habitId: string, pinned: boolean) {
 }
 
 export async function reorderHabits(orderedIds: string[]) {
+  if (orderedIds.length === 0) return;
   const userId = await getCurrentUserId();
-  await Promise.all(
-    orderedIds.map((id, index) =>
-      db
-        .update(habits)
-        .set({ sortOrder: index })
-        .where(and(eq(habits.id, id), eq(habits.userId, userId)))
-    )
+  // db.batch, not Promise.all: independent updates let two concurrent
+  // reorders (two devices, or a fast double-drag) interleave their
+  // individual statements arbitrarily, leaving `sortOrder` a mix of both
+  // orderings. A batch commits as one atomic unit, so two concurrent
+  // reorders can't interleave with each other — one fully applies before
+  // the other's batch starts.
+  const updates = orderedIds.map((id, index) =>
+    db
+      .update(habits)
+      .set({ sortOrder: index })
+      .where(and(eq(habits.id, id), eq(habits.userId, userId)))
   );
+  await db.batch(updates as [(typeof updates)[number], ...(typeof updates)[number][]]);
   revalidateHabitsPaths();
 }

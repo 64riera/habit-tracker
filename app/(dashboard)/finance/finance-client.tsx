@@ -89,7 +89,16 @@ export function FinanceClient({
       .filter((tx) => !pendingDeleteIds.has(tx.id))
       .map((tx) => (pendingEdits.has(tx.id) ? applyPendingTransactionEdit(tx, pendingEdits.get(tx.id)!, categories) : tx));
     const ghosts = pendingNew.map((m) => buildGhostTransaction(m.id, m.values, categories));
-    return [...overlaid, ...ghosts].sort((a, b) => (a.date === b.date ? 0 : b.date.localeCompare(a.date)));
+    // Same tie-break as the server (lib/queries/finance.ts): date desc,
+    // then createdAt desc. Without the second key, same-day transactions
+    // fall back to whatever order they happened to arrive in this array —
+    // an offline-created transaction (appended as a ghost, always last)
+    // would render after every synced same-day transaction regardless of
+    // when it was actually entered, instead of matching the order the
+    // server settles on once it syncs.
+    return [...overlaid, ...ghosts].sort((a, b) =>
+      a.date === b.date ? b.createdAt.localeCompare(a.createdAt) : b.date.localeCompare(a.date)
+    );
   }, [transactions, pendingEdits, pendingDeleteIds, pendingNew, categories]);
 
   const { from, to } = periodRange(period, today, customRange);
