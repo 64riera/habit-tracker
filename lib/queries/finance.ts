@@ -128,33 +128,47 @@ export async function materializeDueRecurringTransactions(today: string): Promis
     .from(recurringTransactions)
     .where(and(eq(recurringTransactions.userId, userId), eq(recurringTransactions.active, true)));
 
-  for (const rule of rules) {
+  // One db.batch() for every rule's writes instead of a serial per-rule
+  // insert+update loop — each active recurring rule used to cost up to 2
+  // sequential round-trips; an account with several rules paid that
+  // sequentially before Finance's main content could even start loading.
+  const statements = rules.flatMap((rule) => {
     const dates = dueOccurrences(rule, today);
-    if (dates.length > 0) {
-      await db
-        .insert(transactions)
-        .values(
-          dates.map((date) => ({
-            id: `${rule.id}:${date}`,
-            userId,
-            type: rule.type,
-            categoryId: rule.categoryId,
-            amount: rule.amount,
-            note: rule.note,
-            date,
-            recurringTransactionId: rule.id,
-          }))
-        )
-        .onConflictDoNothing({ target: transactions.id });
-    }
     // Skips the write once a rule is already caught up to today (the
     // common case: opening Finance more than once in the same day)
     // instead of an unconditional UPDATE on every single page load.
-    if (!rule.lastGeneratedDate || rule.lastGeneratedDate < today) {
-      await db
-        .update(recurringTransactions)
-        .set({ lastGeneratedDate: today })
-        .where(eq(recurringTransactions.id, rule.id));
-    }
-  }
+    const stale = !rule.lastGeneratedDate || rule.lastGeneratedDate < today;
+    return [
+      ...(dates.length > 0
+        ? [
+            db
+              .insert(transactions)
+              .values(
+                dates.map((date) => ({
+                  id: `${rule.id}:${date}`,
+                  userId,
+                  type: rule.type,
+                  categoryId: rule.categoryId,
+                  amount: rule.amount,
+                  note: rule.note,
+                  date,
+                  recurringTransactionId: rule.id,
+                }))
+              )
+              .onConflictDoNothing({ target: transactions.id }),
+          ]
+        : []),
+      ...(stale
+        ? [
+            db
+              .update(recurringTransactions)
+              .set({ lastGeneratedDate: today })
+              .where(eq(recurringTransactions.id, rule.id)),
+          ]
+        : []),
+    ];
+  });
+
+  if (statements.length === 0) return;
+  await db.batch(statements as [(typeof statements)[number], ...(typeof statements)[number][]]);
 }

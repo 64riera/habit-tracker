@@ -1,6 +1,6 @@
 import "server-only";
 import { cache } from "react";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db/client";
 import { categories, habitLogs, habitStreaks, habits } from "@/lib/db/schema";
@@ -51,16 +51,6 @@ export const getCategories = cache(async (options: { includeHidden?: boolean } =
   return options.includeHidden ? rows : rows.filter((c) => !c.hidden);
 });
 
-/** Total number of habits on the account (includes archived/paused: it's
- * about the creation event, not how many are active today) — used to
- * detect "this is the first habit" and offer to install the PWA, see
- * install-suggestion-modal.tsx. */
-export const getHabitCount = cache(async (): Promise<number> => {
-  const userId = await getCurrentUserId();
-  const [row] = await db.select({ count: sql<number>`count(*)` }).from(habits).where(eq(habits.userId, userId));
-  return Number(row?.count ?? 0);
-});
-
 export const getHabitNames = cache(async (): Promise<{ id: string; name: string; categoryId: string | null }[]> => {
   const userId = await getCurrentUserId();
   return db
@@ -70,12 +60,12 @@ export const getHabitNames = cache(async (): Promise<{ id: string; name: string;
     .orderBy(habits.sortOrder);
 });
 
-async function attachExtras(rows: HabitRow[], date: string, userId: string): Promise<HabitWithExtras[]> {
+async function attachExtras(rows: HabitRow[], date: string): Promise<HabitWithExtras[]> {
   if (rows.length === 0) return [];
   const ids = rows.map((r) => r.id);
 
   const [cats, logs, streaks] = await Promise.all([
-    db.select().from(categories).where(eq(categories.userId, userId)),
+    getCategories({ includeHidden: true }),
     db
       .select()
       .from(habitLogs)
@@ -106,7 +96,7 @@ export const getHabitsForToday = cache(async (date: string): Promise<HabitWithEx
     .from(habits)
     .where(and(eq(habits.userId, userId), eq(habits.status, "active")));
   const applicable = active.filter((h) => isDateApplicable(h, date));
-  const withExtras = await attachExtras(applicable, date, userId);
+  const withExtras = await attachExtras(applicable, date);
   return withExtras.sort((a, b) => {
     if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
     return a.sortOrder - b.sortOrder;
@@ -119,7 +109,7 @@ export const getActiveHabits = cache(async (date: string): Promise<HabitWithExtr
     .select()
     .from(habits)
     .where(and(eq(habits.userId, userId), eq(habits.status, "active")));
-  const withExtras = await attachExtras(active, date, userId);
+  const withExtras = await attachExtras(active, date);
   return withExtras.sort((a, b) => {
     if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
     return a.sortOrder - b.sortOrder;
@@ -129,7 +119,7 @@ export const getActiveHabits = cache(async (date: string): Promise<HabitWithExtr
 export const getAllHabitsForManagement = cache(async (date: string): Promise<HabitWithExtras[]> => {
   const userId = await getCurrentUserId();
   const all = await db.select().from(habits).where(eq(habits.userId, userId));
-  const withExtras = await attachExtras(all, date, userId);
+  const withExtras = await attachExtras(all, date);
   return withExtras.sort((a, b) => a.sortOrder - b.sortOrder);
 });
 
@@ -141,6 +131,6 @@ export const getHabitById = cache(async (id: string): Promise<HabitWithExtras | 
     .where(and(eq(habits.id, id), eq(habits.userId, userId)))
     .limit(1);
   if (!habit) return null;
-  const [withExtras] = await attachExtras([habit], "9999-99-99", userId);
+  const [withExtras] = await attachExtras([habit], "9999-99-99");
   return withExtras;
 });

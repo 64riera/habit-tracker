@@ -45,16 +45,6 @@ export async function recalcStreakForHabit(habitId: string): Promise<StreakResul
   return { current: result.currentStreak, longest: result.longestStreak };
 }
 
-export async function getStreakMax(): Promise<number | null> {
-  const userId = await getCurrentUserId();
-  const rows = await db
-    .select({ longestStreak: habitStreaks.longestStreak })
-    .from(habitStreaks)
-    .where(eq(habitStreaks.userId, userId));
-  if (rows.length === 0) return null;
-  return Math.max(0, ...rows.map((r) => r.longestStreak));
-}
-
 export async function getStreakFor(habitId: string): Promise<StreakResult> {
   const userId = await getCurrentUserId();
   const [row] = await db

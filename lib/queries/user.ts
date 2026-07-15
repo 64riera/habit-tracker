@@ -104,17 +104,3 @@ export const getUserProfile = cache(async (): Promise<UserProfile | null> => {
   // without needing to log in again — idempotent on an already-resized URL.
   return user.avatarUrl ? { ...user, avatarUrl: resizeGoogleAvatarUrl(user.avatarUrl) } : user;
 });
-
-/** Whether the install-suggestion modal after their first habit has
- * already been shown (and decided on) — see install-suggestion-modal.tsx.
- * `true` if there's no session, so it's never offered on public pages. */
-export const getInstallPromptSeen = cache(async (): Promise<boolean> => {
-  const userId = await getCurrentUserIdOrNull();
-  if (!userId) return true;
-  const [user] = await db
-    .select({ installPromptSeen: users.installPromptSeen })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
-  return user?.installPromptSeen ?? true;
-});
