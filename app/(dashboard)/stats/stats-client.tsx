@@ -8,6 +8,7 @@ import { TrendBars } from "@/components/charts/trend-bars";
 import { CategoryBars } from "@/components/charts/category-bars";
 import { PeriodSummaryCard } from "@/components/stats/period-summary-card";
 import { PatternsPanel } from "@/components/stats/patterns-panel";
+import { CrossDomainInsights } from "@/components/stats/cross-domain-insights";
 import { useI18n } from "@/lib/i18n/client";
 import { swrKeys } from "@/lib/swr/keys";
 import { usePageData } from "@/lib/swr/use-page-data";
@@ -17,6 +18,8 @@ import type { CategoryStat, HabitStatCard, TrendPoint } from "@/lib/queries/stat
 import type { MoodCorrelation, WorstWeekday } from "@/lib/queries/patterns";
 import type { PeriodComparison } from "@/lib/queries/summary";
 import type { FocusHeaderData } from "@/lib/queries/focus";
+import type { CrossDomainInsights as CrossDomainInsightsData } from "@/lib/queries/insights";
+import type { Currency } from "@/lib/finance/format";
 
 export function EstadisticasClient({
   overall: initialOverall,
@@ -28,6 +31,8 @@ export function EstadisticasClient({
   worstWeekday: initialWorstWeekday,
   moodCorrelation: initialMoodCorrelation,
   focusHeader: initialFocusHeader,
+  insights: initialInsights,
+  currency,
   today,
 }: {
   overall: { pct7: number; pct30: number; pct90: number };
@@ -39,6 +44,8 @@ export function EstadisticasClient({
   worstWeekday: WorstWeekday;
   moodCorrelation: MoodCorrelation;
   focusHeader: FocusHeaderData;
+  insights: CrossDomainInsightsData;
+  currency: Currency;
   today: string;
 }) {
   const { t, locale } = useI18n();
@@ -52,6 +59,8 @@ export function EstadisticasClient({
       monthSummary: initialMonthSummary,
       worstWeekday: initialWorstWeekday,
       moodCorrelation: initialMoodCorrelation,
+      insights: initialInsights,
+      currency,
     }),
     [
       initialOverall,
@@ -62,11 +71,24 @@ export function EstadisticasClient({
       initialMonthSummary,
       initialWorstWeekday,
       initialMoodCorrelation,
+      initialInsights,
+      currency,
     ]
   );
   const { data } = usePageData(swrKeys.stats(today), () => fetchStatsAction(today), initialStatsData);
   const { data: focusHeader } = usePageData(swrKeys.focusHeader(), fetchFocusHeaderAction, initialFocusHeader);
-  const { overall, trend, categories, cards, weekSummary, monthSummary, worstWeekday, moodCorrelation } = data;
+  const {
+    overall,
+    trend,
+    categories,
+    cards,
+    weekSummary,
+    monthSummary,
+    worstWeekday,
+    moodCorrelation,
+    insights,
+    currency: activeCurrency,
+  } = data;
 
   const summaryCards = [
     { value: overall.pct7, label: t("stats.last7") },
@@ -114,6 +136,8 @@ export function EstadisticasClient({
         </div>
 
         <PatternsPanel worstWeekday={worstWeekday} moodCorrelation={moodCorrelation} />
+
+        <CrossDomainInsights insights={insights} currency={activeCurrency} />
 
         {cards.length > 0 && (
           <div>

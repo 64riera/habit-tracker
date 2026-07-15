@@ -190,7 +190,22 @@
     "worstWeekday": "Weekday with most misses",
     "moodCorrelation": "Correlation with low mood",
     "bestMonthSoFar": "This is your best {month} yet",
-    "trendBarLabel": "{date}: {pct}%"
+    "trendBarLabel": "{date}: {pct}%",
+    "crossInsightsTitle": "Connections",
+    "gymDayLabel": "Gym days",
+    "noGymDayLabel": "No gym",
+    "habitsGoodDayLabel": "Completed days",
+    "habitsBadDayLabel": "Missed days",
+    "lowMoodLabel": "Low mood",
+    "highMoodLabel": "High mood",
+    "spendByHabitCompletionTitle": "Spending and habits",
+    "spendByHabitCompletionDelta": "missed vs. completed days",
+    "focusByGymDayTitle": "Focus and gym",
+    "focusByGymDayDelta": "gym vs. no-gym days",
+    "habitCompletionByGymDayTitle": "Habits and gym",
+    "habitCompletionByGymDayDelta": "gym vs. no-gym days",
+    "spendByMoodTitle": "Spending and mood",
+    "spendByMoodDelta": "low vs. high mood"
   },
   "categories": {
     "manage": "Categories",

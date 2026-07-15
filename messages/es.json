@@ -190,7 +190,22 @@
     "worstWeekday": "Día con más fallos",
     "moodCorrelation": "Correlación con ánimo bajo",
     "bestMonthSoFar": "Llevas tu mejor {month} hasta ahora",
-    "trendBarLabel": "{date}: {pct}%"
+    "trendBarLabel": "{date}: {pct}%",
+    "crossInsightsTitle": "Conexiones",
+    "gymDayLabel": "Con gym",
+    "noGymDayLabel": "Sin gym",
+    "habitsGoodDayLabel": "Días cumplidos",
+    "habitsBadDayLabel": "Días fallidos",
+    "lowMoodLabel": "Ánimo bajo",
+    "highMoodLabel": "Ánimo alto",
+    "spendByHabitCompletionTitle": "Gasto y hábitos",
+    "spendByHabitCompletionDelta": "días fallidos vs. cumplidos",
+    "focusByGymDayTitle": "Enfoque y gym",
+    "focusByGymDayDelta": "días con gym vs. sin gym",
+    "habitCompletionByGymDayTitle": "Hábitos y gym",
+    "habitCompletionByGymDayDelta": "días con gym vs. sin gym",
+    "spendByMoodTitle": "Gasto y ánimo",
+    "spendByMoodDelta": "ánimo bajo vs. alto"
   },
   "categories": {
     "manage": "Categorías",
