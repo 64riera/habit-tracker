@@ -23,12 +23,17 @@ export function TodaySummaryDisplay() {
     : "";
   const streakText = useTextScramble(streakLine, "alpha");
 
-  if (!summary || summary.total === 0) return null;
-
+  // Always renders something — never returns null — so the % and bar stay
+  // on screen instead of popping in/out. Blank secondary text until the
+  // first summary arrives (a single frame on mount) and on a day with no
+  // habits: the list below already explains that case with its own message
+  // and a "new habit" CTA, so repeating it here would just be an echo.
   const summaryLine =
-    summary.inProgress > 0
-      ? t("checkin.summaryWithProgress", { done: summary.done, total: summary.total, inProgress: summary.inProgress })
-      : t("checkin.summary", { done: summary.done, total: summary.total });
+    summary && summary.total > 0
+      ? summary.inProgress > 0
+        ? t("checkin.summaryWithProgress", { done: summary.done, total: summary.total, inProgress: summary.inProgress })
+        : t("checkin.summary", { done: summary.done, total: summary.total })
+      : "";
 
   return (
     <div className="flex flex-col gap-4 mb-4 md:gap-[22px] md:mb-[22px]">
@@ -42,7 +47,7 @@ export function TodaySummaryDisplay() {
         <div className="mt-2.5 h-0.5 rounded-full bg-border md:mt-3">
           <div
             className="h-0.5 rounded-full bg-accent transition-[width] duration-500 ease-out"
-            style={{ width: `${summary.pct}%` }}
+            style={{ width: `${pct}%` }}
           />
         </div>
       </div>
