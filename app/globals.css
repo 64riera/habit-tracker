@@ -197,6 +197,19 @@ body {
   animation: modal-panel-in 0.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
 @keyframes heatmap-cell-in {
   from {
     opacity: 0;

@@ -6,12 +6,13 @@ import { useTextScramble } from "@/lib/hooks/use-text-scramble";
 import { useTodaySummary } from "./today-summary-context";
 
 /** Animated mirror of %, summary and best streak — see TodaySummaryProvider
- * for why it lives outside the list's Suspense boundary. The % and streak
- * are revealed with a text scramble when they change; the bar animates via
- * a CSS `width` transition (this only works because this component doesn't
- * remount when the day changes, so the browser has a previous value to
- * start from). The "N of M completed" line updates instantly, without a
- * scramble — it's supporting metadata, not the focus of the animation. */
+ * for why it lives outside the list's Suspense boundary. The % is revealed
+ * with a text scramble when it changes; the bar animates via a CSS `width`
+ * transition (this only works because this component doesn't remount when
+ * the day changes, so the browser has a previous value to start from). The
+ * best-streak line eases in with a plain fade instead of scrambling — it's
+ * a quieter, secondary line, not the focus of the animation — and the "N of
+ * M completed" line updates instantly with no animation at all. */
 export function TodaySummaryDisplay() {
   const { t } = useI18n();
   const { summary } = useTodaySummary();
@@ -22,7 +23,6 @@ export function TodaySummaryDisplay() {
   const bestStreakLabel = summary?.bestStreak
     ? t("checkin.bestStreak", { days: summary.bestStreak.days, habit: summary.bestStreak.habitName })
     : "";
-  const streakText = useTextScramble(bestStreakLabel, "alpha");
 
   // Always renders something — never returns null — so the % and bar stay
   // on screen instead of popping in/out. Blank secondary text until the
@@ -65,7 +65,16 @@ export function TodaySummaryDisplay() {
         </div>
       ) : (
         bestStreakLabel && (
-          <div className="text-right font-serif-italic text-xs text-muted md:text-left">{streakText}</div>
+          // key={bestStreakLabel}: remounts (and replays the fade) whenever
+          // the streak actually changes value, instead of just once on the
+          // component's own mount — unlike the % and empty-state text, this
+          // one doesn't scramble, it eases in.
+          <div
+            key={bestStreakLabel}
+            className="animate-fade-in text-right font-serif-italic text-xs text-muted md:text-left"
+          >
+            {bestStreakLabel}
+          </div>
         )
       )}
     </div>
