@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { useTextScramble } from "@/lib/hooks/use-text-scramble";
 import { useTodaySummary } from "./today-summary-context";
@@ -18,10 +19,10 @@ export function TodaySummaryDisplay() {
   const pct = summary?.pct ?? 0;
   const pctText = useTextScramble(`${pct}%`, "digits");
 
-  const streakLine = summary?.bestStreak
+  const bestStreakLabel = summary?.bestStreak
     ? t("checkin.bestStreak", { days: summary.bestStreak.days, habit: summary.bestStreak.habitName })
     : "";
-  const streakText = useTextScramble(streakLine, "alpha");
+  const streakText = useTextScramble(bestStreakLabel, "alpha");
 
   // Always renders something — never returns null — so the % and bar stay
   // on screen instead of popping in/out. Blank secondary text until the
@@ -52,8 +53,20 @@ export function TodaySummaryDisplay() {
         </div>
       </div>
 
-      {streakLine && (
-        <div className="text-right font-serif-italic text-xs text-muted md:text-left">{streakText}</div>
+      {/* Same row, three states: a quiet loading cue on first mount (before
+          the client has ever computed a value — the one real gap, per
+          summary === null above), the real best-streak line once there is
+          one, or nothing on a day with no streak to report — that's a
+          genuine empty state, not a loading one, so it skips the spinner. */}
+      {summary === null ? (
+        <div className="flex items-center justify-end gap-1.5 text-xs text-muted md:justify-start">
+          <Loader2 size={10} strokeWidth={2.5} className="animate-spin" aria-hidden />
+          {t("common.loading")}
+        </div>
+      ) : (
+        bestStreakLabel && (
+          <div className="text-right font-serif-italic text-xs text-muted md:text-left">{streakText}</div>
+        )
       )}
     </div>
   );
