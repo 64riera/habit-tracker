@@ -43,7 +43,17 @@ export type QueuedMutation =
   | { type: "resumeMetronomeTimer" }
   | { type: "cancelMetronomeTimer" };
 
-export type QueuedRecord = QueuedMutation & { id: number; createdAt: number };
+// The IndexedDB object store's keyPath is "id": for a mutation variant that
+// already carries its own client-generated domain id (createHabit,
+// startFocusSession, ...), spreading `...mutation` in enqueueMutation below
+// means *that* string becomes the record's primary key; for every other
+// variant, `autoIncrement` fills in a numeric one because none was present.
+// So `id` here is genuinely `string | number` depending on mutation type —
+// typing it as bare `number` (as before) silently resolved to `never` for
+// the string-id variants via the intersection, which is unsound: `never`
+// is assignable anywhere, so passing one of those ids into a `number`
+// parameter type-checked without error despite being a string at runtime.
+export type QueuedRecord = QueuedMutation & { id: number | string; createdAt: number };
 
 const DB_NAME = "justgo-offline";
 const STORE_NAME = "mutations";
@@ -93,7 +103,7 @@ export async function getQueuedMutations(): Promise<QueuedRecord[]> {
   return result.sort((a, b) => a.createdAt - b.createdAt);
 }
 
-export async function removeQueuedMutation(id: number): Promise<void> {
+export async function removeQueuedMutation(id: number | string): Promise<void> {
   const db = await openDb();
   await new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
