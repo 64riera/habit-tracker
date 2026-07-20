@@ -1,22 +1,31 @@
 import { z } from "zod";
 
-export const habitFormSchema = z.object({
-  name: z.string().trim().min(1).max(80),
-  description: z.string().trim().max(280).optional().or(z.literal("")),
-  categoryId: z.string().optional().or(z.literal("")),
-  goalType: z.enum(["binary", "quantitative", "duration"]),
-  goalTarget: z.coerce.number().positive().optional(),
-  goalUnit: z.string().trim().max(20).optional().or(z.literal("")),
-  frequencyType: z.enum(["daily", "weekdays", "x_per_week", "x_per_month", "custom_interval"]),
-  weekdays: z.array(z.coerce.number().min(1).max(7)).optional(),
-  timesPerPeriod: z.coerce.number().min(1).max(30).optional(),
-  intervalDays: z.coerce.number().min(1).max(60).optional(),
-  reminderTime: z.string().trim().optional().or(z.literal("")),
-  hardMode: z.coerce.boolean().optional(),
-  skipDaysAllowed: z.coerce.number().min(0).max(10).optional(),
-  startDate: z.string().min(1),
-  isPinned: z.coerce.boolean().optional(),
-});
+export const habitFormSchema = z
+  .object({
+    name: z.string().trim().min(1).max(80),
+    description: z.string().trim().max(280).optional().or(z.literal("")),
+    categoryId: z.string().optional().or(z.literal("")),
+    goalType: z.enum(["binary", "quantitative", "duration"]),
+    goalTarget: z.coerce.number().positive().optional(),
+    goalUnit: z.string().trim().max(20).optional().or(z.literal("")),
+    frequencyType: z.enum(["daily", "weekdays", "x_per_week", "x_per_month", "custom_interval"]),
+    weekdays: z.array(z.coerce.number().min(1).max(7)).optional(),
+    timesPerPeriod: z.coerce.number().min(1).max(30).optional(),
+    intervalDays: z.coerce.number().min(1).max(60).optional(),
+    reminderTime: z.string().trim().optional().or(z.literal("")),
+    hardMode: z.coerce.boolean().optional(),
+    skipDaysAllowed: z.coerce.number().min(0).max(10).optional(),
+    startDate: z.string().min(1),
+    isPinned: z.coerce.boolean().optional(),
+  })
+  // Without this, a "weekdays" habit can be saved with no day selected:
+  // isDateApplicable() then never matches, so the habit is silently
+  // unreachable — its streak stays stuck at 0 forever (same class of bug
+  // task.ts already guards against for custom_weekdays).
+  .refine((v) => v.frequencyType !== "weekdays" || (v.weekdays?.length ?? 0) > 0, {
+    message: "weekdays requires at least one day",
+    path: ["weekdays"],
+  });
 
 export type HabitFormValues = z.infer<typeof habitFormSchema>;
 
