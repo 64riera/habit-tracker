@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { hasAtLeastOneWeekday, extractWeekdays } from "./primitives";
 
 // Caps Feb at 28 on purpose — sidesteps leap-year bookkeeping entirely for a
 // field that's only ever a display reference ("cada 29 de febrero" would be
@@ -28,7 +29,7 @@ export const taskFormSchema = z
     intervalDays: z.coerce.number().min(1).max(365).optional(),
     weekdays: z.array(z.coerce.number().min(1).max(7)).optional(),
   })
-  .refine((v) => v.recurrenceType !== "custom_weekdays" || (v.weekdays?.length ?? 0) > 0, {
+  .refine((v) => v.recurrenceType !== "custom_weekdays" || hasAtLeastOneWeekday(v.weekdays), {
     message: "custom_weekdays requires at least one weekday",
     path: ["weekdays"],
   })
@@ -40,7 +41,7 @@ export const taskFormSchema = z
 export type TaskFormValues = z.infer<typeof taskFormSchema>;
 
 export function extractTaskFields(formData: FormData): unknown {
-  const weekdays = formData.getAll("weekdays").map(Number);
+  const weekdays = extractWeekdays(formData);
   return {
     title: formData.get("title"),
     recurrenceType: formData.get("recurrenceType"),

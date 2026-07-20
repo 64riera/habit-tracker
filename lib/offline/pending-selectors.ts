@@ -22,34 +22,31 @@ import {
 } from "@/lib/focus/compute";
 import { applyPause, applyResume, type TimerRow } from "@/lib/metronome/timer-compute";
 
+/** Narrows the queue down to one mutation variant — the type-guard every `pendingX*` selector
+ * below needs, factored out once instead of repeated per variant. */
+function pendingByType<T extends QueuedRecord["type"]>(
+  queue: QueuedRecord[],
+  type: T
+): Extract<QueuedRecord, { type: T }>[] {
+  return queue.filter((m): m is Extract<QueuedRecord, { type: T }> => m.type === type);
+}
+
 // --- Habits ---
 
 export function pendingHabitCreates(queue: QueuedRecord[]) {
-  return queue.filter((m): m is Extract<QueuedRecord, { type: "createHabit" }> => m.type === "createHabit");
+  return pendingByType(queue, "createHabit");
 }
 
 export function pendingHabitUpdates(queue: QueuedRecord[]): Map<string, HabitFormValues> {
-  return new Map(
-    queue
-      .filter((m): m is Extract<QueuedRecord, { type: "updateHabit" }> => m.type === "updateHabit")
-      .map((m) => [m.habitId, m.values])
-  );
+  return new Map(pendingByType(queue, "updateHabit").map((m) => [m.habitId, m.values]));
 }
 
 export function pendingHabitArchiveIds(queue: QueuedRecord[]): Set<string> {
-  return new Set(
-    queue
-      .filter((m): m is Extract<QueuedRecord, { type: "archiveHabit" }> => m.type === "archiveHabit")
-      .map((m) => m.habitId)
-  );
+  return new Set(pendingByType(queue, "archiveHabit").map((m) => m.habitId));
 }
 
 export function pendingHabitRestoreIds(queue: QueuedRecord[]): Set<string> {
-  return new Set(
-    queue
-      .filter((m): m is Extract<QueuedRecord, { type: "restoreHabit" }> => m.type === "restoreHabit")
-      .map((m) => m.habitId)
-  );
+  return new Set(pendingByType(queue, "restoreHabit").map((m) => m.habitId));
 }
 
 /** Editable habit fields derived from the form values — reused by the creation ghost and the edit overlay. */
@@ -104,35 +101,21 @@ export function applyPendingHabitEdit(
 // --- Categories ---
 
 export function pendingCategoryHiddenOverrides(queue: QueuedRecord[]): Map<string, boolean> {
-  return new Map(
-    queue
-      .filter((m): m is Extract<QueuedRecord, { type: "setCategoryHidden" }> => m.type === "setCategoryHidden")
-      .map((m) => [m.categoryId, m.hidden])
-  );
+  return new Map(pendingByType(queue, "setCategoryHidden").map((m) => [m.categoryId, m.hidden]));
 }
 
 // --- Routines ---
 
 export function pendingRoutineCreates(queue: QueuedRecord[]) {
-  return queue.filter(
-    (m): m is Extract<QueuedRecord, { type: "createRoutine" }> => m.type === "createRoutine"
-  );
+  return pendingByType(queue, "createRoutine");
 }
 
 export function pendingRoutineUpdates(queue: QueuedRecord[]): Map<string, RoutineFormValues> {
-  return new Map(
-    queue
-      .filter((m): m is Extract<QueuedRecord, { type: "updateRoutine" }> => m.type === "updateRoutine")
-      .map((m) => [m.routineId, m.values])
-  );
+  return new Map(pendingByType(queue, "updateRoutine").map((m) => [m.routineId, m.values]));
 }
 
 export function pendingRoutineDeleteIds(queue: QueuedRecord[]): Set<string> {
-  return new Set(
-    queue
-      .filter((m): m is Extract<QueuedRecord, { type: "deleteRoutine" }> => m.type === "deleteRoutine")
-      .map((m) => m.routineId)
-  );
+  return new Set(pendingByType(queue, "deleteRoutine").map((m) => m.routineId));
 }
 
 /**
@@ -176,21 +159,15 @@ export function applyPendingRoutineEdit(
 // --- Tasks ---
 
 export function pendingTaskCreates(queue: QueuedRecord[]) {
-  return queue.filter((m): m is Extract<QueuedRecord, { type: "createTask" }> => m.type === "createTask");
+  return pendingByType(queue, "createTask");
 }
 
 export function pendingTaskUpdates(queue: QueuedRecord[]): Map<string, TaskFormValues> {
-  return new Map(
-    queue
-      .filter((m): m is Extract<QueuedRecord, { type: "updateTask" }> => m.type === "updateTask")
-      .map((m) => [m.taskId, m.values])
-  );
+  return new Map(pendingByType(queue, "updateTask").map((m) => [m.taskId, m.values]));
 }
 
 export function pendingTaskDeleteIds(queue: QueuedRecord[]): Set<string> {
-  return new Set(
-    queue.filter((m): m is Extract<QueuedRecord, { type: "deleteTask" }> => m.type === "deleteTask").map((m) => m.taskId)
-  );
+  return new Set(pendingByType(queue, "deleteTask").map((m) => m.taskId));
 }
 
 /** Editable task fields derived from the form values — reused by the creation ghost and the edit overlay. */
@@ -230,25 +207,15 @@ export function applyPendingTaskEdit(task: TaskWithStatus, values: TaskFormValue
 // --- Transactions ---
 
 export function pendingTransactionCreates(queue: QueuedRecord[]) {
-  return queue.filter(
-    (m): m is Extract<QueuedRecord, { type: "createTransaction" }> => m.type === "createTransaction"
-  );
+  return pendingByType(queue, "createTransaction");
 }
 
 export function pendingTransactionUpdates(queue: QueuedRecord[]): Map<string, TransactionFormValues> {
-  return new Map(
-    queue
-      .filter((m): m is Extract<QueuedRecord, { type: "updateTransaction" }> => m.type === "updateTransaction")
-      .map((m) => [m.transactionId, m.values])
-  );
+  return new Map(pendingByType(queue, "updateTransaction").map((m) => [m.transactionId, m.values]));
 }
 
 export function pendingTransactionDeleteIds(queue: QueuedRecord[]): Set<string> {
-  return new Set(
-    queue
-      .filter((m): m is Extract<QueuedRecord, { type: "deleteTransaction" }> => m.type === "deleteTransaction")
-      .map((m) => m.transactionId)
-  );
+  return new Set(pendingByType(queue, "deleteTransaction").map((m) => m.transactionId));
 }
 
 /** Editable transaction fields derived from the form values — reused by the creation ghost and the edit overlay. */
@@ -391,25 +358,15 @@ export function pendingFocusSession(queue: QueuedRecord[], today: string): Focus
 // --- Gym sessions ---
 
 export function pendingGymSessionCreates(queue: QueuedRecord[]) {
-  return queue.filter(
-    (m): m is Extract<QueuedRecord, { type: "createGymSession" }> => m.type === "createGymSession"
-  );
+  return pendingByType(queue, "createGymSession");
 }
 
 export function pendingGymSessionUpdates(queue: QueuedRecord[]): Map<string, GymSessionFormValues> {
-  return new Map(
-    queue
-      .filter((m): m is Extract<QueuedRecord, { type: "updateGymSession" }> => m.type === "updateGymSession")
-      .map((m) => [m.sessionId, m.values])
-  );
+  return new Map(pendingByType(queue, "updateGymSession").map((m) => [m.sessionId, m.values]));
 }
 
 export function pendingGymSessionDeleteIds(queue: QueuedRecord[]): Set<string> {
-  return new Set(
-    queue
-      .filter((m): m is Extract<QueuedRecord, { type: "deleteGymSession" }> => m.type === "deleteGymSession")
-      .map((m) => m.sessionId)
-  );
+  return new Set(pendingByType(queue, "deleteGymSession").map((m) => m.sessionId));
 }
 
 /** Editable gym session fields derived from the form values — reused by the creation ghost and the edit overlay. */

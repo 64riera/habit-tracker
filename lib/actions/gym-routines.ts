@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db/client";
 import { gymRoutines } from "@/lib/db/schema";
+import { nextSortOrder } from "@/lib/db/sort-order";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { getGymExercises } from "@/lib/queries/gym-exercises";
 import { CANONICAL_GYM_ROUTINES } from "@/lib/gym/canonical-routines";
@@ -33,8 +34,7 @@ export async function createGymRoutine(name: string, exercises: RoutineExercise[
   if (cleanExercises.length === 0) return { error: "exercises" };
 
   const userId = await getCurrentUserId();
-  const rows = await db.select({ sortOrder: gymRoutines.sortOrder }).from(gymRoutines).where(eq(gymRoutines.userId, userId));
-  const maxSortOrder = rows.reduce((max, r) => Math.max(max, r.sortOrder), -1);
+  const sortOrder = await nextSortOrder(gymRoutines, gymRoutines.sortOrder, gymRoutines.userId, userId);
 
   await db
     .insert(gymRoutines)
@@ -43,7 +43,7 @@ export async function createGymRoutine(name: string, exercises: RoutineExercise[
       userId,
       name: trimmedName,
       exercises: JSON.stringify(cleanExercises),
-      sortOrder: maxSortOrder + 1,
+      sortOrder,
     })
     .onConflictDoNothing({ target: [gymRoutines.userId, gymRoutines.name] });
 

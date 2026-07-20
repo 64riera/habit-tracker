@@ -1,9 +1,11 @@
 "use client";
 
+import { useRef } from "react";
 import { Trash2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { deleteGymSession } from "@/lib/actions/gym";
 import { useOfflineIdAction } from "@/lib/offline/form";
+import { useConfirmAction } from "@/lib/hooks/use-confirm-action";
 
 export function DeleteGymSessionButton({ sessionId }: { sessionId: string }) {
   const { t } = useI18n();
@@ -11,17 +13,28 @@ export function DeleteGymSessionButton({ sessionId }: { sessionId: string }) {
     onlineAction: () => deleteGymSession(sessionId),
     buildMutation: () => ({ type: "deleteGymSession", sessionId }),
   });
+  const formRef = useRef<HTMLFormElement>(null);
+  const { requestConfirm, dialog } = useConfirmAction();
+
   return (
-    <form
-      action={action}
-      onSubmit={(e) => {
-        if (!confirm(t("gym.confirmDelete"))) e.preventDefault();
-      }}
-    >
-      <button type="submit" className="flex items-center gap-1.5 text-[12.5px] text-muted">
+    <form ref={formRef} action={action}>
+      <button
+        type="button"
+        onClick={() =>
+          requestConfirm({
+            title: t("common.confirm"),
+            description: t("gym.confirmDelete"),
+            confirmLabel: t("common.delete"),
+            cancelLabel: t("common.cancel"),
+            onConfirm: () => formRef.current?.requestSubmit(),
+          })
+        }
+        className="flex items-center gap-1.5 text-[12.5px] text-muted"
+      >
         <Trash2 size={13} strokeWidth={2} aria-hidden />
         {t("common.delete")}
       </button>
+      {dialog}
     </form>
   );
 }

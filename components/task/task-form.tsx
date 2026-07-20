@@ -1,16 +1,16 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { useFormStatus } from "react-dom";
 import { nanoid } from "nanoid";
 import { useI18n } from "@/lib/i18n/client";
-import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
 import type { TaskRow } from "@/lib/queries/tasks";
 import { parseTaskRecurrenceConfig, type TaskRecurrenceType } from "@/lib/tasks/recurrence";
 import { createTask, updateTask } from "@/lib/actions/tasks";
 import { taskFormSchema, extractTaskFields } from "@/lib/validation/task";
 import { useOfflineFormAction } from "@/lib/offline/form";
+import { FormAlert, StickySaveBar, Field } from "@/components/ui/form-primitives";
+import { PillTabs } from "@/components/ui/pill-tabs";
 
 const PILLS = ["daily", "weekly", "monthly", "yearly", "custom"] as const;
 type Pill = (typeof PILLS)[number];
@@ -58,16 +58,7 @@ export function TaskForm({ task }: { task?: TaskRow }) {
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="recurrenceType" value={recurrenceType} />
 
-      {state.error && (
-        <div role="alert" className="rounded-lg border border-cat-fitness/40 px-3.5 py-2.5 text-[12px] text-cat-fitness">
-          {t("tasks.formError")}
-        </div>
-      )}
-      {state.queued && (
-        <div role="status" className="rounded-lg border border-border px-3.5 py-2.5 text-[12px] text-muted">
-          {t("offline.savedOffline")}
-        </div>
-      )}
+      <FormAlert error={state.error ? t("tasks.formError") : undefined} queued={state.queued} />
 
       <Field label={t("tasks.fieldTitle")}>
         <input
@@ -80,22 +71,12 @@ export function TaskForm({ task }: { task?: TaskRow }) {
       </Field>
 
       <Field label={t("tasks.fieldRecurrence")}>
-        <div className="flex overflow-hidden rounded-lg border border-border">
-          {PILLS.map((p) => (
-            <button
-              type="button"
-              key={p}
-              onClick={() => setPill(p)}
-              className="flex-1 px-1 py-2 text-[11px] font-medium"
-              style={{
-                background: pill === p ? "var(--color-text)" : "transparent",
-                color: pill === p ? "var(--color-surface)" : "var(--color-muted)",
-              }}
-            >
-              {t(`tasks.recurrence.${p}`)}
-            </button>
-          ))}
-        </div>
+        <PillTabs
+          options={PILLS.map((p) => ({ value: p, label: t(`tasks.recurrence.${p}`) }))}
+          value={pill}
+          onChange={setPill}
+          ariaLabel={t("tasks.fieldRecurrence")}
+        />
       </Field>
 
       {pill === "custom" && (
@@ -198,35 +179,7 @@ export function TaskForm({ task }: { task?: TaskRow }) {
         </Field>
       )}
 
-      <SaveBar label={t("common.save")} loadingLabel={t("common.loading")} />
+      <StickySaveBar label={t("common.save")} loadingLabel={t("common.loading")} />
     </form>
-  );
-}
-
-/** Sticky within <main> (the app's only scroll container, see the dashboard
- * layout): Save always sits at the bottom of the visible viewport instead of
- * wherever the last field happens to end, so reaching it never needs an
- * extra scroll no matter how long the form gets (e.g. custom weekdays). */
-function SaveBar({ label, loadingLabel }: { label: string; loadingLabel: string }) {
-  const { pending } = useFormStatus();
-  return (
-    <div className="sticky bottom-0 -mx-5 -mb-6 border-t border-border bg-bg/90 px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+18px)] backdrop-blur-xl md:-mx-10 md:-mb-9 md:px-10">
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full rounded-lg bg-text px-4 py-3 text-[13px] font-semibold text-surface disabled:opacity-60 md:w-fit"
-      >
-        {pending ? loadingLabel : label}
-      </button>
-    </div>
-  );
-}
-
-function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
-  return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
-      <div className="text-[10px] tracking-wide text-muted uppercase">{label}</div>
-      {children}
-    </div>
   );
 }

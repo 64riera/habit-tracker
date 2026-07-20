@@ -23,6 +23,7 @@ import {
 import { swrKeys } from "@/lib/swr/keys";
 import { usePageData } from "@/lib/swr/use-page-data";
 import { fetchCategoriesAction, fetchFocusHeaderAction, fetchHabitsListAction } from "@/lib/actions/habits-read";
+import { useConfirmAction } from "@/lib/hooks/use-confirm-action";
 import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
 import type { FocusHeaderData } from "@/lib/queries/focus";
 
@@ -44,6 +45,7 @@ export function HabitosClient({
   const { data: focusHeader } = usePageData(swrKeys.focusHeader(), fetchFocusHeaderAction, initialFocusHeader);
   const { pendingMutations, runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
+  const { requestConfirm, dialog } = useConfirmAction();
   const [pinnedOverrides, setPinnedOverrides] = useState<Record<string, boolean>>({});
   const [restoredIds, setRestoredIds] = useState<Set<string>>(new Set());
   const [archivedOverrides, setArchivedOverrides] = useState<Record<string, boolean>>({});
@@ -99,11 +101,18 @@ export function HabitosClient({
   }
 
   function handleArchive(habitId: string) {
-    if (!confirm(t("habit.deleteConfirm"))) return;
-    setArchivedOverrides((prev) => ({ ...prev, [habitId]: true }));
-    startTransition(async () => {
-      await runOrQueue({ type: "archiveHabit", habitId });
-      mutate(swrKeys.habitsList(today));
+    requestConfirm({
+      title: t("common.confirm"),
+      description: t("habit.deleteConfirm"),
+      confirmLabel: t("common.archive"),
+      cancelLabel: t("common.cancel"),
+      onConfirm: () => {
+        setArchivedOverrides((prev) => ({ ...prev, [habitId]: true }));
+        startTransition(async () => {
+          await runOrQueue({ type: "archiveHabit", habitId });
+          mutate(swrKeys.habitsList(today));
+        });
+      },
     });
   }
 
@@ -276,6 +285,7 @@ export function HabitosClient({
           {t("achievements.title")}
         </Link>
       </div>
+      {dialog}
     </div>
   );
 }

@@ -1,19 +1,15 @@
 import { z } from "zod";
+import { isoDateSchema, moneyAmountSchema, requireCategoryForExpense, categoryRequiredIssue } from "./primitives";
 
 export const transactionFormSchema = z
   .object({
     type: z.enum(["income", "expense"]),
-    amount: z.coerce.number().positive().max(999_999_999),
+    amount: moneyAmountSchema,
     categoryId: z.string().trim().min(1).optional(),
     note: z.string().trim().max(200).optional(),
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    date: isoDateSchema,
   })
-  // Category is mandatory for expenses (so spend can always be broken down
-  // by category); income has no categories at all, see canonical-categories.ts.
-  .refine((v) => v.type === "income" || !!v.categoryId, {
-    message: "category required for expenses",
-    path: ["categoryId"],
-  });
+  .refine(requireCategoryForExpense, categoryRequiredIssue);
 
 export type TransactionFormValues = z.infer<typeof transactionFormSchema>;
 

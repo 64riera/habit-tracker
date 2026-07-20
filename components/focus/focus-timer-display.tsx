@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useTransition } from "react";
+import { useCallback, useEffect, useRef, useTransition } from "react";
 import { useRouter, unstable_rethrow } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { Check, Pause, Play } from "lucide-react";
@@ -23,6 +23,7 @@ import {
 } from "@/lib/actions/focus";
 import { useOffline } from "@/lib/offline/client";
 import { useOfflineIdAction } from "@/lib/offline/form";
+import { useConfirmAction } from "@/lib/hooks/use-confirm-action";
 import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
 import { BreakBanner } from "./break-banner";
 
@@ -55,6 +56,17 @@ export function FocusTimerDisplay({
   const pause = useOfflineIdAction({ onlineAction: pauseFocusSession, buildMutation: () => ({ type: "pauseFocusSession" }) });
   const resume = useOfflineIdAction({ onlineAction: resumeFocusSession, buildMutation: () => ({ type: "resumeFocusSession" }) });
   const cancel = useOfflineIdAction({ onlineAction: cancelFocusSession, buildMutation: () => ({ type: "cancelFocusSession" }) });
+  const cancelFormRef = useRef<HTMLFormElement>(null);
+  const { requestConfirm, dialog } = useConfirmAction();
+  function requestCancel() {
+    requestConfirm({
+      title: t("common.confirm"),
+      description: t("focus.cancelConfirm"),
+      confirmLabel: t("common.confirm"),
+      cancelLabel: t("common.cancel"),
+      onConfirm: () => cancelFormRef.current?.requestSubmit(),
+    });
+  }
 
   // Covers entering "on_break" and auto-completion while the screen is
   // still being watched: in both cases the component stays mounted long
@@ -105,13 +117,8 @@ export function FocusTimerDisplay({
         <div className="mt-auto flex flex-col items-center gap-3 pt-6">
           <BreakBanner remainingSeconds={state.breakRemainingSeconds ?? 0} />
           {canCancel && (
-            <form
-              action={cancel}
-              onSubmit={(e) => {
-                if (!confirm(t("focus.cancelConfirm"))) e.preventDefault();
-              }}
-            >
-              <TextButton label={t("focus.controls.cancel", { seconds: cancelSecondsLeft })} />
+            <form ref={cancelFormRef} action={cancel}>
+              <TextButton label={t("focus.controls.cancel", { seconds: cancelSecondsLeft })} onConfirmSubmit={requestCancel} />
             </form>
           )}
         </div>
@@ -135,17 +142,13 @@ export function FocusTimerDisplay({
             />
           </div>
           {canCancel && (
-            <form
-              action={cancel}
-              onSubmit={(e) => {
-                if (!confirm(t("focus.cancelConfirm"))) e.preventDefault();
-              }}
-            >
-              <TextButton label={t("focus.controls.cancel", { seconds: cancelSecondsLeft })} />
+            <form ref={cancelFormRef} action={cancel}>
+              <TextButton label={t("focus.controls.cancel", { seconds: cancelSecondsLeft })} onConfirmSubmit={requestCancel} />
             </form>
           )}
         </div>
       )}
+      {dialog}
     </div>
   );
 }
@@ -216,11 +219,12 @@ function PrimaryButton({ label, icon: Icon }: { label: string; icon: LucideIcon 
 /** Deliberately understated style — unlike Pause/Finish, it doesn't compete
  * for attention: it only exists as a quick exit in the first few seconds
  * (see `CANCEL_VISIBLE_ACTIVE_SECONDS`). */
-function TextButton({ label }: { label: string }) {
+function TextButton({ label, onConfirmSubmit }: { label: string; onConfirmSubmit?: () => void }) {
   const { pending } = useFormStatus();
   return (
     <button
-      type="submit"
+      type={onConfirmSubmit ? "button" : "submit"}
+      onClick={onConfirmSubmit}
       disabled={pending}
       className="px-3 py-2.5 text-[11px] text-muted/70 transition-colors hover:text-muted disabled:opacity-60"
     >

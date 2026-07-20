@@ -19,6 +19,7 @@ import {
 import { swrKeys } from "@/lib/swr/keys";
 import { usePageData } from "@/lib/swr/use-page-data";
 import { fetchTasksAction } from "@/lib/actions/tasks-read";
+import { useConfirmAction } from "@/lib/hooks/use-confirm-action";
 import type { TaskWithStatus } from "@/lib/queries/tasks";
 
 export function TasksClient({ tasks: initialTasks, today }: { tasks: TaskWithStatus[]; today: string }) {
@@ -27,6 +28,7 @@ export function TasksClient({ tasks: initialTasks, today }: { tasks: TaskWithSta
   const { data: tasks } = usePageData(swrKeys.tasksList(today), () => fetchTasksAction(today), initialTasks);
   const { pendingMutations, runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
+  const { requestConfirm, dialog } = useConfirmAction();
 
   const pendingNew = pendingTaskCreates(pendingMutations);
   const pendingEdits = pendingTaskUpdates(pendingMutations);
@@ -45,10 +47,17 @@ export function TasksClient({ tasks: initialTasks, today }: { tasks: TaskWithSta
   }, [tasks, pendingEdits, pendingDeleteIds, pendingNew, today]);
 
   function handleDelete(taskId: string) {
-    if (!confirm(t("tasks.confirmDelete"))) return;
-    startTransition(async () => {
-      await runOrQueue({ type: "deleteTask", taskId });
-      mutate(swrKeys.tasksList(today));
+    requestConfirm({
+      title: t("common.confirm"),
+      description: t("tasks.confirmDelete"),
+      confirmLabel: t("common.delete"),
+      cancelLabel: t("common.cancel"),
+      onConfirm: () => {
+        startTransition(async () => {
+          await runOrQueue({ type: "deleteTask", taskId });
+          mutate(swrKeys.tasksList(today));
+        });
+      },
     });
   }
 
@@ -86,6 +95,7 @@ export function TasksClient({ tasks: initialTasks, today }: { tasks: TaskWithSta
           {displayTasks.length === 0 && <p className="py-2 text-sm text-muted">{t("tasks.empty")}</p>}
         </div>
       </SwipeableListProvider>
+      {dialog}
     </div>
   );
 }

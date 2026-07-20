@@ -1,20 +1,22 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { nanoid } from "nanoid";
 import { Archive, RotateCcw } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
 import { usePushSubscription } from "@/lib/hooks/use-push-subscription";
+import { useConfirmAction } from "@/lib/hooks/use-confirm-action";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { parseFrequencyConfig } from "@/lib/habits/frequency";
-import { cn } from "@/lib/utils";
 import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
 import { createHabit, updateHabit, archiveHabit, restoreHabit } from "@/lib/actions/habits";
 import { habitFormSchema, extractHabitFields } from "@/lib/validation/habit";
 import { useOfflineFormAction, useOfflineIdAction } from "@/lib/offline/form";
 import { toISODate } from "@/lib/date";
 import { Select } from "@/components/ui/select";
+import { FormAlert, Field } from "@/components/ui/form-primitives";
+import { PillTabs } from "@/components/ui/pill-tabs";
 
 type Props = {
   categories: CategoryRow[];
@@ -47,20 +49,7 @@ export function HabitForm({ categories, habit }: Props) {
     <form action={formAction} className="flex flex-1 flex-col min-w-0">
       <input type="hidden" name="id" value={id} />
 
-      {state.error && (
-        <div
-          role="alert"
-          className="mb-5 rounded-lg border border-cat-fitness/40 px-3.5 py-2.5 text-[12px] text-cat-fitness"
-        >
-          {t("habit.formError")}
-        </div>
-      )}
-
-      {state.queued && (
-        <div role="status" className="mb-5 rounded-lg border border-border px-3.5 py-2.5 text-[12px] text-muted">
-          {t("offline.savedOffline")}
-        </div>
-      )}
+      <FormAlert error={state.error ? t("habit.formError") : undefined} queued={state.queued} className="mb-5" />
 
       {/* 2-column grid on desktop: short fields (frequency + reminder, start
           date + pin, etc.) share a row instead of stacking one below the
@@ -104,22 +93,12 @@ export function HabitForm({ categories, habit }: Props) {
         </Field>
 
         <Field label={t("habit.fieldGoalType")} className={goalType === "binary" ? "md:col-span-2" : undefined}>
-          <div className="flex overflow-hidden rounded-lg border border-border">
-            {GOAL_TYPES.map((g) => (
-              <button
-                type="button"
-                key={g}
-                onClick={() => setGoalType(g)}
-                className="flex-1 px-1 py-2 text-[11px] font-medium"
-                style={{
-                  background: goalType === g ? "var(--color-text)" : "transparent",
-                  color: goalType === g ? "var(--color-surface)" : "var(--color-muted)",
-                }}
-              >
-                {t(`habit.goalType.${g}`)}
-              </button>
-            ))}
-          </div>
+          <PillTabs
+            options={GOAL_TYPES.map((g) => ({ value: g, label: t(`habit.goalType.${g}`) }))}
+            value={goalType}
+            onChange={setGoalType}
+            ariaLabel={t("habit.fieldGoalType")}
+          />
           <input type="hidden" name="goalType" value={goalType} />
           <p className="text-[11px] text-muted">{t(`habit.goalTypeHelp.${goalType}`)}</p>
         </Field>
@@ -292,18 +271,37 @@ export function ArchiveHabitButton({ habitId, status }: { habitId: string; statu
     buildMutation: () =>
       isArchived ? { type: "restoreHabit", habitId } : { type: "archiveHabit", habitId },
   });
+  const formRef = useRef<HTMLFormElement>(null);
+  const { requestConfirm, dialog } = useConfirmAction();
+
+  const icon = isArchived ? <RotateCcw size={13} strokeWidth={2} aria-hidden /> : <Archive size={13} strokeWidth={2} aria-hidden />;
+  const label = isArchived ? t("habit.restore") : t("common.archive");
+
+  if (isArchived) {
+    return (
+      <form action={action}>
+        <ArchiveSubmitButton label={label} loadingLabel={t("common.loading")} icon={icon} />
+      </form>
+    );
+  }
+
   return (
-    <form
-      action={action}
-      onSubmit={(e) => {
-        if (!isArchived && !confirm(t("habit.deleteConfirm"))) e.preventDefault();
-      }}
-    >
+    <form ref={formRef} action={action}>
       <ArchiveSubmitButton
-        label={isArchived ? t("habit.restore") : t("common.archive")}
+        label={label}
         loadingLabel={t("common.loading")}
-        icon={isArchived ? <RotateCcw size={13} strokeWidth={2} aria-hidden /> : <Archive size={13} strokeWidth={2} aria-hidden />}
+        icon={icon}
+        onConfirmSubmit={() =>
+          requestConfirm({
+            title: t("common.confirm"),
+            description: t("habit.deleteConfirm"),
+            confirmLabel: t("common.archive"),
+            cancelLabel: t("common.cancel"),
+            onConfirm: () => formRef.current?.requestSubmit(),
+          })
+        }
       />
+      {dialog}
     </form>
   );
 }
@@ -312,37 +310,25 @@ function ArchiveSubmitButton({
   label,
   loadingLabel,
   icon,
+  onConfirmSubmit,
 }: {
   label: string;
   loadingLabel: string;
   icon: React.ReactNode;
+  /** When set, the button asks for confirmation instead of submitting the form directly
+   * (archiving a habit is destructive; restoring isn't, see the caller). */
+  onConfirmSubmit?: () => void;
 }) {
   const { pending } = useFormStatus();
   return (
     <button
-      type="submit"
+      type={onConfirmSubmit ? "button" : "submit"}
+      onClick={onConfirmSubmit}
       disabled={pending}
       className="flex items-center gap-1.5 px-4 py-2.5 text-[12.5px] text-muted disabled:opacity-60"
     >
       {icon}
       {pending ? loadingLabel : label}
     </button>
-  );
-}
-
-function Field({
-  label,
-  children,
-  className,
-}: {
-  label: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
-      <div className="text-[10px] tracking-wide text-muted uppercase">{label}</div>
-      {children}
-    </div>
   );
 }

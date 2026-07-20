@@ -45,6 +45,7 @@ import {
   fetchFinanceCategoriesAction,
   fetchTransactionsAction,
 } from "@/lib/actions/finance-read";
+import { useConfirmAction } from "@/lib/hooks/use-confirm-action";
 import type { FinanceBudgetRow, FinanceCategoryRow, TransactionWithCategory } from "@/lib/queries/finance";
 import type { Currency } from "@/lib/finance/format";
 
@@ -68,6 +69,7 @@ export function FinanceClient({
   const { data: budgets } = usePageData(swrKeys.financeBudgets(), fetchFinanceBudgetsAction, initialBudgets);
   const { pendingMutations, runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
+  const { requestConfirm, dialog } = useConfirmAction();
 
   const yesterday = addDays(today, -1);
   const dayHeaderFormatter = new Intl.DateTimeFormat(locale === "es" ? "es-ES" : "en-US", {
@@ -146,10 +148,17 @@ export function FinanceClient({
   const weekdayData = daysBetween(from, to) >= 6 ? weekdayExpenseBreakdown(inRange) : null;
 
   function handleDelete(transactionId: string) {
-    if (!confirm(t("finance.confirmDelete"))) return;
-    startTransition(async () => {
-      await runOrQueue({ type: "deleteTransaction", transactionId });
-      mutate(swrKeys.financeTransactions());
+    requestConfirm({
+      title: t("common.confirm"),
+      description: t("finance.confirmDelete"),
+      confirmLabel: t("common.delete"),
+      cancelLabel: t("common.cancel"),
+      onConfirm: () => {
+        startTransition(async () => {
+          await runOrQueue({ type: "deleteTransaction", transactionId });
+          mutate(swrKeys.financeTransactions());
+        });
+      },
     });
   }
 
@@ -261,6 +270,7 @@ export function FinanceClient({
           {groups.length === 0 && <p className="py-2 text-sm text-muted">{t("finance.empty")}</p>}
         </div>
       </SwipeableListProvider>
+      {dialog}
     </div>
   );
 }

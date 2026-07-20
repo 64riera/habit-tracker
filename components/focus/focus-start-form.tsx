@@ -5,8 +5,9 @@ import { useFormStatus } from "react-dom";
 import { nanoid } from "nanoid";
 import { Play } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
-import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
+import { FormAlert, Field } from "@/components/ui/form-primitives";
+import { PillTabs } from "@/components/ui/pill-tabs";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { startFocusSessionOnline, type StartFocusSessionFormState } from "@/lib/actions/focus";
 import { startFocusSessionSchema, extractStartFocusSessionFields } from "@/lib/validation/focus";
@@ -78,33 +79,16 @@ export function FocusStartForm({ settings, habitOptions, categories, defaultHabi
   return (
     <form action={formAction} className="flex flex-1 flex-col min-w-0">
       <input type="hidden" name="id" value={id} />
-      {state.error && (
-        <div
-          role="alert"
-          className="mb-5 rounded-lg border border-cat-fitness/40 px-3.5 py-2.5 text-[12px] text-cat-fitness"
-        >
-          {t("focus.formError")}
-        </div>
-      )}
+      <FormAlert error={state.error ? t("focus.formError") : undefined} className="mb-5" />
 
       <div className="flex flex-col gap-5">
         <Field label={t("focus.mode.label")}>
-          <div className="flex overflow-hidden rounded-lg border border-border">
-            {MODES.map((m) => (
-              <button
-                type="button"
-                key={m}
-                onClick={() => setMode(m)}
-                className="flex-1 px-1 py-2.5 text-[12px] font-medium"
-                style={{
-                  background: mode === m ? "var(--color-text)" : "transparent",
-                  color: mode === m ? "var(--color-surface)" : "var(--color-muted)",
-                }}
-              >
-                {t(`focus.mode.${m}`)}
-              </button>
-            ))}
-          </div>
+          <PillTabs
+            options={MODES.map((m) => ({ value: m, label: t(`focus.mode.${m}`) }))}
+            value={mode}
+            onChange={setMode}
+            ariaLabel={t("focus.mode.label")}
+          />
           <input type="hidden" name="mode" value={mode} />
         </Field>
 
@@ -245,14 +229,5 @@ function StartButton({ label, loadingLabel }: { label: string; loadingLabel: str
       {!pending && <Play size={17} strokeWidth={2.25} fill="currentColor" aria-hidden />}
       {pending ? loadingLabel : label}
     </button>
-  );
-}
-
-function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
-  return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
-      <div className="text-[10px] tracking-wide text-muted uppercase">{label}</div>
-      {children}
-    </div>
   );
 }

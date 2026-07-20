@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db/client";
 import { gymExercises } from "@/lib/db/schema";
+import { nextSortOrder } from "@/lib/db/sort-order";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { MUSCLE_GROUPS, type MuscleGroup } from "@/lib/gym/canonical-exercises";
 
@@ -33,8 +34,7 @@ export async function createGymExercise(name: string, muscleGroup: string): Prom
   if (!isMuscleGroup(muscleGroup)) return { error: "muscleGroup" };
 
   const userId = await getCurrentUserId();
-  const rows = await db.select({ sortOrder: gymExercises.sortOrder }).from(gymExercises).where(eq(gymExercises.userId, userId));
-  const maxSortOrder = rows.reduce((max, e) => Math.max(max, e.sortOrder), -1);
+  const sortOrder = await nextSortOrder(gymExercises, gymExercises.sortOrder, gymExercises.userId, userId);
 
   await db
     .insert(gymExercises)
@@ -44,7 +44,7 @@ export async function createGymExercise(name: string, muscleGroup: string): Prom
       nameEs: trimmed,
       nameEn: trimmed,
       muscleGroup,
-      sortOrder: maxSortOrder + 1,
+      sortOrder,
       isCustom: true,
     })
     .onConflictDoNothing({ target: [gymExercises.userId, gymExercises.nameEs] });

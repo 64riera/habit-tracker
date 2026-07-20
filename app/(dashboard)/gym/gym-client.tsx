@@ -21,6 +21,7 @@ import { swrKeys } from "@/lib/swr/keys";
 import { usePageData } from "@/lib/swr/use-page-data";
 import { fetchGymSessionsAction } from "@/lib/actions/gym-read";
 import { fetchGymExercisesAction } from "@/lib/actions/gym-exercises-read";
+import { useConfirmAction } from "@/lib/hooks/use-confirm-action";
 import type { GymSessionRow as GymSession } from "@/lib/queries/gym";
 import type { GymExerciseCatalogRow } from "@/lib/queries/gym-exercises";
 
@@ -40,6 +41,7 @@ export function GymClient({
   const exercisesById = useMemo(() => new Map(exercises.map((e) => [e.id, e])), [exercises]);
   const { pendingMutations, runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
+  const { requestConfirm, dialog } = useConfirmAction();
 
   const yesterday = addDays(today, -1);
   const dayHeaderFormatter = new Intl.DateTimeFormat(locale === "es" ? "es-ES" : "en-US", {
@@ -72,10 +74,17 @@ export function GymClient({
   const groups = useMemo(() => groupByDate(allSessions), [allSessions]);
 
   function handleDelete(sessionId: string) {
-    if (!confirm(t("gym.confirmDelete"))) return;
-    startTransition(async () => {
-      await runOrQueue({ type: "deleteGymSession", sessionId });
-      mutate(swrKeys.gymSessions());
+    requestConfirm({
+      title: t("common.confirm"),
+      description: t("gym.confirmDelete"),
+      confirmLabel: t("common.delete"),
+      cancelLabel: t("common.cancel"),
+      onConfirm: () => {
+        startTransition(async () => {
+          await runOrQueue({ type: "deleteGymSession", sessionId });
+          mutate(swrKeys.gymSessions());
+        });
+      },
     });
   }
 
@@ -145,6 +154,7 @@ export function GymClient({
           {t("gym.routinesManage")}
         </Link>
       </div>
+      {dialog}
     </div>
   );
 }

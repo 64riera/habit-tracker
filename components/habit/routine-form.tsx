@@ -8,6 +8,7 @@ import type { RoutineWithHabits } from "@/lib/queries/routines";
 import { createRoutine, updateRoutine } from "@/lib/actions/routines";
 import { routineSchema, extractRoutineFields } from "@/lib/validation/routine";
 import { useOfflineFormAction } from "@/lib/offline/form";
+import { FormAlert, Field } from "@/components/ui/form-primitives";
 
 export function RoutineForm({
   habits,
@@ -36,25 +37,9 @@ export function RoutineForm({
     <form action={formAction} className="flex flex-col gap-3.5">
       <input type="hidden" name="id" value={id} />
 
-      {state.error && (
-        <div
-          role="alert"
-          className="rounded-lg border border-cat-fitness/40 px-3.5 py-2.5 text-[12px] text-cat-fitness"
-        >
-          {t("routines.formError")}
-        </div>
-      )}
+      <FormAlert error={state.error ? t("routines.formError") : undefined} queued={state.queued} />
 
-      {state.queued && (
-        <div role="status" className="rounded-lg border border-border px-3.5 py-2.5 text-[12px] text-muted">
-          {t("offline.savedOffline")}
-        </div>
-      )}
-
-      <div className="flex flex-col gap-1.5">
-        <div className="text-[10px] tracking-wide text-muted uppercase">
-          {t("routines.fieldName")}
-        </div>
+      <Field label={t("routines.fieldName")}>
         <input
           name="name"
           required
@@ -62,11 +47,8 @@ export function RoutineForm({
           defaultValue={routine?.name ?? ""}
           className="rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none focus:border-text"
         />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <div className="text-[10px] tracking-wide text-muted uppercase">
-          {t("routines.fieldHabits")}
-        </div>
+      </Field>
+      <Field label={t("routines.fieldHabits")}>
         <div className="flex flex-col gap-1.5">
           {habits.map((h) => (
             <label key={h.id} className="flex items-center gap-2.5 text-[13px]">
@@ -76,7 +58,7 @@ export function RoutineForm({
           ))}
           {habits.length === 0 && <p className="text-xs text-muted">{t("habit.empty")}</p>}
         </div>
-      </div>
+      </Field>
       <SaveButton label={t("common.save")} loadingLabel={t("common.loading")} />
     </form>
   );

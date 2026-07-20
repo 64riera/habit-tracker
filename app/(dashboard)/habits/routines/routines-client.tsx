@@ -20,6 +20,7 @@ import { swrKeys } from "@/lib/swr/keys";
 import { usePageData } from "@/lib/swr/use-page-data";
 import { fetchHabitNamesAction } from "@/lib/actions/habits-read";
 import { fetchRoutinesAction } from "@/lib/actions/routines-read";
+import { useConfirmAction } from "@/lib/hooks/use-confirm-action";
 import type { RoutineWithStats } from "@/lib/queries/routines";
 
 export function RutinasClient({
@@ -37,6 +38,7 @@ export function RutinasClient({
   const { data: habits } = usePageData(swrKeys.habitNames(), fetchHabitNamesAction, initialHabits);
   const { pendingMutations, runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
+  const { requestConfirm, dialog } = useConfirmAction();
 
   const pendingNew = pendingRoutineCreates(pendingMutations);
   const pendingEdits = pendingRoutineUpdates(pendingMutations);
@@ -55,10 +57,17 @@ export function RutinasClient({
   }, [routines, pendingEdits, pendingDeleteIds, pendingNew, habits]);
 
   function handleDelete(routineId: string) {
-    if (!confirm(t("routines.confirmDelete"))) return;
-    startTransition(async () => {
-      await runOrQueue({ type: "deleteRoutine", routineId });
-      mutate(swrKeys.routines(today));
+    requestConfirm({
+      title: t("common.confirm"),
+      description: t("routines.confirmDelete"),
+      confirmLabel: t("common.delete"),
+      cancelLabel: t("common.cancel"),
+      onConfirm: () => {
+        startTransition(async () => {
+          await runOrQueue({ type: "deleteRoutine", routineId });
+          mutate(swrKeys.routines(today));
+        });
+      },
     });
   }
 
@@ -118,6 +127,7 @@ export function RutinasClient({
           )}
         </div>
       </SwipeableListProvider>
+      {dialog}
     </div>
   );
 }

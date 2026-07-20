@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { hasAtLeastOneWeekday, extractWeekdays } from "./primitives";
 
 export const habitFormSchema = z
   .object({
@@ -22,7 +23,7 @@ export const habitFormSchema = z
   // isDateApplicable() then never matches, so the habit is silently
   // unreachable — its streak stays stuck at 0 forever (same class of bug
   // task.ts already guards against for custom_weekdays).
-  .refine((v) => v.frequencyType !== "weekdays" || (v.weekdays?.length ?? 0) > 0, {
+  .refine((v) => v.frequencyType !== "weekdays" || hasAtLeastOneWeekday(v.weekdays), {
     message: "weekdays requires at least one day",
     path: ["weekdays"],
   });
@@ -31,7 +32,7 @@ export type HabitFormValues = z.infer<typeof habitFormSchema>;
 
 /** Extracts the raw fields from the habit form, ready for `habitFormSchema.safeParse`. */
 export function extractHabitFields(formData: FormData): unknown {
-  const weekdays = formData.getAll("weekdays").map(Number);
+  const weekdays = extractWeekdays(formData);
   return {
     name: formData.get("name"),
     description: formData.get("description") ?? "",

@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
-import { useFormStatus } from "react-dom";
 import { nanoid } from "nanoid";
 import { Plus, Trash2, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
@@ -13,6 +12,7 @@ import type { GymRoutineRow } from "@/lib/queries/gym-routines";
 import { createGymSession, updateGymSession } from "@/lib/actions/gym";
 import { gymSessionFormSchema, extractGymSessionFields } from "@/lib/validation/gym";
 import { useOfflineFormAction } from "@/lib/offline/form";
+import { FormAlert, StickySaveBar, Field } from "@/components/ui/form-primitives";
 
 // `key` is local draft bookkeeping only — a stable identity for React
 // across add/remove, never sent to the server (see serializedExercises,
@@ -131,16 +131,10 @@ export function GymSessionForm({
       <input type="hidden" name="exercises" value={serializedExercises} />
       {session && <input type="hidden" name="expectedUpdatedAt" value={session.updatedAt} />}
 
-      {state.error && (
-        <div role="alert" className="rounded-lg border border-cat-fitness/40 px-3.5 py-2.5 text-[12px] text-cat-fitness">
-          {state.error === "conflict" ? t("gym.conflictError") : t("gym.formError")}
-        </div>
-      )}
-      {state.queued && (
-        <div role="status" className="rounded-lg border border-border px-3.5 py-2.5 text-[12px] text-muted">
-          {t("offline.savedOffline")}
-        </div>
-      )}
+      <FormAlert
+        error={state.error ? (state.error === "conflict" ? t("gym.conflictError") : t("gym.formError")) : undefined}
+        queued={state.queued}
+      />
 
       <Field label={t("gym.fieldDate")}>
         <input
@@ -195,7 +189,7 @@ export function GymSessionForm({
         {t("gym.addExercise")}
       </button>
 
-      <SaveBar label={t("common.save")} loadingLabel={t("common.loading")} />
+      <StickySaveBar label={t("common.save")} loadingLabel={t("common.loading")} />
     </form>
   );
 }
@@ -293,34 +287,6 @@ function ExerciseCard({
         maxLength={200}
         className="mt-2.5 w-full rounded-lg border border-border bg-transparent px-3 py-1.5 text-[12px] outline-none focus:border-text"
       />
-    </div>
-  );
-}
-
-/** Sticky within <main> (the app's only scroll container, see the dashboard
- * layout): Save always sits at the bottom of the visible viewport instead of
- * wherever the last field happens to end, so reaching it never needs an
- * extra scroll no matter how long the form gets. */
-function SaveBar({ label, loadingLabel }: { label: string; loadingLabel: string }) {
-  const { pending } = useFormStatus();
-  return (
-    <div className="sticky bottom-0 -mx-5 -mb-6 border-t border-border bg-bg/90 px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+18px)] backdrop-blur-xl md:-mx-10 md:-mb-9 md:px-10">
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full rounded-lg bg-text px-4 py-3 text-[13px] font-semibold text-surface disabled:opacity-60 md:w-fit"
-      >
-        {pending ? loadingLabel : label}
-      </button>
-    </div>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <div className="text-[10px] tracking-wide text-muted uppercase">{label}</div>
-      {children}
     </div>
   );
 }

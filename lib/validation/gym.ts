@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isoDateSchema } from "./primitives";
 
 export const gymSetSchema = z.object({
   weight: z.string().trim().max(20).optional(),
@@ -12,7 +13,7 @@ export const gymExerciseSchema = z.object({
 });
 
 export const gymSessionFormSchema = z.object({
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  date: isoDateSchema,
   exercises: z.array(gymExerciseSchema).min(1),
   // Only set when editing an existing session — the updatedAt the form read
   // when it opened, round-tripped as an optimistic-concurrency token (see

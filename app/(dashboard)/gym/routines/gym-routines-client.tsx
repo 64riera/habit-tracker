@@ -14,6 +14,7 @@ import {
   setGymRoutineHidden,
   resetGymRoutineToCanonical,
 } from "@/lib/actions/gym-routines";
+import { useConfirmAction } from "@/lib/hooks/use-confirm-action";
 import type { GymExerciseCatalogRow } from "@/lib/queries/gym-exercises";
 import type { GymRoutineRow } from "@/lib/queries/gym-routines";
 import type { RoutineExercise } from "@/lib/gym/types";
@@ -39,6 +40,7 @@ export function GymRoutinesClient({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [, startTransition] = useTransition();
+  const { requestConfirm, dialog } = useConfirmAction();
 
   const sorted = useMemo(() => [...rows].sort((a, b) => a.sortOrder - b.sortOrder), [rows]);
 
@@ -70,18 +72,26 @@ export function GymRoutinesClient({
 
   function handleReset(routine: GymRoutineRow) {
     const canonical = CANONICAL_GYM_ROUTINES.find((r) => r.name === routine.name);
-    if (!canonical || !confirm(t("gym.confirmResetRoutine"))) return;
+    if (!canonical) return;
 
-    const byName = new Map(exercises.map((e) => [e.nameEs, e.id]));
-    const resolved: RoutineExercise[] = canonical.exercises.flatMap((e) => {
-      const exerciseId = byName.get(e.nameEs);
-      return exerciseId ? [{ exerciseId, note: e.note }] : [];
-    });
-    if (resolved.length === 0) return;
+    requestConfirm({
+      title: t("common.confirm"),
+      description: t("gym.confirmResetRoutine"),
+      confirmLabel: t("common.confirm"),
+      cancelLabel: t("common.cancel"),
+      onConfirm: () => {
+        const byName = new Map(exercises.map((e) => [e.nameEs, e.id]));
+        const resolved: RoutineExercise[] = canonical.exercises.flatMap((e) => {
+          const exerciseId = byName.get(e.nameEs);
+          return exerciseId ? [{ exerciseId, note: e.note }] : [];
+        });
+        if (resolved.length === 0) return;
 
-    setRows((prev) => prev.map((r) => (r.id === routine.id ? { ...r, exercises: resolved } : r)));
-    startTransition(async () => {
-      await resetGymRoutineToCanonical(routine.id);
+        setRows((prev) => prev.map((r) => (r.id === routine.id ? { ...r, exercises: resolved } : r)));
+        startTransition(async () => {
+          await resetGymRoutineToCanonical(routine.id);
+        });
+      },
     });
   }
 
@@ -172,6 +182,7 @@ export function GymRoutinesClient({
         )}
         {sorted.length === 0 && <p className="py-2 text-sm text-muted">{t("gym.routinesEmpty")}</p>}
       </div>
+      {dialog}
     </div>
   );
 }

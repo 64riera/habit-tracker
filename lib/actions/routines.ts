@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { routines } from "@/lib/db/schema";
+import { nextSortOrder } from "@/lib/db/sort-order";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { routineSchema, extractRoutineFields } from "@/lib/validation/routine";
 
@@ -34,7 +35,7 @@ export async function createRoutineCore(id: string, rawValues: unknown): Promise
   if (!parsed.success) return { error: "invalid" };
   const values = parsed.data;
   const userId = await getCurrentUserId();
-  const count = (await db.select().from(routines).where(eq(routines.userId, userId))).length;
+  const sortOrder = await nextSortOrder(routines, routines.sortOrder, routines.userId, userId);
 
   // onConflictDoNothing: idempotent if the offline replay retries after a
   // drain gets interrupted between the insert and removing the mutation from the queue.
@@ -45,7 +46,7 @@ export async function createRoutineCore(id: string, rawValues: unknown): Promise
       userId,
       name: values.name,
       habitIds: JSON.stringify(values.habitIds),
-      sortOrder: count,
+      sortOrder,
     })
     .onConflictDoNothing({ target: routines.id });
 
