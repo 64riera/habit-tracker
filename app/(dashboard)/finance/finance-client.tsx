@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useSWRConfig } from "swr";
 import { PiggyBank, Plus, Repeat, Trash2 } from "lucide-react";
@@ -15,23 +15,10 @@ import { TransactionRow } from "@/components/finance/transaction-row";
 import { FinanceInsights } from "@/components/finance/finance-insights";
 import { useI18n } from "@/lib/i18n/client";
 import { useOffline } from "@/lib/offline/client";
-import { addDays, daysBetween, endOfMonth, groupByDate, parseISODate, startOfMonth } from "@/lib/date";
-import {
-  periodRange,
-  previousPeriodRange,
-  filterByRange,
-  summarizeTransactions,
-  bucketTransactions,
-  bucketForPeriod,
-  dailyAverageExpense,
-  savingsRate,
-  topExpense as topExpenseOf,
-  topCategoryShare,
-  transactionStats,
-  weekdayExpenseBreakdown,
-  type Period,
-} from "@/lib/finance/aggregate";
+import { addDays, parseISODate } from "@/lib/date";
+import type { Period } from "@/lib/finance/aggregate";
 import { useFinanceTransactions } from "@/lib/finance/use-finance-transactions";
+import { useFinancePeriodStats } from "@/lib/finance/use-finance-period-stats";
 import { swrKeys } from "@/lib/swr/keys";
 import { useConfirmAction } from "@/lib/hooks/use-confirm-action";
 import type { FinanceBudgetRow, FinanceCategoryRow, TransactionWithCategory } from "@/lib/queries/finance";
@@ -76,41 +63,19 @@ export function FinanceClient({
   const [period, setPeriod] = useState<Period>("month");
   const [customRange, setCustomRange] = useState({ from: today, to: today });
 
-  const { from, to } = periodRange(period, today, customRange);
-  const inRange = useMemo(() => filterByRange(allTransactions, from, to), [allTransactions, from, to]);
-  const totals = useMemo(() => summarizeTransactions(inRange), [inRange]);
-  const buckets = useMemo(() => bucketTransactions(inRange, bucketForPeriod(period)), [inRange, period]);
-  const groups = useMemo(() => groupByDate(inRange), [inRange]);
-
-  // Budgets are always tracked against the current calendar month, not
-  // whatever period the ledger view is filtered to (a "week" or "year"
-  // view of spend wouldn't make sense against a monthly limit) — see
-  // lib/finance/budgets.ts.
-  const spentByCategory = useMemo(() => {
-    const monthFrom = startOfMonth(today);
-    const monthTo = endOfMonth(today);
-    const monthTotals = summarizeTransactions(filterByRange(allTransactions, monthFrom, monthTo));
-    return new Map(monthTotals.byCategory.map((c) => [c.categoryId, c.total]));
-  }, [allTransactions, today]);
-
-  // Everything the collapsed "more stats" panel needs — derived from the
-  // same inRange/totals already computed above, plus one extra slice for
-  // the previous-period comparison. Kept as plain useMemo values (not a
-  // separate component's state) so FinanceInsights stays a pure renderer.
-  const spansMultipleDays = daysBetween(from, to) >= 1;
-  const comparison = useMemo(() => {
-    const { from: prevFrom, to: prevTo } = previousPeriodRange(period, today, customRange);
-    const previous = summarizeTransactions(filterByRange(allTransactions, prevFrom, prevTo));
-    if (previous.expense <= 0) return null;
-    const changePct = Math.round(((totals.expense - previous.expense) / previous.expense) * 100);
-    return { current: totals.expense, previous: previous.expense, changePct };
-  }, [allTransactions, period, today, customRange, totals.expense]);
-  const dailyAverage = spansMultipleDays ? dailyAverageExpense(inRange, from, to) : 0;
-  const savings = savingsRate(totals);
-  const topExpense = useMemo(() => topExpenseOf(inRange), [inRange]);
-  const topCategory = topCategoryShare(totals);
-  const txStats = useMemo(() => transactionStats(inRange), [inRange]);
-  const weekdayData = daysBetween(from, to) >= 6 ? weekdayExpenseBreakdown(inRange) : null;
+  const {
+    totals,
+    buckets,
+    groups,
+    spentByCategory,
+    comparison,
+    dailyAverage,
+    savings,
+    topExpense,
+    topCategory,
+    txStats,
+    weekdayData,
+  } = useFinancePeriodStats(allTransactions, period, customRange, today);
 
   function handleDelete(transactionId: string) {
     requestConfirm({
