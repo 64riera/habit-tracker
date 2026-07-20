@@ -34,17 +34,23 @@ export const getFinanceCategories = cache(async (): Promise<FinanceCategoryRow[]
   const missing = CANONICAL_FINANCE_CATEGORIES.filter((c) => !existingNames.has(c.nameEs));
   if (missing.length > 0) {
     const minSortOrder = rows.reduce((min, c) => Math.min(min, c.sortOrder), 0);
-    await db.insert(financeCategories).values(
-      missing.map((c, i) => ({
-        id: nanoid(),
-        userId,
-        nameEs: c.nameEs,
-        nameEn: c.nameEn,
-        color: c.color,
-        icon: c.icon,
-        sortOrder: minSortOrder - missing.length + i,
-      }))
-    );
+    await db
+      .insert(financeCategories)
+      .values(
+        missing.map((c, i) => ({
+          id: nanoid(),
+          userId,
+          nameEs: c.nameEs,
+          nameEn: c.nameEn,
+          color: c.color,
+          icon: c.icon,
+          sortOrder: minSortOrder - missing.length + i,
+        }))
+      )
+      // Two concurrent requests can both observe the same category as
+      // "missing" before either commits; finance_categories_user_name_idx
+      // exists precisely to make that race safe to no-op instead of 500ing.
+      .onConflictDoNothing();
     rows = await db
       .select()
       .from(financeCategories)
