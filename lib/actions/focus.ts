@@ -220,9 +220,19 @@ async function transition(
 
   const now = new Date();
   const patch = makePatch(session, now);
-  await db.update(focusSessions).set(patch).where(eq(focusSessions.id, session.id));
-  revalidateFocusPaths();
+  // Only applies if the row is still in the exact status just read — guards
+  // against two near-simultaneous transitions (e.g. a double-tap on
+  // "Finish", or Finish racing a concurrent Cancel) both reading the same
+  // snapshot and both writing a patch computed from it. If another
+  // transition already won this race, this one is a safe no-op: it didn't
+  // change anything, so it reports no newly unlocked tiers either.
+  const result = await db
+    .update(focusSessions)
+    .set(patch)
+    .where(and(eq(focusSessions.id, session.id), eq(focusSessions.status, session.status)));
+  if (result.rowsAffected === 0) return { session, unlockedTiers: [] };
 
+  revalidateFocusPaths();
   const unlockedTiers = patch.status === "completed" ? await checkAndUnlockFocusRewards(session.userId) : [];
   return { session: { ...session, ...patch }, unlockedTiers };
 }
