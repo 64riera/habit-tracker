@@ -15,13 +15,6 @@ import { TransactionRow } from "@/components/finance/transaction-row";
 import { FinanceInsights } from "@/components/finance/finance-insights";
 import { useI18n } from "@/lib/i18n/client";
 import { useOffline } from "@/lib/offline/client";
-import {
-  pendingTransactionCreates,
-  pendingTransactionUpdates,
-  pendingTransactionDeleteIds,
-  buildGhostTransaction,
-  applyPendingTransactionEdit,
-} from "@/lib/offline/pending-selectors";
 import { addDays, daysBetween, endOfMonth, groupByDate, parseISODate, startOfMonth } from "@/lib/date";
 import {
   periodRange,
@@ -38,13 +31,8 @@ import {
   weekdayExpenseBreakdown,
   type Period,
 } from "@/lib/finance/aggregate";
+import { useFinanceTransactions } from "@/lib/finance/use-finance-transactions";
 import { swrKeys } from "@/lib/swr/keys";
-import { usePageData } from "@/lib/swr/use-page-data";
-import {
-  fetchFinanceBudgetsAction,
-  fetchFinanceCategoriesAction,
-  fetchTransactionsAction,
-} from "@/lib/actions/finance-read";
 import { useConfirmAction } from "@/lib/hooks/use-confirm-action";
 import type { FinanceBudgetRow, FinanceCategoryRow, TransactionWithCategory } from "@/lib/queries/finance";
 import type { Currency } from "@/lib/finance/format";
@@ -64,10 +52,12 @@ export function FinanceClient({
 }) {
   const { t, locale } = useI18n();
   const { mutate } = useSWRConfig();
-  const { data: transactions } = usePageData(swrKeys.financeTransactions(), fetchTransactionsAction, initialTransactions);
-  const { data: categories } = usePageData(swrKeys.financeCategories(), fetchFinanceCategoriesAction, initialCategories);
-  const { data: budgets } = usePageData(swrKeys.financeBudgets(), fetchFinanceBudgetsAction, initialBudgets);
-  const { pendingMutations, runOrQueue } = useOffline();
+  const { transactions: allTransactions, categories, budgets, pendingIds } = useFinanceTransactions(today, {
+    transactions: initialTransactions,
+    categories: initialCategories,
+    budgets: initialBudgets,
+  });
+  const { runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
   const { requestConfirm, dialog } = useConfirmAction();
 
@@ -85,31 +75,6 @@ export function FinanceClient({
 
   const [period, setPeriod] = useState<Period>("month");
   const [customRange, setCustomRange] = useState({ from: today, to: today });
-
-  const pendingNew = pendingTransactionCreates(pendingMutations);
-  const pendingEdits = pendingTransactionUpdates(pendingMutations);
-  const pendingDeleteIds = pendingTransactionDeleteIds(pendingMutations);
-  const pendingIds = useMemo(
-    () => new Set([...pendingNew.map((m) => m.id), ...pendingEdits.keys()]),
-    [pendingNew, pendingEdits]
-  );
-
-  const allTransactions = useMemo(() => {
-    const overlaid = transactions
-      .filter((tx) => !pendingDeleteIds.has(tx.id))
-      .map((tx) => (pendingEdits.has(tx.id) ? applyPendingTransactionEdit(tx, pendingEdits.get(tx.id)!, categories) : tx));
-    const ghosts = pendingNew.map((m) => buildGhostTransaction(m.id, m.values, categories));
-    // Same tie-break as the server (lib/queries/finance.ts): date desc,
-    // then createdAt desc. Without the second key, same-day transactions
-    // fall back to whatever order they happened to arrive in this array —
-    // an offline-created transaction (appended as a ghost, always last)
-    // would render after every synced same-day transaction regardless of
-    // when it was actually entered, instead of matching the order the
-    // server settles on once it syncs.
-    return [...overlaid, ...ghosts].sort((a, b) =>
-      a.date === b.date ? b.createdAt.localeCompare(a.createdAt) : b.date.localeCompare(a.date)
-    );
-  }, [transactions, pendingEdits, pendingDeleteIds, pendingNew, categories]);
 
   const { from, to } = periodRange(period, today, customRange);
   const inRange = useMemo(() => filterByRange(allTransactions, from, to), [allTransactions, from, to]);
