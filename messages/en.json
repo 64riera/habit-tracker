@@ -30,6 +30,7 @@
     "metronome": { "title": "Metronome", "subtitle": "Keep the beat and time your sessions" }
   },
   "common": {
+    "saveFailed": "Couldn't save. Try again.",
     "save": "Save changes",
     "cancel": "Cancel",
     "archive": "Archive habit",

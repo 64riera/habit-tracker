@@ -30,6 +30,7 @@
     "metronome": { "title": "Metrónomo", "subtitle": "Mantén el tiempo y cronometra tus sesiones" }
   },
   "common": {
+    "saveFailed": "No se pudo guardar. Inténtalo de nuevo.",
     "save": "Guardar cambios",
     "cancel": "Cancelar",
     "archive": "Archivar hábito",
