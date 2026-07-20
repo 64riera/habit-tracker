@@ -1,11 +1,11 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db/client";
 import { gymExercises } from "@/lib/db/schema";
 import { nextSortOrder } from "@/lib/db/sort-order";
+import { ownedWhere } from "@/lib/db/owned-where";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { MUSCLE_GROUPS, type MuscleGroup } from "@/lib/gym/canonical-exercises";
 
@@ -71,7 +71,7 @@ export async function updateGymExercise(
   await db
     .update(gymExercises)
     .set({ nameEs: trimmed, nameEn: trimmed, muscleGroup, isCustom: true })
-    .where(and(eq(gymExercises.id, exerciseId), eq(gymExercises.userId, userId)));
+    .where(ownedWhere(gymExercises.id, exerciseId, gymExercises.userId, userId));
 
   revalidateGymExercisePaths();
   return {};
@@ -85,7 +85,7 @@ export async function setGymExerciseHidden(exerciseId: string, hidden: boolean):
   await db
     .update(gymExercises)
     .set({ hidden })
-    .where(and(eq(gymExercises.id, exerciseId), eq(gymExercises.userId, userId)));
+    .where(ownedWhere(gymExercises.id, exerciseId, gymExercises.userId, userId));
 
   revalidateGymExercisePaths();
 }

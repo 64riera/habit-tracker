@@ -1,12 +1,12 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { habits } from "@/lib/db/schema";
 import { habitFormSchema, extractHabitFields } from "@/lib/validation/habit";
 import { getCurrentUserId } from "@/lib/auth/session";
+import { ownedWhere } from "@/lib/db/owned-where";
 import { notifyDeviceSync } from "@/lib/realtime/notify";
 import { buildFrequencyConfig } from "@/lib/habits/frequency";
 
@@ -107,7 +107,7 @@ export async function updateHabitCore(habitId: string, rawValues: unknown): Prom
       startDate: values.startDate,
       isPinned: values.isPinned ?? false,
     })
-    .where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
+    .where(ownedWhere(habits.id, habitId, habits.userId, userId));
 
   revalidateHabitsPaths(habitId);
   return {};
@@ -124,7 +124,7 @@ export async function archiveHabitCore(habitId: string): Promise<void> {
   await db
     .update(habits)
     .set({ status: "archived" })
-    .where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
+    .where(ownedWhere(habits.id, habitId, habits.userId, userId));
   revalidateHabitsPaths();
 }
 
@@ -133,7 +133,7 @@ export async function restoreHabit(habitId: string) {
   await db
     .update(habits)
     .set({ status: "active" })
-    .where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
+    .where(ownedWhere(habits.id, habitId, habits.userId, userId));
   revalidateHabitsPaths();
 }
 
@@ -142,7 +142,7 @@ export async function togglePinHabit(habitId: string, pinned: boolean) {
   await db
     .update(habits)
     .set({ isPinned: pinned })
-    .where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
+    .where(ownedWhere(habits.id, habitId, habits.userId, userId));
   revalidateHabitsPaths();
 }
 
@@ -159,7 +159,7 @@ export async function reorderHabits(orderedIds: string[]) {
     db
       .update(habits)
       .set({ sortOrder: index })
-      .where(and(eq(habits.id, id), eq(habits.userId, userId)))
+      .where(ownedWhere(habits.id, id, habits.userId, userId))
   );
   await db.batch(updates as [(typeof updates)[number], ...(typeof updates)[number][]]);
   revalidateHabitsPaths();

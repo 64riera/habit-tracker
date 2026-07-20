@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
@@ -9,6 +9,7 @@ import { getCurrentUserId } from "@/lib/auth/session";
 import { getServerToday } from "@/lib/settings/date-server";
 import { buildTaskRecurrenceConfig } from "@/lib/tasks/recurrence";
 import { extractTaskFields, taskFormSchema } from "@/lib/validation/task";
+import { ownedWhere } from "@/lib/db/owned-where";
 
 export type TaskFormState = { error?: string };
 
@@ -77,7 +78,7 @@ export async function updateTaskCore(taskId: string, rawValues: unknown): Promis
       recurrenceType: values.recurrenceType,
       recurrenceConfig: JSON.stringify(buildTaskRecurrenceConfig(values)),
     })
-    .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)));
+    .where(ownedWhere(tasks.id, taskId, tasks.userId, userId));
 
   revalidateTaskPaths();
   return {};
@@ -91,7 +92,7 @@ export async function deleteTask(taskId: string): Promise<void> {
 
 export async function deleteTaskCore(taskId: string): Promise<void> {
   const userId = await getCurrentUserId();
-  await db.delete(tasks).where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)));
+  await db.delete(tasks).where(ownedWhere(tasks.id, taskId, tasks.userId, userId));
   revalidateTaskPaths();
 }
 
@@ -112,7 +113,7 @@ export async function toggleTaskCore(taskId: string, periodKey: string, done: bo
   const [task] = await db
     .select({ id: tasks.id })
     .from(tasks)
-    .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
+    .where(ownedWhere(tasks.id, taskId, tasks.userId, userId))
     .limit(1);
   if (!task) return;
 

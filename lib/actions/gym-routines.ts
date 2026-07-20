@@ -1,11 +1,11 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db/client";
 import { gymRoutines } from "@/lib/db/schema";
 import { nextSortOrder } from "@/lib/db/sort-order";
+import { ownedWhere } from "@/lib/db/owned-where";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { getGymExercises } from "@/lib/queries/gym-exercises";
 import { CANONICAL_GYM_ROUTINES } from "@/lib/gym/canonical-routines";
@@ -65,7 +65,7 @@ export async function updateGymRoutine(
   await db
     .update(gymRoutines)
     .set({ name: trimmedName, exercises: JSON.stringify(cleanExercises) })
-    .where(and(eq(gymRoutines.id, routineId), eq(gymRoutines.userId, userId)));
+    .where(ownedWhere(gymRoutines.id, routineId, gymRoutines.userId, userId));
 
   revalidateGymRoutinePaths();
   return {};
@@ -76,7 +76,7 @@ export async function setGymRoutineHidden(routineId: string, hidden: boolean): P
   await db
     .update(gymRoutines)
     .set({ hidden })
-    .where(and(eq(gymRoutines.id, routineId), eq(gymRoutines.userId, userId)));
+    .where(ownedWhere(gymRoutines.id, routineId, gymRoutines.userId, userId));
 
   revalidateGymRoutinePaths();
 }
@@ -95,7 +95,7 @@ export async function resetGymRoutineToCanonical(routineId: string): Promise<{ e
   const [routine] = await db
     .select({ name: gymRoutines.name })
     .from(gymRoutines)
-    .where(and(eq(gymRoutines.id, routineId), eq(gymRoutines.userId, userId)));
+    .where(ownedWhere(gymRoutines.id, routineId, gymRoutines.userId, userId));
   if (!routine) return { error: "notFound" };
 
   const canonical = CANONICAL_GYM_ROUTINES.find((r) => r.name === routine.name);
@@ -112,7 +112,7 @@ export async function resetGymRoutineToCanonical(routineId: string): Promise<{ e
   await db
     .update(gymRoutines)
     .set({ exercises: JSON.stringify(exercises) })
-    .where(and(eq(gymRoutines.id, routineId), eq(gymRoutines.userId, userId)));
+    .where(ownedWhere(gymRoutines.id, routineId, gymRoutines.userId, userId));
 
   revalidateGymRoutinePaths();
   return {};

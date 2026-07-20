@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { categories, focusSessions, focusSettings, habits } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
+import { ownedWhere } from "@/lib/db/owned-where";
 import { notifyDeviceSync } from "@/lib/realtime/notify";
 import { getServerToday } from "@/lib/settings/date-server";
 import { checkAndUnlockFocusRewards, getActiveFocusSession, getActiveFocusSessionWithRewards } from "@/lib/queries/focus";
@@ -41,7 +42,7 @@ async function resolveHabit(userId: string, habitId: string | undefined | null) 
   const [habit] = await db
     .select({ id: habits.id, categoryId: habits.categoryId })
     .from(habits)
-    .where(and(eq(habits.id, habitId), eq(habits.userId, userId)))
+    .where(ownedWhere(habits.id, habitId, habits.userId, userId))
     .limit(1);
   return habit ?? null;
 }
@@ -51,7 +52,7 @@ async function resolveCategoryId(userId: string, categoryId: string | undefined 
   const [category] = await db
     .select({ id: categories.id })
     .from(categories)
-    .where(and(eq(categories.id, categoryId), eq(categories.userId, userId)))
+    .where(ownedWhere(categories.id, categoryId, categories.userId, userId))
     .limit(1);
   return category?.id ?? null;
 }

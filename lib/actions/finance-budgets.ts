@@ -1,11 +1,11 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db/client";
 import { financeBudgets, financeCategories } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
+import { ownedWhere } from "@/lib/db/owned-where";
 
 function revalidateFinanceBudgetPaths() {
   revalidatePath("/finance");
@@ -25,11 +25,11 @@ export async function setBudget(categoryId: string, monthlyLimit: number | null)
   const [category] = await db
     .select({ id: financeCategories.id })
     .from(financeCategories)
-    .where(and(eq(financeCategories.id, categoryId), eq(financeCategories.userId, userId)));
+    .where(ownedWhere(financeCategories.id, categoryId, financeCategories.userId, userId));
   if (!category) return { error: "category" };
 
   if (monthlyLimit === null || !(monthlyLimit > 0)) {
-    await db.delete(financeBudgets).where(and(eq(financeBudgets.categoryId, categoryId), eq(financeBudgets.userId, userId)));
+    await db.delete(financeBudgets).where(ownedWhere(financeBudgets.categoryId, categoryId, financeBudgets.userId, userId));
     revalidateFinanceBudgetPaths();
     return {};
   }

@@ -7,6 +7,7 @@ import { db } from "@/lib/db/client";
 import { gymSessions } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { extractGymSessionFields, gymSessionFormSchema } from "@/lib/validation/gym";
+import { ownedWhere } from "@/lib/db/owned-where";
 
 export type GymSessionFormState = { error?: string };
 
@@ -100,6 +101,6 @@ export async function deleteGymSession(sessionId: string): Promise<void> {
 
 export async function deleteGymSessionCore(sessionId: string): Promise<void> {
   const userId = await getCurrentUserId();
-  await db.delete(gymSessions).where(and(eq(gymSessions.id, sessionId), eq(gymSessions.userId, userId)));
+  await db.delete(gymSessions).where(ownedWhere(gymSessions.id, sessionId, gymSessions.userId, userId));
   revalidateGymPaths();
 }

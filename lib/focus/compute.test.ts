@@ -21,6 +21,7 @@ function makeSession(overrides: Partial<FocusSessionRow> = {}): FocusSessionRow 
     id: "s1",
     userId: "u1",
     habitId: null,
+    categoryId: null,
     mode: "countdown",
     plannedDurationSeconds: 25 * 60,
     status: "running",

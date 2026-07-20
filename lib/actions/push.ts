@@ -1,10 +1,10 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db/client";
 import { pushSubscriptions } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
+import { ownedWhere } from "@/lib/db/owned-where";
 
 type PushSubscriptionInput = {
   endpoint: string;
@@ -44,5 +44,5 @@ export async function unsubscribeFromPush(endpoint: string) {
   const userId = await getCurrentUserId();
   await db
     .delete(pushSubscriptions)
-    .where(and(eq(pushSubscriptions.endpoint, endpoint), eq(pushSubscriptions.userId, userId)));
+    .where(ownedWhere(pushSubscriptions.endpoint, endpoint, pushSubscriptions.userId, userId));
 }

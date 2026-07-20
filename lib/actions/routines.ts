@@ -1,11 +1,11 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { routines } from "@/lib/db/schema";
 import { nextSortOrder } from "@/lib/db/sort-order";
+import { ownedWhere } from "@/lib/db/owned-where";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { routineSchema, extractRoutineFields } from "@/lib/validation/routine";
 
@@ -76,7 +76,7 @@ export async function updateRoutineCore(
   await db
     .update(routines)
     .set({ name: values.name, habitIds: JSON.stringify(values.habitIds) })
-    .where(and(eq(routines.id, routineId), eq(routines.userId, userId)));
+    .where(ownedWhere(routines.id, routineId, routines.userId, userId));
 
   revalidateRoutinesPaths();
   return {};
@@ -90,7 +90,7 @@ export async function deleteRoutine(routineId: string): Promise<void> {
 
 export async function deleteRoutineCore(routineId: string): Promise<void> {
   const userId = await getCurrentUserId();
-  await db.delete(routines).where(and(eq(routines.id, routineId), eq(routines.userId, userId)));
+  await db.delete(routines).where(ownedWhere(routines.id, routineId, routines.userId, userId));
 
   revalidateRoutinesPaths();
 }

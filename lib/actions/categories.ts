@@ -1,10 +1,10 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { categories } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/session";
+import { ownedWhere } from "@/lib/db/owned-where";
 
 // Not wired to realtime (see lib/realtime/domain.ts) — Categories isn't
 // one of the three domains where an instant cross-device push earns its
@@ -22,7 +22,7 @@ export async function setCategoryHidden(categoryId: string, hidden: boolean): Pr
   await db
     .update(categories)
     .set({ hidden })
-    .where(and(eq(categories.id, categoryId), eq(categories.userId, userId)));
+    .where(ownedWhere(categories.id, categoryId, categories.userId, userId));
 
   revalidateCategoriesPaths();
 }
