@@ -1,8 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { useSWRConfig } from "swr";
 import { Plus, Tags, Repeat, Trophy, RotateCcw, Archive, Star } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { FocusHeaderChip } from "@/components/focus/focus-header-chip";
@@ -10,20 +8,8 @@ import { ReorderableList } from "@/components/ui/reorderable-list";
 import { SwipeableRow, SwipeableListProvider } from "@/components/ui/swipeable-row";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName, describeFrequency, habitAvatarGlyph } from "@/lib/habits/describe";
-import { useOffline } from "@/lib/offline/client";
 import { PendingSyncBadge } from "@/components/offline/pending-sync-badge";
-import {
-  pendingHabitCreates,
-  pendingHabitUpdates,
-  pendingHabitArchiveIds,
-  pendingHabitRestoreIds,
-  buildGhostHabit,
-  applyPendingHabitEdit,
-} from "@/lib/offline/pending-selectors";
-import { swrKeys } from "@/lib/swr/keys";
-import { usePageData } from "@/lib/swr/use-page-data";
-import { fetchCategoriesAction, fetchFocusHeaderAction, fetchHabitsListAction } from "@/lib/actions/habits-read";
-import { useConfirmAction } from "@/lib/hooks/use-confirm-action";
+import { useHabitsListData } from "@/lib/habits/use-habits-list";
 import type { CategoryRow, HabitWithExtras } from "@/lib/queries/habits";
 import type { FocusHeaderData } from "@/lib/queries/focus";
 
@@ -39,82 +25,22 @@ export function HabitosClient({
   today: string;
 }) {
   const { t, dict, locale } = useI18n();
-  const { mutate } = useSWRConfig();
-  const { data: habits } = usePageData(swrKeys.habitsList(today), () => fetchHabitsListAction(today), initialHabits);
-  const { data: categories } = usePageData(swrKeys.categories(), fetchCategoriesAction, initialCategories);
-  const { data: focusHeader } = usePageData(swrKeys.focusHeader(), fetchFocusHeaderAction, initialFocusHeader);
-  const { pendingMutations, runOrQueue } = useOffline();
-  const [, startTransition] = useTransition();
-  const { requestConfirm, dialog } = useConfirmAction();
-  const [pinnedOverrides, setPinnedOverrides] = useState<Record<string, boolean>>({});
-  const [restoredIds, setRestoredIds] = useState<Set<string>>(new Set());
-  const [archivedOverrides, setArchivedOverrides] = useState<Record<string, boolean>>({});
-
-  const pendingNewHabits = pendingHabitCreates(pendingMutations);
-  const pendingEdits = pendingHabitUpdates(pendingMutations);
-  const pendingArchiveIds = pendingHabitArchiveIds(pendingMutations);
-  const pendingRestoreIds = pendingHabitRestoreIds(pendingMutations);
-  const pendingIds = useMemo(
-    () => new Set([...pendingNewHabits.map((m) => m.id), ...pendingEdits.keys()]),
-    [pendingNewHabits, pendingEdits]
-  );
-
-  const displayHabits = useMemo(() => {
-    const overlaid = habits.map((h) =>
-      pendingEdits.has(h.id) ? applyPendingHabitEdit(h, pendingEdits.get(h.id)!, categories) : h
-    );
-    const ghosts = pendingNewHabits.map((m) => buildGhostHabit(m.id, m.values, categories));
-    return [...overlaid, ...ghosts];
-  }, [habits, pendingEdits, pendingNewHabits, categories]);
-
-  const visibleHabits = displayHabits.filter(
-    (h) => h.status !== "archived" && !pendingArchiveIds.has(h.id) && !archivedOverrides[h.id]
-  );
-  const archivedHabits = displayHabits.filter(
-    (h) =>
-      (h.status === "archived" || pendingArchiveIds.has(h.id) || archivedOverrides[h.id]) &&
-      !restoredIds.has(h.id) &&
-      !pendingRestoreIds.has(h.id)
-  );
-
-  function handleReorder(orderedIds: string[]) {
-    startTransition(async () => {
-      await runOrQueue({ type: "reorderHabits", orderedIds });
-      mutate(swrKeys.habitsList(today));
-    });
-  }
-
-  function handleTogglePin(habitId: string, pinned: boolean) {
-    setPinnedOverrides((prev) => ({ ...prev, [habitId]: pinned }));
-    startTransition(async () => {
-      await runOrQueue({ type: "togglePinHabit", habitId, pinned });
-      mutate(swrKeys.habitsList(today));
-    });
-  }
-
-  function handleRestore(habitId: string) {
-    setRestoredIds((prev) => new Set(prev).add(habitId));
-    startTransition(async () => {
-      await runOrQueue({ type: "restoreHabit", habitId });
-      mutate(swrKeys.habitsList(today));
-    });
-  }
-
-  function handleArchive(habitId: string) {
-    requestConfirm({
-      title: t("common.confirm"),
-      description: t("habit.deleteConfirm"),
-      confirmLabel: t("common.archive"),
-      cancelLabel: t("common.cancel"),
-      onConfirm: () => {
-        setArchivedOverrides((prev) => ({ ...prev, [habitId]: true }));
-        startTransition(async () => {
-          await runOrQueue({ type: "archiveHabit", habitId });
-          mutate(swrKeys.habitsList(today));
-        });
-      },
-    });
-  }
+  const {
+    focusHeader,
+    pinnedOverrides,
+    pendingIds,
+    visibleHabits,
+    archivedHabits,
+    handleReorder,
+    handleTogglePin,
+    handleRestore,
+    requestArchive,
+    confirmDialog,
+  } = useHabitsListData(today, {
+    habits: initialHabits,
+    categories: initialCategories,
+    focusHeader: initialFocusHeader,
+  });
 
   return (
     <div>
@@ -154,7 +80,7 @@ export function HabitosClient({
                       label: t("common.archive"),
                       icon: <Archive size={16} strokeWidth={2} aria-hidden />,
                       background: "var(--color-cat-fitness)",
-                      onAction: () => handleArchive(habit.id),
+                      onAction: () => requestArchive(habit.id),
                     },
                   ]}
                 >
@@ -285,7 +211,7 @@ export function HabitosClient({
           {t("achievements.title")}
         </Link>
       </div>
-      {dialog}
+      {confirmDialog}
     </div>
   );
 }
