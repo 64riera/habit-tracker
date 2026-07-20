@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import { focusSessions } from "@/lib/db/schema";
 import { LIVE_STATUSES } from "@/lib/focus/compute";
 import { reconcileAndPersist } from "@/lib/queries/focus";
+import { isAuthorizedCronRequest } from "@/lib/auth/cron-secret";
 
 /**
  * Force-finishes focus sessions that ran past their cap (2h stopwatch, 4h
@@ -29,9 +30,7 @@ import { reconcileAndPersist } from "@/lib/queries/focus";
  * already logged done.
  */
 export async function POST(request: Request) {
-  const expected = process.env.CRON_SECRET;
-  const authHeader = request.headers.get("authorization");
-  if (!expected || authHeader !== `Bearer ${expected}`) {
+  if (!isAuthorizedCronRequest(request)) {
     return Response.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -42,10 +41,19 @@ export async function POST(request: Request) {
   // coming back "completed" can only mean this call is the one that just
   // pushed it over its cap — no separate "changed" flag needed.
   let finalized = 0;
+  let errors = 0;
   for (const row of rows) {
-    const { session } = await reconcileAndPersist(row, now);
-    if (session.status === "completed") finalized++;
+    // Isolated per row: one session hitting a constraint (e.g. a race with
+    // the user's own client reconciling the same session at read-time)
+    // shouldn't stop every other overdue session in this batch from being
+    // finalized too.
+    try {
+      const { session } = await reconcileAndPersist(row, now);
+      if (session.status === "completed") finalized++;
+    } catch {
+      errors++;
+    }
   }
 
-  return Response.json({ checked: rows.length, finalized });
+  return Response.json({ checked: rows.length, finalized, errors });
 }

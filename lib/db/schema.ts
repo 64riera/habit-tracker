@@ -487,6 +487,24 @@ export const pushSubscriptions = sqliteTable(
   ]
 );
 
+// One row per reminder push actually sent (see app/api/cron/reminders/route.ts).
+// The external cron trigger isn't guaranteed to run at most once per window
+// (a retry, a manual re-run, or two ticks overlapping if a run took longer
+// than WINDOW_MINUTES all invoke this route again for the same window) —
+// claiming a row here via onConflictDoNothing before sending makes a
+// duplicate invocation a no-op instead of a duplicate push notification.
+export const reminderSends = sqliteTable(
+  "reminder_sends",
+  {
+    id: text("id").primaryKey(),
+    habitId: text("habit_id").notNull().references(() => habits.id, { onDelete: "cascade" }),
+    date: text("date").notNull(), // YYYY-MM-DD in the habit owner's timezone
+    reminderTime: text("reminder_time").notNull(), // HH:MM, one of habits.reminders
+    sentAt: text("sent_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [uniqueIndex("reminder_sends_habit_date_time_idx").on(t.habitId, t.date, t.reminderTime)]
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   categories: many(categories),
   habits: many(habits),

@@ -1,8 +1,10 @@
 import { and, eq, inArray, isNotNull } from "drizzle-orm";
+import { nanoid } from "nanoid";
 import webpush from "web-push";
 import { db } from "@/lib/db/client";
-import { habits, pushSubscriptions, users } from "@/lib/db/schema";
+import { habits, pushSubscriptions, reminderSends, users } from "@/lib/db/schema";
 import { isReminderDue } from "@/lib/push/reminder-window";
+import { isAuthorizedCronRequest } from "@/lib/auth/cron-secret";
 
 // Matches the frequency of the external cron (.github/workflows/push-reminders.yml):
 // each run should only catch reminders that became "due" since the previous run.
@@ -21,6 +23,10 @@ function nowHHMMInTimezone(timeZone: string): string {
   return `${hour}:${minute}`;
 }
 
+function todayInTimezone(timeZone: string): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date());
+}
+
 /**
  * Triggered by a free external cron (GitHub Actions, not Vercel Cron — see
  * .github/workflows/push-reminders.yml), not by a browser: there's no user
@@ -33,9 +39,7 @@ function nowHHMMInTimezone(timeZone: string): string {
  * gap as the global day-cutoff one, out of scope here).
  */
 export async function POST(request: Request) {
-  const expected = process.env.CRON_SECRET;
-  const authHeader = request.headers.get("authorization");
-  if (!expected || authHeader !== `Bearer ${expected}`) {
+  if (!isAuthorizedCronRequest(request)) {
     return Response.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -61,6 +65,7 @@ export async function POST(request: Request) {
     .where(and(eq(habits.status, "active"), isNotNull(habits.reminders), isNotNull(users.timezone)));
 
   const nowByTimezone = new Map<string, string>();
+  const todayByTimezone = new Map<string, string>();
   const dueHabits: { habitId: string; habitName: string; userId: string; locale: "es" | "en" }[] = [];
 
   for (const row of rows) {
@@ -70,11 +75,26 @@ export async function POST(request: Request) {
       nowHHMM = nowHHMMInTimezone(timezone);
       nowByTimezone.set(timezone, nowHHMM);
     }
-    const reminderTimes: string[] = JSON.parse(row.reminders!);
-    const isDue = reminderTimes.some((reminderTime) => isReminderDue(reminderTime, nowHHMM, WINDOW_MINUTES));
-    if (isDue) {
-      dueHabits.push({ habitId: row.habitId, habitName: row.habitName, userId: row.userId, locale: row.locale });
+    let today = todayByTimezone.get(timezone);
+    if (!today) {
+      today = todayInTimezone(timezone);
+      todayByTimezone.set(timezone, today);
     }
+    const reminderTimes: string[] = JSON.parse(row.reminders!);
+    const dueReminderTime = reminderTimes.find((reminderTime) => isReminderDue(reminderTime, nowHHMM, WINDOW_MINUTES));
+    if (!dueReminderTime) continue;
+
+    // Claims this exact (habit, day, reminder time) occurrence first: a
+    // retry or an overlapping invocation of this same cron for the same
+    // window finds the row already there, and onConflictDoNothing() makes
+    // it a no-op instead of a second push notification.
+    const claim = await db
+      .insert(reminderSends)
+      .values({ id: nanoid(), habitId: row.habitId, date: today, reminderTime: dueReminderTime })
+      .onConflictDoNothing();
+    if (claim.rowsAffected === 0) continue;
+
+    dueHabits.push({ habitId: row.habitId, habitName: row.habitName, userId: row.userId, locale: row.locale });
   }
 
   if (dueHabits.length === 0) {
