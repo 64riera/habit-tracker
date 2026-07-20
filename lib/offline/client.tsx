@@ -45,6 +45,37 @@ const OfflineContext = createContext<OfflineContextValue | null>(null);
 const SYNCED_BANNER_MS = 2500;
 const BACKGROUND_SYNC_TAG = "sync-mutations";
 const LAST_SYNCED_AT_KEY = "justgo:last-synced-at";
+const DRAIN_QUEUE_LOCK = "justgo:drain-queue";
+
+/**
+ * Runs `fn` only if no other tab (or this tab, re-entrantly) is already
+ * draining the queue — without this, two tabs regaining connectivity at
+ * the same moment both read the same queued mutations from IndexedDB
+ * before either has removed one, and both replay them, duplicating every
+ * pending write (transactions, gym sessions, focus sessions...) on the
+ * server. `navigator.locks` is scoped to the whole origin, so it
+ * serializes across tabs; `{ ifAvailable: true }` makes a losing tab skip
+ * immediately instead of queueing up to run right after, which would just
+ * repeat the same "nothing left to do" drain a moment later. Falls back to
+ * a same-tab-only guard on browsers without Web Locks (all evergreen
+ * browsers have shipped it since 2021, but not e.g. old Safari).
+ */
+async function withDrainLock(sameTabGuard: { current: boolean }, fn: () => Promise<void>) {
+  if (typeof navigator !== "undefined" && "locks" in navigator) {
+    await navigator.locks.request(DRAIN_QUEUE_LOCK, { ifAvailable: true }, async (lock) => {
+      if (!lock) return;
+      await fn();
+    });
+    return;
+  }
+  if (sameTabGuard.current) return;
+  sameTabGuard.current = true;
+  try {
+    await fn();
+  } finally {
+    sameTabGuard.current = false;
+  }
+}
 
 function readLastSyncedAt(): number | null {
   if (typeof window === "undefined") return null;
@@ -112,52 +143,51 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const drainQueue = useCallback(async () => {
-    if (draining.current) return;
-    draining.current = true;
-    setIsDraining(true);
-    try {
-      const queued = await refreshQueue();
-      for (const mutation of queued) {
-        try {
-          const result = await replay(mutation);
-          if (result && "unlocked" in result && result.unlocked) notifyAchievements(result.unlocked);
-          if (result && "freezeQuotaExhausted" in result && result.freezeQuotaExhausted) {
-            push(t("checkin.freezeQuotaExhausted"));
+    await withDrainLock(draining, async () => {
+      setIsDraining(true);
+      try {
+        const queued = await refreshQueue();
+        for (const mutation of queued) {
+          try {
+            const result = await replay(mutation);
+            if (result && "unlocked" in result && result.unlocked) notifyAchievements(result.unlocked);
+            if (result && "freezeQuotaExhausted" in result && result.freezeQuotaExhausted) {
+              push(t("checkin.freezeQuotaExhausted"));
+            }
+            await removeQueuedMutation(mutation.id);
+          } catch (error) {
+            if (isLikelyNetworkError(error, navigator.onLine)) {
+              // Still genuinely offline (or a transient blip): stop here, this
+              // mutation and everything queued after it retry on the next
+              // reconnect, in order.
+              break;
+            }
+            // The server was reached and rejected this mutation (e.g. it
+            // targets a record another device already deleted or changed
+            // incompatibly) — retrying the exact same payload would just fail
+            // again forever and block every mutation queued behind it.
+            // Dropping it is the only way to keep the queue moving.
+            await removeQueuedMutation(mutation.id);
+            push(t("offline.mutationDropped"));
           }
-          await removeQueuedMutation(mutation.id);
-        } catch (error) {
-          if (isLikelyNetworkError(error, navigator.onLine)) {
-            // Still genuinely offline (or a transient blip): stop here, this
-            // mutation and everything queued after it retry on the next
-            // reconnect, in order.
-            break;
-          }
-          // The server was reached and rejected this mutation (e.g. it
-          // targets a record another device already deleted or changed
-          // incompatibly) — retrying the exact same payload would just fail
-          // again forever and block every mutation queued behind it.
-          // Dropping it is the only way to keep the queue moving.
-          await removeQueuedMutation(mutation.id);
-          push(t("offline.mutationDropped"));
         }
+        await refreshQueue();
+        // Brings this device up to date unconditionally, even with nothing
+        // queued — simply regaining connectivity is enough to catch up on
+        // writes made from another device meanwhile (same reasoning as the
+        // realtime-triggered resync below, see lib/swr/resync-everything.ts).
+        await resyncEverything({ cache, mutate: globalMutate, router });
+        const syncedAt = Date.now();
+        setLastSyncedAt(syncedAt);
+        window.localStorage.setItem(LAST_SYNCED_AT_KEY, String(syncedAt));
+        setJustSynced(true);
+        setTimeout(() => setJustSynced(false), SYNCED_BANNER_MS);
+      } catch {
+        // Still genuinely offline: will retry on the next "online" event.
+      } finally {
+        setIsDraining(false);
       }
-      await refreshQueue();
-      // Brings this device up to date unconditionally, even with nothing
-      // queued — simply regaining connectivity is enough to catch up on
-      // writes made from another device meanwhile (same reasoning as the
-      // realtime-triggered resync below, see lib/swr/resync-everything.ts).
-      await resyncEverything({ cache, mutate: globalMutate, router });
-      const syncedAt = Date.now();
-      setLastSyncedAt(syncedAt);
-      window.localStorage.setItem(LAST_SYNCED_AT_KEY, String(syncedAt));
-      setJustSynced(true);
-      setTimeout(() => setJustSynced(false), SYNCED_BANNER_MS);
-    } catch {
-      // Still genuinely offline: will retry on the next "online" event.
-    } finally {
-      draining.current = false;
-      setIsDraining(false);
-    }
+    });
   }, [cache, globalMutate, notifyAchievements, push, refreshQueue, router, t]);
 
   useEffect(() => {
