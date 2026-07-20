@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useSWRConfig } from "swr";
 import { Clock, Hash } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
@@ -15,6 +15,12 @@ import type { LogStatus } from "@/lib/habits/status";
 import { getStatusVisual } from "@/lib/habits/status-visual";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { swrKeys } from "@/lib/swr/keys";
+import { useSequencedAction } from "@/lib/hooks/use-sequenced-action";
+
+/** A tap on the check row, queued through useSequencedAction so rapid taps
+ * (e.g. incrementing a quantitative habit) resolve in order instead of as
+ * unsequenced concurrent calls that can clobber each other. */
+type HabitTapAction = { status: "done" | "partial"; value?: number } | { status: null };
 
 type Props = {
   habit: HabitWithExtras;
@@ -28,7 +34,13 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
   const { t, dict, locale } = useI18n();
   const { mutate } = useSWRConfig();
   const { runOrQueue } = useOffline();
-  const [, startTransition] = useTransition();
+  const dispatchTap = useSequencedAction<HabitTapAction>(
+    (action) =>
+      action.status === null
+        ? runOrQueue({ type: "delete", habitId: habit.id, date })
+        : runOrQueue({ type: "log", input: { habitId: habit.id, date, status: action.status, value: action.value } }),
+    () => mutate(swrKeys.todayHabits(date))
+  );
   const [status, setStatus] = useState<LogStatus | null>(
     (habit.todayLog?.status as LogStatus) ?? null
   );
@@ -49,23 +61,14 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
   function logDone(doneValue?: number) {
     setStatus("done");
     if (doneValue != null) setValue(doneValue);
-    startTransition(async () => {
-      await runOrQueue({
-        type: "log",
-        input: { habitId: habit.id, date, status: "done", value: doneValue },
-      });
-      mutate(swrKeys.todayHabits(date));
-    });
+    dispatchTap({ status: "done", value: doneValue });
   }
 
   function handleClick() {
     if (isBinary) {
       if (isDone) {
         setStatus(null);
-        startTransition(async () => {
-          await runOrQueue({ type: "delete", habitId: habit.id, date });
-          mutate(swrKeys.todayHabits(date));
-        });
+        dispatchTap({ status: null });
       } else {
         logDone();
       }
@@ -92,20 +95,14 @@ export function HabitCheckRow({ habit, date, compact, isPendingSync }: Props) {
     } else {
       setStatus("partial");
       setValue(next);
-      startTransition(async () => {
-        await runOrQueue({ type: "log", input: { habitId: habit.id, date, status: "partial", value: next } });
-        mutate(swrKeys.todayHabits(date));
-      });
+      dispatchTap({ status: "partial", value: next });
     }
   }
 
   function handleUnmarkConfirmed() {
     setStatus(null);
     setValue(0);
-    startTransition(async () => {
-      await runOrQueue({ type: "delete", habitId: habit.id, date });
-      mutate(swrKeys.todayHabits(date));
-    });
+    dispatchTap({ status: null });
   }
 
   return (
