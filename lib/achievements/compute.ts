@@ -82,14 +82,25 @@ function checkPerfectMonth(habit: HabitRow, logs: LogStatusRow[], today: string)
       else periods.set(key, [date]);
     }
     const periodsOverlappingMonth = [...periods.values()].filter((dates) => dates.some((d) => monthKey(d) === currentMonth));
-    return periodsOverlappingMonth.every(
-      (dates) => dates.filter((d) => keepsStreakOn(statusByDate.get(d), d, overLimit)).length >= timesPerPeriod
+    // .every() on an empty array is vacuously true — guard against unlocking
+    // "perfect month" when there's nothing to have been perfect about.
+    return (
+      periodsOverlappingMonth.length > 0 &&
+      periodsOverlappingMonth.every(
+        (dates) => dates.filter((d) => keepsStreakOn(statusByDate.get(d), d, overLimit)).length >= timesPerPeriod
+      )
     );
   }
 
   const applicable = daysInMonth.filter((d) => isDateApplicable(habit, d) && d <= today);
-  return applicable.every((d) => {
-    const status = statusByDate.get(d);
-    return status ? keepsStreakOn(status, d, overLimit) : d === today;
-  });
+  // Same vacuous-truth guard: a custom-interval habit whose next occurrence
+  // falls outside this month has zero applicable days, and .every() on an
+  // empty array would otherwise unlock the achievement for doing nothing.
+  return (
+    applicable.length > 0 &&
+    applicable.every((d) => {
+      const status = statusByDate.get(d);
+      return status ? keepsStreakOn(status, d, overLimit) : d === today;
+    })
+  );
 }
