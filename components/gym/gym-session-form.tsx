@@ -14,17 +14,24 @@ import { createGymSession, updateGymSession } from "@/lib/actions/gym";
 import { gymSessionFormSchema, extractGymSessionFields } from "@/lib/validation/gym";
 import { useOfflineFormAction } from "@/lib/offline/form";
 
-type SetDraft = { weight: string; reps: string };
-type ExerciseDraft = { exerciseId: string; note: string; sets: SetDraft[] };
+// `key` is local draft bookkeeping only — a stable identity for React
+// across add/remove, never sent to the server (see serializedExercises,
+// which picks fields explicitly). Without it, keying by array index made
+// React reuse a SearchableSelect/input instance across a different
+// exercise or set after removing one from the middle, dragging its
+// internal state (open/search text) along with it.
+type SetDraft = { key: string; weight: string; reps: string };
+type ExerciseDraft = { key: string; exerciseId: string; note: string; sets: SetDraft[] };
 
 function toDrafts(session: GymSessionRow | undefined, defaultExerciseId: string): ExerciseDraft[] {
   if (!session || session.exercises.length === 0) {
-    return [{ exerciseId: defaultExerciseId, note: "", sets: [{ weight: "", reps: "" }] }];
+    return [{ key: nanoid(), exerciseId: defaultExerciseId, note: "", sets: [{ key: nanoid(), weight: "", reps: "" }] }];
   }
   return session.exercises.map((e) => ({
+    key: nanoid(),
     exerciseId: e.exerciseId,
     note: e.note ?? "",
-    sets: e.sets.map((s) => ({ weight: s.weight ?? "", reps: String(s.reps) })),
+    sets: e.sets.map((s) => ({ key: nanoid(), weight: s.weight ?? "", reps: String(s.reps) })),
   }));
 }
 
@@ -54,7 +61,12 @@ export function GymSessionForm({
   // would just be a confusing way to lose data already typed in.
   function startFromRoutine(routine: GymRoutineRow) {
     setExercises(
-      routine.exercises.map((e) => ({ exerciseId: e.exerciseId, note: e.note ?? "", sets: [{ weight: "", reps: "" }] }))
+      routine.exercises.map((e) => ({
+        key: nanoid(),
+        exerciseId: e.exerciseId,
+        note: e.note ?? "",
+        sets: [{ key: nanoid(), weight: "", reps: "" }],
+      }))
     );
   }
 
@@ -80,7 +92,10 @@ export function GymSessionForm({
     );
   }
   function addExercise() {
-    setExercises((prev) => [...prev, { exerciseId: catalog[0]?.id ?? "", note: "", sets: [{ weight: "", reps: "" }] }]);
+    setExercises((prev) => [
+      ...prev,
+      { key: nanoid(), exerciseId: catalog[0]?.id ?? "", note: "", sets: [{ key: nanoid(), weight: "", reps: "" }] },
+    ]);
   }
   function removeExercise(i: number) {
     setExercises((prev) => prev.filter((_, idx) => idx !== i));
@@ -93,7 +108,7 @@ export function GymSessionForm({
       prev.map((e, idx) => {
         if (idx !== i) return e;
         const last = e.sets[e.sets.length - 1];
-        return { ...e, sets: [...e.sets, { weight: last?.weight ?? "", reps: "" }] };
+        return { ...e, sets: [...e.sets, { key: nanoid(), weight: last?.weight ?? "", reps: "" }] };
       })
     );
   }
@@ -157,7 +172,7 @@ export function GymSessionForm({
       <div className="flex flex-col gap-3">
         {exercises.map((exercise, i) => (
           <ExerciseCard
-            key={i}
+            key={exercise.key}
             index={i}
             exercise={exercise}
             catalogOptions={catalogOptions}
@@ -233,7 +248,7 @@ function ExerciseCard({
 
       <div className="mt-2.5 flex flex-col gap-1.5">
         {exercise.sets.map((set, j) => (
-          <div key={j} className="flex items-center gap-2">
+          <div key={set.key} className="flex items-center gap-2">
             <span className="w-14 shrink-0 text-[10.5px] text-muted">{t("gym.setLabel", { n: j + 1 })}</span>
             <input
               value={set.weight}
