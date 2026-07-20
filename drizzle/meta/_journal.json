@@ -169,6 +169,13 @@
       "when": 1784122834145,
       "tag": "0023_even_beyonder",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1784560393361,
+      "tag": "0024_stale_fixer",
+      "breakpoints": true
     }
   ]
 }

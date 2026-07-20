@@ -100,7 +100,14 @@ const registry: Registry = {
     await createGymSessionCore(m.id, m.values);
   },
   updateGymSession: async (m) => {
-    await updateGymSessionCore(m.sessionId, m.values);
+    const result = await updateGymSessionCore(m.sessionId, m.values);
+    // Unlike the other *Core {error} results above (validation, always
+    // discarded here since the client already validated before queuing),
+    // a conflict here means the session was edited elsewhere since this
+    // change was queued. Throwing routes it through drainQueue's
+    // per-mutation error handling, which drops the mutation and tells the
+    // user instead of silently discarding real lost work.
+    if (result.error) throw new Error(result.error);
   },
   deleteGymSession: (m) => deleteGymSessionCore(m.sessionId),
   // No ack needed on success: the timer's own ghost preview (built the

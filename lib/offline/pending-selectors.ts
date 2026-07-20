@@ -421,10 +421,12 @@ function gymSessionEditableFields(values: GymSessionFormValues) {
 /** Builds a "good enough" `GymSessionRow` to display a session logged
  * offline that hasn't synced yet. */
 export function buildGhostGymSession(id: string, values: GymSessionFormValues): GymSessionRow {
+  const now = new Date().toISOString();
   return {
     id,
     userId: "",
-    createdAt: new Date().toISOString(),
+    createdAt: now,
+    updatedAt: now,
     ...gymSessionEditableFields(values),
   };
 }

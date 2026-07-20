@@ -357,6 +357,11 @@ export const gymSessions = sqliteTable(
     date: text("date").notNull(), // YYYY-MM-DD
     exercises: text("exercises").notNull(), // JSON, GymExercise[]
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    // Bumped on every update; the edit form round-trips the value it read
+    // back as an optimistic-concurrency token (see updateGymSessionCore) so
+    // that editing the same session from two devices can't silently drop
+    // one of the two edits.
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (t) => [index("gym_sessions_user_idx").on(t.userId), index("gym_sessions_user_date_idx").on(t.userId, t.date)]
 );

@@ -114,10 +114,11 @@ export function GymSessionForm({
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="date" value={date} />
       <input type="hidden" name="exercises" value={serializedExercises} />
+      {session && <input type="hidden" name="expectedUpdatedAt" value={session.updatedAt} />}
 
       {state.error && (
         <div role="alert" className="rounded-lg border border-cat-fitness/40 px-3.5 py-2.5 text-[12px] text-cat-fitness">
-          {t("gym.formError")}
+          {state.error === "conflict" ? t("gym.conflictError") : t("gym.formError")}
         </div>
       )}
       {state.queued && (

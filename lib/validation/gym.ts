@@ -14,6 +14,10 @@ export const gymExerciseSchema = z.object({
 export const gymSessionFormSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   exercises: z.array(gymExerciseSchema).min(1),
+  // Only set when editing an existing session — the updatedAt the form read
+  // when it opened, round-tripped as an optimistic-concurrency token (see
+  // updateGymSessionCore). Absent for a brand-new session.
+  expectedUpdatedAt: z.string().optional().or(z.literal("")),
 });
 
 export type GymSessionFormValues = z.infer<typeof gymSessionFormSchema>;
@@ -31,5 +35,5 @@ export function extractGymSessionFields(formData: FormData): unknown {
   } catch {
     exercises = [];
   }
-  return { date: formData.get("date"), exercises };
+  return { date: formData.get("date"), exercises, expectedUpdatedAt: formData.get("expectedUpdatedAt") ?? "" };
 }

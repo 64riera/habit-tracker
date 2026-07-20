@@ -40,7 +40,13 @@ export async function createGymSessionCore(id: string, rawValues: unknown): Prom
   // from the queue (same reasoning as createTransactionCore/createTaskCore).
   await db
     .insert(gymSessions)
-    .values({ id, userId, date: values.date, exercises: JSON.stringify(values.exercises) })
+    .values({
+      id,
+      userId,
+      date: values.date,
+      exercises: JSON.stringify(values.exercises),
+      updatedAt: new Date().toISOString(),
+    })
     .onConflictDoNothing({ target: gymSessions.id });
 
   revalidateGymPaths();
@@ -63,10 +69,24 @@ export async function updateGymSessionCore(sessionId: string, rawValues: unknown
   const values = parsed.data;
   const userId = await getCurrentUserId();
 
-  await db
+  // Optimistic concurrency: `exercises` is the session's entire set of
+  // exercises/sets as one JSON blob, so a blind overwrite here would let
+  // editing the same session from two devices silently drop whichever
+  // edit lost the race — no merge is possible on a blob. When the form
+  // supplied the updatedAt it read, only apply the write if nothing else
+  // has touched the row since; otherwise report a conflict instead of
+  // clobbering the other edit.
+  const conditions = [eq(gymSessions.id, sessionId), eq(gymSessions.userId, userId)];
+  if (values.expectedUpdatedAt) conditions.push(eq(gymSessions.updatedAt, values.expectedUpdatedAt));
+
+  const result = await db
     .update(gymSessions)
-    .set({ date: values.date, exercises: JSON.stringify(values.exercises) })
-    .where(and(eq(gymSessions.id, sessionId), eq(gymSessions.userId, userId)));
+    .set({ date: values.date, exercises: JSON.stringify(values.exercises), updatedAt: new Date().toISOString() })
+    .where(and(...conditions));
+
+  if (values.expectedUpdatedAt && result.rowsAffected === 0) {
+    return { error: "conflict" };
+  }
 
   revalidateGymPaths();
   return {};

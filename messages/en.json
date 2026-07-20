@@ -375,6 +375,7 @@
     "noteLabel": "Note (optional)",
     "notePlaceholder": "e.g. watch the wrist",
     "formError": "Check the fields: an exercise is missing its name, or a set isn't valid.",
+    "conflictError": "This session was edited from another device in the meantime. Reload the page to see the latest version before saving.",
     "confirmDelete": "Delete this session?",
     "empty": "You don't have any gym sessions yet. Log the first one.",
     "summary": "{exercises} exercises · {sets} sets",
