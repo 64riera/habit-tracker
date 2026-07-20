@@ -63,6 +63,7 @@
     "googleSubmit": "Continuar con Google",
     "errors": {
       "invalidCredentials": "Usuario o contraseña incorrectos",
+      "tooManyAttempts": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",
       "usernameTaken": "Ese usuario ya existe",
       "usernameInvalid": "El usuario debe tener 3 a 30 caracteres (letras, números, . _ -)",
       "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",

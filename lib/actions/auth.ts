@@ -11,6 +11,14 @@ import { getPreAuthLocaleCookie, resolvePreAuthLocale } from "@/lib/i18n/locale"
 import { isGoogleAuthEnabled } from "@/lib/auth/google";
 import { CANONICAL_CATEGORIES } from "@/lib/habits/canonical-categories";
 import { CANONICAL_FINANCE_CATEGORIES } from "@/lib/finance/canonical-categories";
+import { clearLoginAttempts, isLoginRateLimited, recordFailedLoginAttempt } from "@/lib/auth/login-rate-limit";
+
+// Same shape as a real stored hash (see hashPassword: 16-byte salt, 64-byte
+// key, both hex) so verifyPassword takes its normal, scrypt-dominated time
+// even when the username doesn't exist — without this, "no such user" (an
+// immediate return) is measurably faster than "wrong password" (a scrypt
+// derivation), letting an attacker enumerate valid usernames by timing.
+const DUMMY_PASSWORD_HASH = `${"0".repeat(32)}:${"0".repeat(128)}`;
 
 /** `redirectTo` instead of next/navigation's `redirect()`: login/signup
  * change which account is active, and with it the language that should be
@@ -154,10 +162,17 @@ export async function login(_prevState: AuthState, formData: FormData): Promise<
   const password = String(formData.get("password") ?? "");
   const next = String(formData.get("next") ?? "/");
 
+  if (isLoginRateLimited(username)) {
+    return { error: "tooManyAttempts" };
+  }
+
   const [user] = await db.select().from(users).where(eq(users.username, username)).limit(1);
-  if (!user || !user.passwordHash || !(await verifyPassword(password, user.passwordHash))) {
+  const passwordValid = await verifyPassword(password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
+  if (!user || !user.passwordHash || !passwordValid) {
+    recordFailedLoginAttempt(username);
     return { error: "invalidCredentials" };
   }
+  clearLoginAttempts(username);
 
   await syncLocalePreferenceOnLogin(user.id);
   await createSessionCookie(user.id);
