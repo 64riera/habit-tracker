@@ -50,7 +50,13 @@ export const categories = sqliteTable(
     // users can only hide the ones they don't care about, not create/edit/delete.
     hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
   },
-  (t) => [index("categories_user_idx").on(t.userId)]
+  (t) => [
+    index("categories_user_idx").on(t.userId),
+    // Prevents the canonical-categories self-heal in getCategories() from
+    // ever creating a duplicate under a concurrent first load — same
+    // reasoning as finance_categories_user_name_idx.
+    uniqueIndex("categories_user_name_idx").on(t.userId, t.nameEs),
+  ]
 );
 
 export const habits = sqliteTable(

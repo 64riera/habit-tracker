@@ -34,17 +34,23 @@ export const getCategories = cache(async (options: { includeHidden?: boolean } =
   const missing = CANONICAL_CATEGORIES.filter((c) => !existingNames.has(c.nameEs));
   if (missing.length > 0) {
     const minSortOrder = rows.reduce((min, c) => Math.min(min, c.sortOrder), 0);
-    await db.insert(categories).values(
-      missing.map((c, i) => ({
-        id: nanoid(),
-        userId,
-        nameEs: c.nameEs,
-        nameEn: c.nameEn,
-        color: c.color,
-        icon: c.icon,
-        sortOrder: minSortOrder - missing.length + i,
-      }))
-    );
+    await db
+      .insert(categories)
+      .values(
+        missing.map((c, i) => ({
+          id: nanoid(),
+          userId,
+          nameEs: c.nameEs,
+          nameEn: c.nameEn,
+          color: c.color,
+          icon: c.icon,
+          sortOrder: minSortOrder - missing.length + i,
+        }))
+      )
+      // Two concurrent requests can both observe the same category as
+      // "missing" before either commits; categories_user_name_idx exists
+      // precisely to make that race safe to no-op instead of duplicating.
+      .onConflictDoNothing();
     rows = await db.select().from(categories).where(eq(categories.userId, userId)).orderBy(categories.sortOrder);
   }
 
