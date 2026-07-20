@@ -45,6 +45,13 @@ async function findOrCreateGoogleUser(profile: GoogleProfile): Promise<string> {
 
   const [byEmail] = await db.select().from(users).where(eq(users.email, profile.email)).limit(1);
   if (byEmail) {
+    if (!profile.emailVerified) {
+      // Refuse to auto-link an unverified Google email to an existing
+      // account: Google can issue an id_token with email_verified=false,
+      // and trusting it here would let anyone with such an account take
+      // over whichever existing account happens to share that address.
+      throw new Error("Google account email is not verified; refusing to link");
+    }
     await db
       .update(users)
       .set({ googleId: profile.googleId, ...profileFields(profile) })

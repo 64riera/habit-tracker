@@ -21,6 +21,13 @@ export function getGoogleClient(redirectURI: string): Google {
 export type GoogleProfile = {
   googleId: string;
   email: string;
+  /** Google's own attestation that `email` was verified — must be checked
+   * before trusting `email` to link/take over an existing account (see
+   * findOrCreateGoogleUser in the OAuth callback route). Google can issue
+   * an id_token with `email_verified: false` (e.g. an unverified Workspace
+   * domain), and it's a documented requirement of OIDC relying parties to
+   * check this claim rather than trust the email address blindly. */
+  emailVerified: boolean;
   /** `null`, not omitted, when Google didn't return one — callers persist
    * this straight to the (nullable) users.name/avatar_url columns, so the
    * shape always has both keys instead of leaving stale data untouched by
@@ -32,6 +39,7 @@ export type GoogleProfile = {
 type GoogleIdTokenClaims = {
   sub: string;
   email?: string;
+  email_verified?: boolean;
   name?: string;
   picture?: string;
 };
@@ -65,6 +73,7 @@ export function getGoogleProfile(idToken: string): GoogleProfile {
   return {
     googleId: claims.sub,
     email: claims.email,
+    emailVerified: claims.email_verified === true,
     name: claims.name ?? null,
     avatarUrl: claims.picture ? resizeGoogleAvatarUrl(claims.picture) : null,
   };
