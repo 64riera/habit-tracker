@@ -19,7 +19,6 @@ function habit(overrides: Partial<HabitRow> = {}): HabitRow {
     hardMode: false,
     skipDaysAllowed: 0,
     startDate: "2026-07-01",
-    endDate: null,
     status: "active",
     isPinned: false,
     sortOrder: 0,

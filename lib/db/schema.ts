@@ -80,7 +80,6 @@ export const habits = sqliteTable(
     hardMode: integer("hard_mode", { mode: "boolean" }).notNull().default(false),
     skipDaysAllowed: integer("skip_days_allowed").notNull().default(0),
     startDate: text("start_date").notNull(),
-    endDate: text("end_date"),
     status: text("status", { enum: ["active", "paused", "archived"] }).notNull().default("active"),
     isPinned: integer("is_pinned", { mode: "boolean" }).notNull().default(false),
     sortOrder: integer("sort_order").notNull().default(0),

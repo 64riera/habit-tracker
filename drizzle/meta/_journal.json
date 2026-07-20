@@ -190,6 +190,13 @@
       "when": 1784561683646,
       "tag": "0026_tearful_payback",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "6",
+      "when": 1784562266974,
+      "tag": "0027_illegal_sphinx",
+      "breakpoints": true
     }
   ]
 }

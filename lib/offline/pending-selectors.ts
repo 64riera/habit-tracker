@@ -83,7 +83,6 @@ export function buildGhostHabit(
     userId: "",
     icon: null,
     color: null,
-    endDate: null,
     status: "active",
     sortOrder: 0,
     createdAt: new Date().toISOString(),
