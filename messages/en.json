@@ -502,6 +502,7 @@
     "synced": "All synced",
     "pendingItem": "Pending sync",
     "savedOffline": "Saved offline. It will sync automatically.",
+    "mutationDropped": "A pending change couldn't be synced and was discarded.",
     "domainHabits": "Habits",
     "domainRoutines": "Routines",
     "domainTasks": "Tasks",

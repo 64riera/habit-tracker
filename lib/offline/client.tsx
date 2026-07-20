@@ -6,6 +6,7 @@ import { useSWRConfig } from "swr";
 import { enqueueMutation, getQueuedMutations, removeQueuedMutation } from "@/lib/offline/db";
 import type { QueuedMutation, QueuedRecord } from "@/lib/offline/db";
 import { replay } from "@/lib/offline/replay-registry";
+import { isLikelyNetworkError } from "@/lib/offline/network-error";
 import { useAchievementToast, useToast } from "@/lib/toast/client";
 import { useI18n } from "@/lib/i18n/client";
 import { resyncEverything } from "@/lib/swr/resync-everything";
@@ -117,14 +118,30 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
     try {
       const queued = await refreshQueue();
       for (const mutation of queued) {
-        const result = await replay(mutation);
-        if (result && "unlocked" in result && result.unlocked) notifyAchievements(result.unlocked);
-        if (result && "freezeQuotaExhausted" in result && result.freezeQuotaExhausted) {
-          push(t("checkin.freezeQuotaExhausted"));
+        try {
+          const result = await replay(mutation);
+          if (result && "unlocked" in result && result.unlocked) notifyAchievements(result.unlocked);
+          if (result && "freezeQuotaExhausted" in result && result.freezeQuotaExhausted) {
+            push(t("checkin.freezeQuotaExhausted"));
+          }
+          await removeQueuedMutation(mutation.id);
+        } catch (error) {
+          if (isLikelyNetworkError(error, navigator.onLine)) {
+            // Still genuinely offline (or a transient blip): stop here, this
+            // mutation and everything queued after it retry on the next
+            // reconnect, in order.
+            break;
+          }
+          // The server was reached and rejected this mutation (e.g. it
+          // targets a record another device already deleted or changed
+          // incompatibly) — retrying the exact same payload would just fail
+          // again forever and block every mutation queued behind it.
+          // Dropping it is the only way to keep the queue moving.
+          await removeQueuedMutation(mutation.id);
+          push(t("offline.mutationDropped"));
         }
-        await removeQueuedMutation(mutation.id);
       }
-      if (queued.length > 0) await refreshQueue();
+      await refreshQueue();
       // Brings this device up to date unconditionally, even with nothing
       // queued — simply regaining connectivity is enough to catch up on
       // writes made from another device meanwhile (same reasoning as the

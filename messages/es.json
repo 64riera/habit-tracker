@@ -502,6 +502,7 @@
     "synced": "Todo sincronizado",
     "pendingItem": "Pendiente de sincronizar",
     "savedOffline": "Guardado sin conexión. Se sincronizará automáticamente.",
+    "mutationDropped": "Un cambio pendiente no se pudo sincronizar y se descartó.",
     "domainHabits": "Hábitos",
     "domainRoutines": "Rutinas",
     "domainTasks": "Tareas",
