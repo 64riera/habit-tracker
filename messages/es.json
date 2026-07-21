@@ -518,6 +518,15 @@
     "fallbackBody": "Esta sección todavía no se guardó en este dispositivo, así que no hay nada que mostrar sin conexión. Vuelve a intentarlo cuando tengas señal, o revisa una sección que ya hayas visitado antes.",
     "fallbackCta": "Ir a Hoy"
   },
+  "errorPages": {
+    "errorTitle": "Algo salió mal",
+    "errorBody": "Hubo un problema al cargar esto. Podés intentar de nuevo o volver al inicio.",
+    "errorRetry": "Reintentar",
+    "errorHome": "Ir a Hoy",
+    "notFoundTitle": "No encontramos esta página",
+    "notFoundBody": "Puede que el enlace esté roto o que la página se haya movido.",
+    "notFoundHome": "Ir a Hoy"
+  },
   "pwa": {
     "installTitle": "Instalar {name}",
     "installBody": "Agrégala a tu pantalla de inicio para un acceso instantáneo.",

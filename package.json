@@ -20,6 +20,8 @@
     "@radix-ui/react-dialog": "^1.1.19",
     "@radix-ui/react-popover": "^1.1.19",
     "@radix-ui/react-select": "^2.3.3",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "arctic": "^3.7.0",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",

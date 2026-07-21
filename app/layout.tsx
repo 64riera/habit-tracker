@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Newsreader, Public_Sans } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider } from "@/components/theme-provider";
 import { I18nProvider } from "@/lib/i18n/client";
 import { ToastProvider } from "@/lib/toast/client";
@@ -127,6 +129,8 @@ export default async function RootLayout({
             <ToastProvider>
               <RegisterServiceWorker />
               {children}
+              <Analytics />
+              <SpeedInsights />
             </ToastProvider>
           </I18nProvider>
         </ThemeProvider>

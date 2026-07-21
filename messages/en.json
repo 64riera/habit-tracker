@@ -518,6 +518,15 @@
     "fallbackBody": "This section hasn't been saved on this device yet, so there's nothing to show offline. Try again once you have signal, or open a section you've already visited.",
     "fallbackCta": "Go to Today"
   },
+  "errorPages": {
+    "errorTitle": "Something went wrong",
+    "errorBody": "There was a problem loading this. You can try again or head back home.",
+    "errorRetry": "Try again",
+    "errorHome": "Go to Today",
+    "notFoundTitle": "We couldn't find this page",
+    "notFoundBody": "The link may be broken, or the page may have moved.",
+    "notFoundHome": "Go to Today"
+  },
   "pwa": {
     "installTitle": "Install {name}",
     "installBody": "Add it to your home screen for instant access.",
