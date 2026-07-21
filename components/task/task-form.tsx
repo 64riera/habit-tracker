@@ -60,8 +60,9 @@ export function TaskForm({ task }: { task?: TaskRow }) {
 
       <FormAlert error={state.error ? t("tasks.formError") : undefined} queued={state.queued} />
 
-      <Field label={t("tasks.fieldTitle")}>
+      <Field label={t("tasks.fieldTitle")} htmlFor="task-title">
         <input
+          id="task-title"
           name="title"
           required
           maxLength={80}
@@ -81,7 +82,7 @@ export function TaskForm({ task }: { task?: TaskRow }) {
 
       {pill === "custom" && (
         <Field label={t("tasks.recurrence.custom")}>
-          <div className="flex w-fit overflow-hidden rounded-full border border-border">
+          <div role="group" aria-label={t("tasks.recurrence.custom")} className="flex w-fit overflow-hidden rounded-full border border-border">
             {CUSTOM_MODES.map((m) => (
               <button
                 type="button"
@@ -101,8 +102,9 @@ export function TaskForm({ task }: { task?: TaskRow }) {
       )}
 
       {pill === "monthly" && (
-        <Field label={t("tasks.fieldDayOfMonth")}>
+        <Field label={t("tasks.fieldDayOfMonth")} htmlFor="task-day-of-month">
           <input
+            id="task-day-of-month"
             name="dayOfMonth"
             type="number"
             min={1}
@@ -123,11 +125,13 @@ export function TaskForm({ task }: { task?: TaskRow }) {
               value={String(month)}
               onValueChange={(v) => setMonth(Number(v))}
               options={MONTHS.map((m) => ({ value: String(m), label: t(`tasks.monthLong.${m}`) }))}
+              ariaLabel={t("tasks.fieldMonth")}
             />
             <input type="hidden" name="month" value={month} />
           </Field>
-          <Field label={t("tasks.fieldDay")}>
+          <Field label={t("tasks.fieldDay")} htmlFor="task-day">
             <input
+              id="task-day"
               name="day"
               type="number"
               min={1}
@@ -141,8 +145,9 @@ export function TaskForm({ task }: { task?: TaskRow }) {
       )}
 
       {pill === "custom" && customMode === "custom_interval" && (
-        <Field label={t("tasks.fieldIntervalDays")}>
+        <Field label={t("tasks.fieldIntervalDays")} htmlFor="task-interval-days">
           <input
+            id="task-interval-days"
             name="intervalDays"
             type="number"
             min={1}
@@ -156,7 +161,7 @@ export function TaskForm({ task }: { task?: TaskRow }) {
 
       {pill === "custom" && customMode === "custom_weekdays" && (
         <Field label={t("tasks.fieldWeekdays")}>
-          <div className="flex gap-1.5">
+          <div role="group" aria-label={t("tasks.fieldWeekdays")} className="flex gap-1.5">
             {WEEKDAYS.map((d) => (
               <button
                 type="button"

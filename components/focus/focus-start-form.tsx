@@ -122,9 +122,10 @@ export function FocusStartForm({ settings, habitOptions, categories, defaultHabi
 
         {breaksEnabled && (
           <div className="grid grid-cols-2 gap-4">
-            <Field label={t("focus.breaks.interval")}>
+            <Field label={t("focus.breaks.interval")} htmlFor="focus-break-interval">
               <div className="flex items-center gap-2">
                 <input
+                  id="focus-break-interval"
                   name="breakIntervalMinutes"
                   type="number"
                   min={BREAK_INTERVAL_MIN_MINUTES}
@@ -135,9 +136,10 @@ export function FocusStartForm({ settings, habitOptions, categories, defaultHabi
                 <span className="text-[11px] text-muted">{t("focus.duration.minutes")}</span>
               </div>
             </Field>
-            <Field label={t("focus.breaks.duration")}>
+            <Field label={t("focus.breaks.duration")} htmlFor="focus-break-duration">
               <div className="flex items-center gap-2">
                 <input
+                  id="focus-break-duration"
                   name="breakDurationMinutes"
                   type="number"
                   min={BREAK_DURATION_MIN_MINUTES}
@@ -159,6 +161,7 @@ export function FocusStartForm({ settings, habitOptions, categories, defaultHabi
               value={habitId}
               onValueChange={setHabitId}
               options={habitSelectOptions}
+              ariaLabel={t("focus.habit.label")}
             />
             <input type="hidden" name="habitId" value={submittedHabitId} />
           </Field>
@@ -178,7 +181,7 @@ export function FocusStartForm({ settings, habitOptions, categories, defaultHabi
                 </span>
               </div>
             ) : (
-              <div className="flex flex-wrap gap-1.5">
+              <div role="group" aria-label={t("focus.category.label")} className="flex flex-wrap gap-1.5">
                 {categories.map((c) => {
                   const active = categoryId === c.id;
                   return (

@@ -48,18 +48,29 @@ export function StickySaveBar({ label, loadingLabel }: { label: string; loadingL
   );
 }
 
+/** `htmlFor`: pass the wrapped control's `id` when it's a single native input/select/textarea,
+ * so screen readers get a real programmatic label instead of just visible text next to an
+ * unrelated control. Omit it for fields wrapping a button group/toggle/chip list (PillTabs,
+ * category pickers, ...) — those already carry their own `aria-label`/`role="group"` on the
+ * group itself, which is the correct pattern for a set of buttons (a `<label>` can't target a
+ * group the way it targets one input). */
 export function Field({
   label,
+  htmlFor,
   children,
   className,
 }: {
   label: string;
+  htmlFor?: string;
   children: React.ReactNode;
   className?: string;
 }) {
+  const LabelTag = htmlFor ? "label" : "div";
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <div className="text-[10px] tracking-wide text-muted uppercase">{label}</div>
+      <LabelTag htmlFor={htmlFor} className="text-[10px] tracking-wide text-muted uppercase">
+        {label}
+      </LabelTag>
       {children}
     </div>
   );

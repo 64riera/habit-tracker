@@ -58,8 +58,9 @@ export function HabitForm({ categories, habit }: Props) {
           width (name, category, frequency with its sub-controls) use
           md:col-span-2. */}
       <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
-        <Field label={t("habit.fieldName")} className="md:col-span-2">
+        <Field label={t("habit.fieldName")} htmlFor="habit-name" className="md:col-span-2">
           <input
+            id="habit-name"
             name="name"
             defaultValue={habit?.name ?? ""}
             required
@@ -69,7 +70,7 @@ export function HabitForm({ categories, habit }: Props) {
         </Field>
 
         <Field label={t("habit.fieldCategory")} className="md:col-span-2">
-          <div className="flex flex-wrap gap-1.5">
+          <div role="group" aria-label={t("habit.fieldCategory")} className="flex flex-wrap gap-1.5">
             {categories.map((c) => {
               const active = categoryId === c.id;
               return (
@@ -104,9 +105,10 @@ export function HabitForm({ categories, habit }: Props) {
         </Field>
 
         {goalType !== "binary" && (
-          <Field label={t("habit.fieldGoal")}>
+          <Field label={t("habit.fieldGoal")} htmlFor="habit-goal-target">
             <div className="flex gap-2">
               <input
+                id="habit-goal-target"
                 name="goalTarget"
                 type="number"
                 min={1}
@@ -117,6 +119,7 @@ export function HabitForm({ categories, habit }: Props) {
               <input
                 name="goalUnit"
                 placeholder={t("habit.fieldGoalUnit")}
+                aria-label={t("habit.fieldGoalUnit")}
                 defaultValue={habit?.goalUnit ?? (goalType === "duration" ? "min" : "")}
                 className="w-24 rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-text"
               />
@@ -131,11 +134,12 @@ export function HabitForm({ categories, habit }: Props) {
             value={frequencyType}
             onValueChange={(v) => setFrequencyType(v as typeof frequencyType)}
             options={FREQ_TYPES.map((f) => ({ value: f, label: t(`habit.frequency.${f}`) }))}
+            ariaLabel={t("habit.fieldFrequency")}
           />
           <input type="hidden" name="frequencyType" value={frequencyType} />
 
           {frequencyType === "weekdays" && (
-            <div className="mt-2 flex gap-1.5">
+            <div role="group" aria-label={t("habit.frequency.weekdays")} className="mt-2 flex gap-1.5">
               {[1, 2, 3, 4, 5, 6, 7].map((d) => {
                 const on = weekdays.includes(d);
                 return (
@@ -170,6 +174,7 @@ export function HabitForm({ categories, habit }: Props) {
               type="number"
               min={1}
               max={30}
+              aria-label={t(`habit.frequency.${frequencyType}`)}
               defaultValue={cfg.timesPerPeriod ?? 3}
               className="mt-2 w-24 rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-text"
             />
@@ -181,14 +186,16 @@ export function HabitForm({ categories, habit }: Props) {
               type="number"
               min={1}
               max={60}
+              aria-label={t("habit.frequency.custom_interval")}
               defaultValue={cfg.intervalDays ?? 2}
               className="mt-2 w-24 rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-text"
             />
           )}
         </Field>
 
-        <Field label={t("habit.fieldReminder")}>
+        <Field label={t("habit.fieldReminder")} htmlFor="habit-reminder-time">
           <input
+            id="habit-reminder-time"
             name="reminderTime"
             type="time"
             defaultValue={
@@ -204,8 +211,9 @@ export function HabitForm({ categories, habit }: Props) {
           />
         </Field>
 
-        <Field label={t("habit.fieldSkipDays")}>
+        <Field label={t("habit.fieldSkipDays")} htmlFor="habit-skip-days">
           <input
+            id="habit-skip-days"
             name="skipDaysAllowed"
             type="number"
             min={0}
@@ -216,8 +224,9 @@ export function HabitForm({ categories, habit }: Props) {
           <p className="text-[11px] text-muted">{t("habit.fieldSkipDaysHelp")}</p>
         </Field>
 
-        <Field label={t("habit.fieldStartDate")}>
+        <Field label={t("habit.fieldStartDate")} htmlFor="habit-start-date">
           <input
+            id="habit-start-date"
             name="startDate"
             type="date"
             defaultValue={habit?.startDate ?? toISODate(new Date())}

@@ -136,8 +136,9 @@ export function GymSessionForm({
         queued={state.queued}
       />
 
-      <Field label={t("gym.fieldDate")}>
+      <Field label={t("gym.fieldDate")} htmlFor="gym-date">
         <input
+          id="gym-date"
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
@@ -148,7 +149,7 @@ export function GymSessionForm({
 
       {!session && routines.length > 0 && (
         <Field label={t("gym.startFromRoutine")}>
-          <div className="flex flex-wrap gap-1.5">
+          <div role="group" aria-label={t("gym.startFromRoutine")} className="flex flex-wrap gap-1.5">
             {routines.map((routine) => (
               <button
                 type="button"
@@ -248,6 +249,7 @@ function ExerciseCard({
               value={set.weight}
               onChange={(e) => onUpdateSet(j, { weight: e.target.value })}
               placeholder={t("gym.weightPlaceholder")}
+              aria-label={t("gym.weightPlaceholder")}
               inputMode="decimal"
               className="w-0 min-w-0 flex-1 rounded-lg border border-border bg-transparent px-2.5 py-1.5 text-[13px] outline-none focus:border-text"
             />
@@ -255,6 +257,7 @@ function ExerciseCard({
               value={set.reps}
               onChange={(e) => onUpdateSet(j, { reps: e.target.value })}
               placeholder={t("gym.repsPlaceholder")}
+              aria-label={t("gym.repsPlaceholder")}
               type="number"
               inputMode="numeric"
               min={1}
@@ -284,6 +287,7 @@ function ExerciseCard({
         value={exercise.note}
         onChange={(e) => onChange({ note: e.target.value })}
         placeholder={t("gym.notePlaceholder")}
+        aria-label={t("gym.notePlaceholder")}
         maxLength={200}
         className="mt-2.5 w-full rounded-lg border border-border bg-transparent px-3 py-1.5 text-[12px] outline-none focus:border-text"
       />

@@ -39,8 +39,9 @@ export function RoutineForm({
 
       <FormAlert error={state.error ? t("routines.formError") : undefined} queued={state.queued} />
 
-      <Field label={t("routines.fieldName")}>
+      <Field label={t("routines.fieldName")} htmlFor="routine-name">
         <input
+          id="routine-name"
           name="name"
           required
           maxLength={60}

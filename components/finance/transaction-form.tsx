@@ -61,8 +61,9 @@ export function TransactionForm({
       {/* Amount + date share a row: both are short fields, so stacking them
           full-width one below the other wasted most of the row on mobile. */}
       <div className="flex gap-3">
-        <Field label={t("finance.fieldAmount")} className="flex-1">
+        <Field label={t("finance.fieldAmount")} htmlFor="tx-amount" className="flex-1">
           <input
+            id="tx-amount"
             name="amount"
             type="number"
             inputMode="decimal"
@@ -74,8 +75,9 @@ export function TransactionForm({
             className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none focus:border-text"
           />
         </Field>
-        <Field label={t("finance.fieldDate")} className="flex-1">
+        <Field label={t("finance.fieldDate")} htmlFor="tx-date" className="flex-1">
           <input
+            id="tx-date"
             name="date"
             type="date"
             defaultValue={transaction?.date ?? today}
@@ -87,7 +89,7 @@ export function TransactionForm({
 
       {type === "expense" && (
         <Field label={t("finance.fieldCategory")}>
-          <div className="flex flex-wrap gap-1.5">
+          <div role="group" aria-label={t("finance.fieldCategory")} className="flex flex-wrap gap-1.5">
             {categories.map((c) => {
               const active = categoryId === c.id;
               return (
@@ -111,8 +113,9 @@ export function TransactionForm({
         </Field>
       )}
 
-      <Field label={`${t("finance.fieldNote")} (${t("common.optional")})`}>
+      <Field label={`${t("finance.fieldNote")} (${t("common.optional")})`} htmlFor="tx-note">
         <input
+          id="tx-note"
           name="note"
           maxLength={200}
           defaultValue={transaction?.note ?? ""}
