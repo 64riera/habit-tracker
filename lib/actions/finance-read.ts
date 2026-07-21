@@ -1,11 +1,6 @@
 "use server";
 
-import {
-  getFinanceBudgets,
-  getFinanceCategories,
-  getRecurringTransactions,
-  getTransactions,
-} from "@/lib/queries/finance";
+import { getFinanceBudgets, getFinanceCategories, getTransactions } from "@/lib/queries/finance";
 
 /** Thin read-only wrappers around lib/queries/finance.ts (server-only, can't
  * be imported into a Client Component) so they're callable as SWR fetchers.
@@ -24,8 +19,4 @@ export async function fetchTransactionsAction() {
 
 export async function fetchFinanceBudgetsAction() {
   return getFinanceBudgets();
-}
-
-export async function fetchRecurringTransactionsAction() {
-  return getRecurringTransactions();
 }
