@@ -141,8 +141,22 @@ export function SwipeableRow({
     action.onAction();
   }
 
+  // The action buttons are real, focusable <button>s reachable by Tab even
+  // without a swipe — the actual gap was that they stay visually behind
+  // `children` (untranslated) until revealed, so a keyboard user landing on
+  // one via Tab had no visual sign it existed. Reveal-on-focus fixes that
+  // without a new UI affordance or touching any of this component's ~8 call
+  // sites: focusing an action button opens its side exactly like a swipe
+  // past the threshold would (reuses `openSide`, including the existing
+  // iOS-style "close any other open row" coordination); losing focus to
+  // somewhere outside this row (not just between the row's own action
+  // buttons and its content) closes it again.
+  function handleRowBlur(e: React.FocusEvent<HTMLDivElement>) {
+    if (!e.currentTarget.contains(e.relatedTarget)) close();
+  }
+
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden" onBlur={handleRowBlur}>
       {leadingActions.length > 0 && (
         <div className="absolute inset-y-0 left-0 flex" style={{ width: leadingWidth }}>
           {leadingActions.map((action) => (
@@ -150,6 +164,7 @@ export function SwipeableRow({
               key={action.key}
               type="button"
               onClick={() => runAction(action)}
+              onFocus={() => openSide("leading")}
               aria-label={action.label}
               className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium"
               style={{ width: ACTION_WIDTH, background: action.background, color: action.color ?? "#fff" }}
@@ -167,6 +182,7 @@ export function SwipeableRow({
               key={action.key}
               type="button"
               onClick={() => runAction(action)}
+              onFocus={() => openSide("trailing")}
               aria-label={action.label}
               className="flex flex-col items-center justify-center gap-1 text-[10px] font-medium"
               style={{ width: ACTION_WIDTH, background: action.background, color: action.color ?? "#fff" }}
