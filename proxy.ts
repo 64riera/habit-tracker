@@ -20,6 +20,10 @@ const PUBLIC_PATHS = [
   "/manifest.webmanifest",
   "/api/auth/google",
   "/api/cron/",
+  // Crawlers can't authenticate — gating these behind a session would just
+  // bounce every crawler to /login instead of ever seeing the real content.
+  "/robots.txt",
+  "/sitemap.xml",
 ];
 
 // Old domain (before the rebrand to "Just Go"): redirect permanently
