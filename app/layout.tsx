@@ -3,14 +3,10 @@ import { Newsreader, Public_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { I18nProvider } from "@/lib/i18n/client";
 import { ToastProvider } from "@/lib/toast/client";
-import { OfflineProvider } from "@/lib/offline/client";
-import { RealtimeProvider } from "@/lib/realtime/client";
-import { SWRConfigProvider } from "@/components/swr/swr-provider";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { getCurrentLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getThemePreference, getDarkVariant, type DarkVariant } from "@/lib/queries/user";
-import { getCurrentUserIdOrNull } from "@/lib/auth/session";
 import { APP_NAME, APP_NAME_FULL, APP_URL } from "@/lib/branding";
 import "./globals.css";
 
@@ -104,15 +100,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Runs on every single page load in the app — none of these four depend
-  // on each other's result (each internally re-derives the session-based
-  // userId it needs, deduped for free within this request by their own
-  // cache() wrapping), so there's no reason to wait on them one at a time.
-  const [locale, themePreference, darkVariant, userId] = await Promise.all([
+  // Runs on every single page load in the app — none of these three depend
+  // on each other's result, so there's no reason to wait on them one at a
+  // time.
+  const [locale, themePreference, darkVariant] = await Promise.all([
     getCurrentLocale(),
     getThemePreference(),
     getDarkVariant(),
-    getCurrentUserIdOrNull(),
   ]);
   const dict = getDictionary(locale);
 
@@ -131,14 +125,8 @@ export default async function RootLayout({
         <ThemeProvider attribute="class" defaultTheme={themePreference} enableSystem>
           <I18nProvider locale={locale} dict={dict}>
             <ToastProvider>
-              <SWRConfigProvider userId={userId}>
-                <RealtimeProvider userId={userId}>
-                  <OfflineProvider>
-                    <RegisterServiceWorker />
-                    {children}
-                  </OfflineProvider>
-                </RealtimeProvider>
-              </SWRConfigProvider>
+              <RegisterServiceWorker />
+              {children}
             </ToastProvider>
           </I18nProvider>
         </ThemeProvider>
