@@ -3,6 +3,7 @@
 import { nanoid } from "nanoid";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { db } from "@/lib/db/client";
 import { categories, financeCategories, users } from "@/lib/db/schema";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
@@ -12,6 +13,7 @@ import { isGoogleAuthEnabled } from "@/lib/auth/google";
 import { CANONICAL_CATEGORIES } from "@/lib/habits/canonical-categories";
 import { CANONICAL_FINANCE_CATEGORIES } from "@/lib/finance/canonical-categories";
 import { clearLoginAttempts, isLoginRateLimited, recordFailedLoginAttempt } from "@/lib/auth/login-rate-limit";
+import { isSignupRateLimited, recordSignupAttempt } from "@/lib/auth/signup-rate-limit";
 
 // Same shape as a real stored hash (see hashPassword: 16-byte salt, 64-byte
 // key, both hex) so verifyPassword takes its normal, scrypt-dominated time
@@ -37,6 +39,16 @@ const USERNAME_MAX_LENGTH = 30;
 
 function normalizeUsername(raw: string): string {
   return raw.trim().toLowerCase();
+}
+
+/** `x-forwarded-for` is a comma-separated list when the request passed
+ * through multiple proxies (client, then any intermediate ones) — the
+ * first entry is the original client. Vercel always sets this header, but
+ * a missing/empty one (e.g. a direct request in some other environment)
+ * falls back to a shared key rather than skipping the rate limit entirely. */
+async function getClientIp(): Promise<string> {
+  const forwardedFor = (await headers()).get("x-forwarded-for");
+  return forwardedFor?.split(",")[0]?.trim() || "unknown";
 }
 
 export async function seedDefaultCategories(userId: string): Promise<void> {
@@ -119,6 +131,12 @@ export async function signup(_prevState: AuthState, formData: FormData): Promise
   if (isGoogleAuthEnabled()) {
     return { error: "manualAuthDisabled" };
   }
+
+  const ip = await getClientIp();
+  if (isSignupRateLimited(ip)) {
+    return { error: "tooManyAttempts" };
+  }
+  recordSignupAttempt(ip);
 
   const username = normalizeUsername(String(formData.get("username") ?? ""));
   const password = String(formData.get("password") ?? "");
