@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useI18n } from "@/lib/i18n/client";
 import { useInstallPrompt } from "@/lib/hooks/use-install-prompt";
@@ -25,6 +25,11 @@ export function InstallSuggestionModal({ shouldOffer }: { shouldOffer: boolean }
   // dialog in this session; `setInstallPromptSeen()` persists the decision
   // so it doesn't get offered again on a future visit.
   const [dismissed, setDismissed] = useState(false);
+  // Unlike ConfirmDialog, nothing here is destructive (Install/Dismiss are
+  // both harmless), so — unlike there — it's fine to land focus on the
+  // primary CTA. Only one of the two branches below ever renders at once,
+  // so sharing one ref between them is unambiguous.
+  const primaryButtonRef = useRef<HTMLButtonElement>(null);
 
   const open = !dismissed && shouldOffer && (canInstall || isIOSManual);
 
@@ -44,7 +49,10 @@ export function InstallSuggestionModal({ shouldOffer }: { shouldOffer: boolean }
         <Dialog.Overlay className="animate-modal-overlay-in fixed inset-0 z-40 bg-black/45" />
         <Dialog.Content
           className="animate-modal-panel-in fixed top-1/2 left-1/2 z-50 w-[calc(100%-2.5rem)] max-w-sm rounded-2xl border border-border bg-surface p-6 shadow-[0_24px_48px_-20px_var(--header-shadow)] outline-none"
-          onOpenAutoFocus={(e) => e.preventDefault()}
+          onOpenAutoFocus={(e) => {
+            e.preventDefault();
+            primaryButtonRef.current?.focus();
+          }}
         >
           <Dialog.Title className="font-serif-italic text-xl font-semibold">
             {t("pwa.installTitle", { name: APP_NAME })}
@@ -57,6 +65,7 @@ export function InstallSuggestionModal({ shouldOffer }: { shouldOffer: boolean }
             <div className="mt-5 flex items-center gap-4">
               <Dialog.Close asChild>
                 <button
+                  ref={primaryButtonRef}
                   type="button"
                   onClick={handleInstall}
                   className="rounded-full px-4 py-2 text-[12.5px] font-medium"
@@ -75,6 +84,7 @@ export function InstallSuggestionModal({ shouldOffer }: { shouldOffer: boolean }
             <div className="mt-5">
               <Dialog.Close asChild>
                 <button
+                  ref={primaryButtonRef}
                   type="button"
                   className="rounded-full px-4 py-2 text-[12.5px] font-medium"
                   style={{ background: "var(--color-accent)", color: "var(--color-accent-contrast)" }}
