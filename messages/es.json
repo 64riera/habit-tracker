@@ -383,6 +383,8 @@
     "discardDraft": "Descartar",
     "draftSaving": "Guardando borrador…",
     "draftSaved": "Borrador guardado",
+    "draftInProgressTitle": "Sesión en curso",
+    "continueDraft": "Continuar",
     "empty": "Aún no tienes sesiones de gym. Registra la primera.",
     "summary": "{exercises} ejercicios · {sets} series",
     "stats": {

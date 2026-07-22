@@ -24,6 +24,7 @@ export const swrKeys = {
 
   gymSessions: () => ["gym:sessions"] as const,
   gymExercises: () => ["gym:exercises"] as const,
+  gymSessionDraft: () => ["gym:sessionDraft"] as const,
 
   history: (today: string, habitId: string, categoryId: string, rangeDays: number) =>
     ["history", today, habitId, categoryId, rangeDays] as const,

@@ -10,7 +10,7 @@ import {
 } from "@/lib/actions/habits-read";
 import { fetchTasksAction } from "@/lib/actions/tasks-read";
 import { fetchFinanceCategoriesAction, fetchTransactionsAction } from "@/lib/actions/finance-read";
-import { fetchGymSessionsAction } from "@/lib/actions/gym-read";
+import { fetchGymSessionsAction, fetchGymSessionDraftAction } from "@/lib/actions/gym-read";
 import { fetchGymExercisesAction } from "@/lib/actions/gym-exercises-read";
 import { fetchFocusSupportingAction } from "@/lib/actions/focus-supporting-read";
 import { fetchHistoryAction } from "@/lib/actions/history-read";
@@ -53,6 +53,7 @@ export const sectionRegistry: SectionEntry[] = [
   { key: () => swrKeys.financeCategories(), fetcher: () => fetchFinanceCategoriesAction() },
   { key: () => swrKeys.gymSessions(), fetcher: () => fetchGymSessionsAction() },
   { key: () => swrKeys.gymExercises(), fetcher: () => fetchGymExercisesAction() },
+  { key: () => swrKeys.gymSessionDraft(), fetcher: () => fetchGymSessionDraftAction() },
   { key: (today) => swrKeys.focusSupporting(today), fetcher: (today) => fetchFocusSupportingAction(today) },
   {
     key: (today) => swrKeys.history(today, "", "", DEFAULT_HISTORY_RANGE_DAYS),
