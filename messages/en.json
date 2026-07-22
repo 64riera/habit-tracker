@@ -379,6 +379,10 @@
     "formError": "Check the fields: an exercise is missing its name, or a set isn't valid.",
     "conflictError": "This session was edited from another device in the meantime. Reload the page to see the latest version before saving.",
     "confirmDelete": "Delete this session?",
+    "draftRestoredBanner": "We restored your draft — pick up where you left off.",
+    "discardDraft": "Discard",
+    "draftSaving": "Saving draft…",
+    "draftSaved": "Draft saved",
     "empty": "You don't have any gym sessions yet. Log the first one.",
     "summary": "{exercises} exercises · {sets} sets",
     "stats": {

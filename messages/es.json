@@ -379,6 +379,10 @@
     "formError": "Revisa los campos: falta el nombre de algún ejercicio o alguna serie no es válida.",
     "conflictError": "Esta sesión se editó desde otro dispositivo mientras tanto. Recarga la página para ver la versión más reciente antes de guardar.",
     "confirmDelete": "¿Eliminar esta sesión?",
+    "draftRestoredBanner": "Restauramos tu borrador — seguí donde lo dejaste.",
+    "discardDraft": "Descartar",
+    "draftSaving": "Guardando borrador…",
+    "draftSaved": "Borrador guardado",
     "empty": "Aún no tienes sesiones de gym. Registra la primera.",
     "summary": "{exercises} ejercicios · {sets} series",
     "stats": {

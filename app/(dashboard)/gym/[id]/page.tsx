@@ -18,10 +18,15 @@ export default async function SesionGymDetallePage({ params }: { params: Promise
   const session = sessions.find((s) => s.id === id);
   if (!session) notFound();
 
+  const initialDraft =
+    session.draftDate && session.draftExercises
+      ? { id: session.id, date: session.draftDate, exercises: session.draftExercises }
+      : undefined;
+
   return (
     <div>
       <ContentHeader titleKey="gym.editSession" subtitleKey="screens.gym.subtitle" backHref="/gym" />
-      <GymSessionForm session={session} exercises={exercises} today={today} />
+      <GymSessionForm session={session} exercises={exercises} today={today} initialDraft={initialDraft} />
       <div className="mt-3">
         <DeleteGymSessionButton sessionId={id} />
       </div>

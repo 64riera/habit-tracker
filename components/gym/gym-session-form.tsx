@@ -7,11 +7,13 @@ import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import type { GymSessionRow } from "@/lib/queries/gym";
+import type { GymExercise } from "@/lib/gym/types";
 import type { GymExerciseCatalogRow } from "@/lib/queries/gym-exercises";
 import type { GymRoutineRow } from "@/lib/queries/gym-routines";
 import { createGymSession, updateGymSession } from "@/lib/actions/gym";
-import { gymSessionFormSchema, extractGymSessionFields } from "@/lib/validation/gym";
-import { useOfflineFormAction } from "@/lib/offline/form";
+import { gymSessionFormSchema, extractGymSessionFields, type GymSessionDraftValues } from "@/lib/validation/gym";
+import { useOfflineFormAction, useGymSessionDraftAutosave } from "@/lib/offline/form";
+import { useOffline } from "@/lib/offline/client";
 import { FormAlert, StickySaveBar, Field } from "@/components/ui/form-primitives";
 
 // `key` is local draft bookkeeping only — a stable identity for React
@@ -23,11 +25,17 @@ import { FormAlert, StickySaveBar, Field } from "@/components/ui/form-primitives
 type SetDraft = { key: string; weight: string; reps: string };
 type ExerciseDraft = { key: string; exerciseId: string; note: string; sets: SetDraft[] };
 
-function toDrafts(session: GymSessionRow | undefined, defaultExerciseId: string): ExerciseDraft[] {
-  if (!session || session.exercises.length === 0) {
+/** A pending, not-yet-confirmed draft to restore into the form on mount —
+ * either a brand-new session that was autosaved but never submitted, or an
+ * in-progress edit to an existing one (see saveGymSessionDraftCore for how
+ * these get built server-side). */
+export type GymSessionDraftToRestore = { id: string; date: string; exercises: GymExercise[] };
+
+function toDrafts(exercises: GymExercise[] | undefined, defaultExerciseId: string): ExerciseDraft[] {
+  if (!exercises || exercises.length === 0) {
     return [{ key: nanoid(), exerciseId: defaultExerciseId, note: "", sets: [{ key: nanoid(), weight: "", reps: "" }] }];
   }
-  return session.exercises.map((e) => ({
+  return exercises.map((e) => ({
     key: nanoid(),
     exerciseId: e.exerciseId,
     note: e.note ?? "",
@@ -40,16 +48,30 @@ export function GymSessionForm({
   today,
   exercises: catalog,
   routines = [],
+  initialDraft,
 }: {
   session?: GymSessionRow;
   today: string;
   exercises: GymExerciseCatalogRow[];
   routines?: GymRoutineRow[];
+  initialDraft?: GymSessionDraftToRestore;
 }) {
   const { t, locale } = useI18n();
-  const [id] = useState(() => session?.id ?? nanoid());
-  const [date, setDate] = useState(session?.date ?? today);
-  const [exercises, setExercises] = useState<ExerciseDraft[]>(() => toDrafts(session, catalog[0]?.id ?? ""));
+  const { runOrQueue } = useOffline();
+  const [id] = useState(() => session?.id ?? initialDraft?.id ?? nanoid());
+  const [date, setDate] = useState(initialDraft?.date ?? session?.date ?? today);
+  const [exercises, setExercises] = useState<ExerciseDraft[]>(() =>
+    toDrafts(initialDraft?.exercises ?? session?.exercises, catalog[0]?.id ?? "")
+  );
+  const [draftDismissed, setDraftDismissed] = useState(false);
+  const showDraftBanner = Boolean(initialDraft) && !draftDismissed;
+
+  function discardDraft() {
+    setDraftDismissed(true);
+    setDate(session?.date ?? today);
+    setExercises(toDrafts(session?.exercises, catalog[0]?.id ?? ""));
+    void runOrQueue({ type: "discardGymSessionDraft", id });
+  }
 
   const catalogOptions = useMemo(
     () => catalog.map((e) => ({ value: e.id, label: categoryDisplayName(e, locale) })),
@@ -116,13 +138,36 @@ export function GymSessionForm({
     setExercises((prev) => prev.map((e, idx) => (idx === i ? { ...e, sets: e.sets.filter((_, sj) => sj !== j) } : e)));
   }
 
-  const serializedExercises = JSON.stringify(
-    exercises.map((e) => ({
-      exerciseId: e.exerciseId,
-      note: e.note || undefined,
-      sets: e.sets.map((s) => ({ weight: s.weight, reps: s.reps })),
-    }))
+  const draftValues: GymSessionDraftValues = useMemo(
+    () => ({
+      date,
+      exercises: exercises.map((e) => ({
+        exerciseId: e.exerciseId,
+        note: e.note || undefined,
+        sets: e.sets.map((s) => ({ weight: s.weight, reps: s.reps })),
+      })),
+    }),
+    [date, exercises]
   );
+  const serializedExercises = JSON.stringify(draftValues.exercises);
+  const serializedDraftValues = JSON.stringify(draftValues);
+  // Baseline to diff against for "has the user actually changed anything
+  // since the form opened" — a freshly restored draft starts out equal to
+  // this (nothing to autosave yet), only diverging once it's edited
+  // further. A lazy useState initializer (not a ref) captures it once at
+  // mount without ever calling its setter again.
+  const [initialSerializedDraft] = useState(() => serializedDraftValues);
+  // Stops autosaving once the real "Guardar" has been queued offline (the
+  // component stays mounted showing the "saved offline" banner instead of
+  // redirecting) — otherwise a stray autosave tick right after would stash
+  // the same, already-confirmed data as a phantom pending draft.
+  const dirty = !state.queued && serializedDraftValues !== initialSerializedDraft;
+  const autosaveStatus = useGymSessionDraftAutosave({
+    id,
+    dirty,
+    values: draftValues,
+    serializedValues: serializedDraftValues,
+  });
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -135,6 +180,18 @@ export function GymSessionForm({
         error={state.error ? (state.error === "conflict" ? t("gym.conflictError") : t("gym.formError")) : undefined}
         queued={state.queued}
       />
+
+      {showDraftBanner && (
+        <div
+          role="status"
+          className="flex items-center justify-between gap-3 rounded-lg border border-border px-3.5 py-2.5 text-[12px] text-muted"
+        >
+          <span>{t("gym.draftRestoredBanner")}</span>
+          <button type="button" onClick={discardDraft} className="shrink-0 font-semibold text-text">
+            {t("gym.discardDraft")}
+          </button>
+        </div>
+      )}
 
       <Field label={t("gym.fieldDate")} htmlFor="gym-date">
         <input
@@ -189,6 +246,12 @@ export function GymSessionForm({
         <Plus size={14} strokeWidth={2} aria-hidden />
         {t("gym.addExercise")}
       </button>
+
+      {autosaveStatus !== "idle" && (
+        <p role="status" className="text-center text-[10.5px] text-muted">
+          {autosaveStatus === "saving" ? t("gym.draftSaving") : t("gym.draftSaved")}
+        </p>
+      )}
 
       <StickySaveBar label={t("common.save")} loadingLabel={t("common.loading")} />
     </form>

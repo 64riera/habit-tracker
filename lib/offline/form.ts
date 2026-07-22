@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { unstable_rethrow } from "next/navigation";
 import { useOffline } from "@/lib/offline/client";
 import type { QueuedMutation } from "@/lib/offline/db";
+import type { GymSessionDraftValues } from "@/lib/validation/gym";
 
 export type OfflineFormState = { error?: string; queued?: boolean };
 
@@ -60,6 +61,88 @@ type OfflineIdActionConfig = {
   onlineAction: () => Promise<void>;
   buildMutation: () => QueuedMutation;
 };
+
+export type DraftAutosaveStatus = "idle" | "saving" | "saved";
+
+const DRAFT_AUTOSAVE_DEBOUNCE_MS = 1200;
+
+/**
+ * Debounced autosave for an in-progress gym session (see
+ * saveGymSessionDraftCore) — reuses the exact same online-or-queue
+ * transport as every other write in the app (`useOffline().runOrQueue`),
+ * so an autosaved draft survives going offline (or the app closing
+ * outright) the same way any other queued mutation already does; no
+ * separate local-storage layer.
+ *
+ * `dirty` gates both the very first tick (an untouched, freshly opened
+ * form shouldn't autosave anything) and the tail end after a real "Guardar"
+ * submit already queued offline (the caller should flip it false once
+ * `state.queued` is true, so this doesn't keep re-saving as a draft
+ * something that was just confirmed for real).
+ *
+ * `serializedValues` is a cheap string identity for "did the draft change
+ * since last render" — it drives the debounce effect instead of `values`
+ * itself (a fresh object every render, which would restart the timer on
+ * every keystroke's re-render even without a real change). `values` is
+ * still read fresh from a ref when the timer fires, so a save always
+ * reflects the latest state even though the timer was scheduled earlier.
+ */
+export function useGymSessionDraftAutosave({
+  id,
+  dirty,
+  values,
+  serializedValues,
+}: {
+  id: string;
+  dirty: boolean;
+  values: GymSessionDraftValues;
+  serializedValues: string;
+}): DraftAutosaveStatus {
+  const { runOrQueue } = useOffline();
+  const [status, setStatus] = useState<DraftAutosaveStatus>("idle");
+  const valuesRef = useRef(values);
+  const runOrQueueRef = useRef(runOrQueue);
+  // Keeps both refs pointing at the latest render's values without reading
+  // or writing `.current` during render itself (only allowed in effects/
+  // event handlers) — this effect has no dependency array so it re-runs
+  // after every render, right after commit.
+  useEffect(() => {
+    valuesRef.current = values;
+    runOrQueueRef.current = runOrQueue;
+  });
+
+  const flush = useCallback(() => {
+    setStatus("saving");
+    void runOrQueueRef.current({ type: "saveGymSessionDraft", id, values: valuesRef.current }).then(() =>
+      setStatus("saved")
+    );
+  }, [id]);
+
+  useEffect(() => {
+    // serializedValues (not `values`, a fresh object every render) is the real change signal.
+    if (!dirty) return;
+    const timer = setTimeout(flush, DRAFT_AUTOSAVE_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [dirty, serializedValues, flush]);
+
+  // Catches the "app closes before the debounce fires" case this feature
+  // exists for: `visibilitychange`(hidden) covers a backgrounded/killed PWA,
+  // `pagehide` covers a closed tab/navigation away.
+  useEffect(() => {
+    if (!dirty) return;
+    function onVisibilityChange() {
+      if (document.visibilityState === "hidden") flush();
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("pagehide", flush);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("pagehide", flush);
+    };
+  }, [dirty, flush]);
+
+  return status;
+}
 
 /** Same as `useOfflineFormAction` but for actions without fields (archive, delete). */
 export function useOfflineIdAction(config: OfflineIdActionConfig) {
