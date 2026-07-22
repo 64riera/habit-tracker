@@ -367,6 +367,19 @@ export const gymSessions = sqliteTable(
     // that editing the same session from two devices can't silently drop
     // one of the two edits.
     updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    // "draft": a brand-new session still being built, autosaved but never
+    // confirmed with "Guardar" — date/exercises hold whatever's typed so
+    // far, not yet real. "completed": a real, confirmed session (every
+    // pre-existing row via the column default). See saveGymSessionDraftCore.
+    status: text("status", { enum: ["draft", "completed"] }).notNull().default("completed"),
+    // Autosaved in-progress edits to an already-completed session, kept
+    // separate from date/exercises so a mid-edit autosave (e.g. a set with
+    // an empty reps field) can never clobber the last confirmed version —
+    // only promoted to date/exercises when the user actually hits "Guardar"
+    // (see updateGymSessionCore). Null whenever there's no pending edit.
+    draftDate: text("draft_date"),
+    draftExercises: text("draft_exercises"),
+    draftSavedAt: text("draft_saved_at"),
   },
   (t) => [index("gym_sessions_user_idx").on(t.userId), index("gym_sessions_user_date_idx").on(t.userId, t.date)]
 );

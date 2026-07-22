@@ -383,6 +383,10 @@ export function buildGhostGymSession(id: string, values: GymSessionFormValues): 
     userId: "",
     createdAt: now,
     updatedAt: now,
+    status: "completed",
+    draftDate: null,
+    draftExercises: null,
+    draftSavedAt: null,
     ...gymSessionEditableFields(values),
   };
 }

@@ -198,6 +198,10 @@ describe("gym sessions", () => {
       exercises: [{ exerciseId: "old-exercise", sets: [{ weight: "10", reps: 5 }] }],
       createdAt: "2026-07-01T00:00:00.000Z",
       updatedAt: "2026-07-01T00:00:00.000Z",
+      status: "completed",
+      draftDate: null,
+      draftExercises: null,
+      draftSavedAt: null,
     };
     const edited = applyPendingGymSessionEdit(real, values);
     expect(edited.id).toBe("g1");

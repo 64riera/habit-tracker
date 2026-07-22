@@ -23,6 +23,29 @@ export const gymSessionFormSchema = z.object({
 
 export type GymSessionFormValues = z.infer<typeof gymSessionFormSchema>;
 
+/**
+ * Deliberately permissive sibling of gymSessionFormSchema, used only for
+ * autosaved drafts (see saveGymSessionDraftCore). A draft is captured
+ * mid-typing — e.g. a set whose reps field is still empty — so it can't be
+ * held to the same business-correctness rules as a real save (positive
+ * reps, at least one set/exercise). This only guards shape and size against
+ * abuse; it's never treated as a valid, complete session.
+ */
+export const gymSessionDraftSchema = z.object({
+  date: z.string().trim().max(10),
+  exercises: z
+    .array(
+      z.object({
+        exerciseId: z.string().trim().max(100),
+        note: z.string().trim().max(200).optional(),
+        sets: z.array(z.object({ weight: z.string().trim().max(20).optional(), reps: z.string().trim().max(10) })).max(50),
+      })
+    )
+    .max(50),
+});
+
+export type GymSessionDraftValues = z.infer<typeof gymSessionDraftSchema>;
+
 /** `exercises` travels as a JSON string in a hidden field — FormData has no
  * native way to encode a variable-depth array of exercises/sets, and this
  * app has no existing convention for dynamic nested form fields (unlike

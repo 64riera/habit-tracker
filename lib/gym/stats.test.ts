@@ -11,7 +11,18 @@ import {
 import type { GymSessionRow } from "@/lib/queries/gym";
 
 function session(id: string, date: string, exercises: GymSessionRow["exercises"]): GymSessionRow {
-  return { id, userId: "u1", date, exercises, createdAt: `${date}T00:00:00.000Z`, updatedAt: `${date}T00:00:00.000Z` };
+  return {
+    id,
+    userId: "u1",
+    date,
+    exercises,
+    createdAt: `${date}T00:00:00.000Z`,
+    updatedAt: `${date}T00:00:00.000Z`,
+    status: "completed",
+    draftDate: null,
+    draftExercises: null,
+    draftSavedAt: null,
+  };
 }
 
 describe("parseWeight", () => {
