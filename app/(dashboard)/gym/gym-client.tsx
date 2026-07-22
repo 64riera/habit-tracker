@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useTransition } from "react";
+import { useMemo, useTransition } from "react";
 import Link from "next/link";
-import useSWR, { useSWRConfig } from "swr";
+import { useSWRConfig } from "swr";
 import { Dumbbell, ListChecks, Plus, Trash2, TrendingUp } from "lucide-react";
 import { ContentHeader } from "@/components/nav/content-header";
 import { SwipeableRow, SwipeableListProvider } from "@/components/ui/swipeable-row";
@@ -40,21 +40,7 @@ export function GymClient({
   const { mutate } = useSWRConfig();
   const { data: sessions } = usePageData(swrKeys.gymSessions(), fetchGymSessionsAction, initialSessions);
   const { data: exercises } = usePageData(swrKeys.gymExercises(), fetchGymExercisesAction, initialExercises);
-  // Not usePageData: that hook pushes a changed `initialData` prop into the
-  // SWR cache synchronously *during render*, which works fine for the
-  // array-shaped sections above (a fresh `[]`/`[...]` reference on every
-  // navigation) but silently failed to ever clear the cached value once it
-  // legitimately becomes `undefined` (confirmed with a client-side
-  // create-then-navigate-back repro: the card stayed stuck until a hard
-  // reload). Pushing the same update from a `useEffect` — after commit,
-  // not during render — is the well-supported way to sync external state
-  // and doesn't have that failure mode.
-  const { data: draft, mutate: mutateDraft } = useSWR(swrKeys.gymSessionDraft(), fetchGymSessionDraftAction, {
-    fallbackData: initialDraft,
-  });
-  useEffect(() => {
-    mutateDraft(initialDraft, { revalidate: false });
-  }, [initialDraft, mutateDraft]);
+  const { data: draft } = usePageData(swrKeys.gymSessionDraft(), fetchGymSessionDraftAction, initialDraft);
   const exercisesById = useMemo(() => new Map(exercises.map((e) => [e.id, e])), [exercises]);
   const { pendingMutations, runOrQueue } = useOffline();
   const [, startTransition] = useTransition();
