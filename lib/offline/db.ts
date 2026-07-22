@@ -6,7 +6,7 @@ import type { RoutineFormValues } from "@/lib/validation/routine";
 import type { TaskFormValues } from "@/lib/validation/task";
 import type { TransactionFormValues } from "@/lib/validation/transaction";
 import type { StartFocusSessionValues } from "@/lib/validation/focus";
-import type { GymSessionFormValues } from "@/lib/validation/gym";
+import type { GymSessionFormValues, GymSessionDraftValues } from "@/lib/validation/gym";
 
 export type QueuedMutation =
   | { type: "log"; input: LogInput }
@@ -38,6 +38,8 @@ export type QueuedMutation =
   | { type: "createGymSession"; id: string; values: GymSessionFormValues }
   | { type: "updateGymSession"; sessionId: string; values: GymSessionFormValues }
   | { type: "deleteGymSession"; sessionId: string }
+  | { type: "saveGymSessionDraft"; id: string; values: GymSessionDraftValues }
+  | { type: "discardGymSessionDraft"; id: string }
   | { type: "startMetronomeTimer"; durationSeconds: number }
   | { type: "pauseMetronomeTimer" }
   | { type: "resumeMetronomeTimer" }
@@ -72,11 +74,35 @@ function openDb(): Promise<IDBDatabase> {
   });
 }
 
+// A high-frequency mutation (e.g. the gym session draft autosave, which can
+// fire every ~1.2s of typing) only ever needs its *latest* queued state
+// replayed — queuing every tick separately while offline would leave
+// hundreds of near-identical mutations to replay in order on reconnect.
+// Returns a key identifying "this mutation supersedes any other queued
+// mutation with the same key", or null for every mutation type that should
+// keep the default one-entry-per-call behavior (i.e. everything else).
+function coalesceKey(mutation: QueuedMutation): string | null {
+  if (mutation.type === "saveGymSessionDraft") return `saveGymSessionDraft:${mutation.id}`;
+  return null;
+}
+
 export async function enqueueMutation(mutation: QueuedMutation): Promise<void> {
   const db = await openDb();
+  const key = coalesceKey(mutation);
   await new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
-    tx.objectStore(STORE_NAME).add({ ...mutation, createdAt: Date.now() });
+    const store = tx.objectStore(STORE_NAME);
+    if (key) {
+      const request = store.getAll();
+      request.onsuccess = () => {
+        for (const record of request.result as QueuedRecord[]) {
+          if (coalesceKey(record) === key) store.delete(record.id);
+        }
+        store.add({ ...mutation, createdAt: Date.now() });
+      };
+    } else {
+      store.add({ ...mutation, createdAt: Date.now() });
+    }
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });

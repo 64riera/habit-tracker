@@ -489,6 +489,8 @@ const DOMAIN_BY_MUTATION_TYPE: Record<QueuedRecord["type"], PendingDomain> = {
   createGymSession: "gym",
   updateGymSession: "gym",
   deleteGymSession: "gym",
+  saveGymSessionDraft: "gym",
+  discardGymSessionDraft: "gym",
   startMetronomeTimer: "metronome",
   pauseMetronomeTimer: "metronome",
   resumeMetronomeTimer: "metronome",

@@ -26,7 +26,13 @@ import {
   finishFocusSession,
   cancelFocusSession,
 } from "@/lib/actions/focus";
-import { createGymSessionCore, updateGymSessionCore, deleteGymSessionCore } from "@/lib/actions/gym";
+import {
+  createGymSessionCore,
+  updateGymSessionCore,
+  deleteGymSessionCore,
+  saveGymSessionDraftCore,
+  discardGymSessionDraftCore,
+} from "@/lib/actions/gym";
 import { startTimer, pauseTimer, resumeTimer, cancelTimer } from "@/lib/actions/metronome";
 import type { AchievementType } from "@/lib/achievements";
 
@@ -110,6 +116,8 @@ const registry: Registry = {
     if (result.error) throw new Error(result.error);
   },
   deleteGymSession: (m) => deleteGymSessionCore(m.sessionId),
+  saveGymSessionDraft: (m) => saveGymSessionDraftCore(m.id, m.values),
+  discardGymSessionDraft: (m) => discardGymSessionDraftCore(m.id),
   // No ack needed on success: the timer's own ghost preview (built the
   // instant this was queued, see lib/offline/pending-selectors.ts) is
   // already showing the right thing — this replay just makes it real.
