@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `light_variant` text DEFAULT 'clear' NOT NULL;

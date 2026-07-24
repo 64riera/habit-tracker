@@ -22,6 +22,11 @@ export const users = sqliteTable(
     // "system"); independent of themePreference so next-themes keeps owning
     // light/dark/system on its own. See .dark.oled in app/globals.css.
     darkVariant: text("dark_variant", { enum: ["original", "oled"] }).notNull().default("oled"),
+    // Mirrors darkVariant for light mode: "warm" is the original cream
+    // background, "clear" swaps it for pure white. Independent of
+    // themePreference, same reasoning as darkVariant. See .light.clear in
+    // app/globals.css. Defaults to "clear" — the new default light look.
+    lightVariant: text("light_variant", { enum: ["warm", "clear"] }).notNull().default("clear"),
     localePreference: text("locale_preference", { enum: ["es", "en"] }).notNull().default("es"),
     currencyPreference: text("currency_preference", { enum: ["MXN", "USD"] }).notNull().default("MXN"),
     timezone: text("timezone"), // IANA, e.g. "America/Monterrey" — detected in the browser, see timezone-sync.tsx

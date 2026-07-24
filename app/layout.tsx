@@ -8,14 +8,24 @@ import { ToastProvider } from "@/lib/toast/client";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { getCurrentLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { getThemePreference, getDarkVariant, type DarkVariant } from "@/lib/queries/user";
+import {
+  getThemePreference,
+  getDarkVariant,
+  getLightVariant,
+  type DarkVariant,
+  type LightVariant,
+} from "@/lib/queries/user";
 import { APP_NAME, APP_NAME_FULL, APP_URL } from "@/lib/branding";
 import "./globals.css";
 
-// Kept in sync by hand with :root / .dark / .dark.oled in app/globals.css —
-// the browser chrome (status bar, system nav bar) can't read CSS custom
-// properties, so it needs these as plain values.
-const THEME_COLORS = { light: "#faf7f2", dark: "#1b1712", oled: "#000000" } as const;
+// Kept in sync by hand with :root / .light.clear / .dark / .dark.oled in
+// app/globals.css — the browser chrome (status bar, system nav bar) can't
+// read CSS custom properties, so it needs these as plain values.
+const THEME_COLORS = { warm: "#faf7f2", clear: "#ffffff", dark: "#1b1712", oled: "#000000" } as const;
+
+function lightBackgroundColor(variant: LightVariant) {
+  return variant === "clear" ? THEME_COLORS.clear : THEME_COLORS.warm;
+}
 
 function darkBackgroundColor(variant: DarkVariant) {
   return variant === "oled" ? THEME_COLORS.oled : THEME_COLORS.dark;
@@ -68,20 +78,24 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export async function generateViewport(): Promise<Viewport> {
-  const [themePreference, darkVariant] = await Promise.all([getThemePreference(), getDarkVariant()]);
+  const [themePreference, darkVariant, lightVariant] = await Promise.all([
+    getThemePreference(),
+    getDarkVariant(),
+    getLightVariant(),
+  ]);
   const darkColor = darkBackgroundColor(darkVariant);
+  const lightColor = lightBackgroundColor(lightVariant);
 
   // Explicit light/dark: a single color, no media query needed. "system":
   // still keyed off prefers-color-scheme (the one case where the OS is the
-  // actual source of truth), using the saved dark variant's color for the
-  // dark branch.
+  // actual source of truth), using the saved variant's color for each branch.
   const themeColor: Viewport["themeColor"] =
     themePreference === "light"
-      ? THEME_COLORS.light
+      ? lightColor
       : themePreference === "dark"
         ? darkColor
         : [
-            { media: "(prefers-color-scheme: light)", color: THEME_COLORS.light },
+            { media: "(prefers-color-scheme: light)", color: lightColor },
             { media: "(prefers-color-scheme: dark)", color: darkColor },
           ];
 
@@ -102,26 +116,29 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Runs on every single page load in the app — none of these three depend
+  // Runs on every single page load in the app — none of these four depend
   // on each other's result, so there's no reason to wait on them one at a
   // time.
-  const [locale, themePreference, darkVariant] = await Promise.all([
+  const [locale, themePreference, darkVariant, lightVariant] = await Promise.all([
     getCurrentLocale(),
     getThemePreference(),
     getDarkVariant(),
+    getLightVariant(),
   ]);
   const dict = getDictionary(locale);
 
-  // Present regardless of whether dark ends up active (next-themes decides
-  // that, possibly client-side for "system") — the CSS only applies it via
-  // `.dark.oled`, so there's no flash-of-wrong-variant to guard against.
+  // Present regardless of whether dark/light ends up active (next-themes
+  // decides that, possibly client-side for "system") — the CSS only applies
+  // each via `.dark.oled` / `.light.clear`, so there's no
+  // flash-of-wrong-variant to guard against.
   const darkVariantClass = darkVariant === "oled" ? " oled" : "";
+  const lightVariantClass = lightVariant === "clear" ? " clear" : "";
 
   return (
     <html
       lang={locale}
       suppressHydrationWarning
-      className={`${newsreader.variable} ${publicSans.variable} h-full antialiased${darkVariantClass}`}
+      className={`${newsreader.variable} ${publicSans.variable} h-full antialiased${darkVariantClass}${lightVariantClass}`}
     >
       <body className="min-h-full">
         <ThemeProvider attribute="class" defaultTheme={themePreference} enableSystem>

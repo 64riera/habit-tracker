@@ -79,6 +79,16 @@
   --header-shadow: rgba(0, 0, 0, 0.6);
 }
 
+/* Variante "clear" del modo claro: blanco puro en vez del crema cálido de
+   arriba (mismo espíritu que .dark.oled, pero para claro). --color-surface
+   ya era blanco en :root, así que esto además iguala bg y surface — sin
+   perder separación visual, porque toda tarjeta/dropdown/modal ya usa
+   border-border + shadow para despegarse de la página (ver bg-surface en
+   confirm-dialog.tsx, select.tsx, etc.), nunca el contraste bg/surface. */
+.light.clear {
+  --color-bg: #ffffff;
+}
+
 @theme inline {
   --color-bg: var(--color-bg);
   --color-surface: var(--color-surface);

@@ -9,6 +9,7 @@ import type { Locale } from "@/lib/i18n/dictionaries";
 
 export type ThemePreference = "light" | "dark" | "system";
 export type DarkVariant = "original" | "oled";
+export type LightVariant = "warm" | "clear";
 export type CurrencyPreference = "MXN" | "USD";
 
 /** Theme preference saved on the account. "system" if there's no session
@@ -37,6 +38,20 @@ export const getDarkVariant = cache(async (): Promise<DarkVariant> => {
     .where(eq(users.id, userId))
     .limit(1);
   return user?.darkVariant ?? "oled";
+});
+
+/** Light mode style saved on the account — only visible while light mode is
+ * active. "clear" if there's no session, matching the column default.
+ * Memoized with `cache()`, same reasoning as `getThemePreference`. */
+export const getLightVariant = cache(async (): Promise<LightVariant> => {
+  const userId = await getCurrentUserIdOrNull();
+  if (!userId) return "clear";
+  const [user] = await db
+    .select({ lightVariant: users.lightVariant })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return user?.lightVariant ?? "clear";
 });
 
 /** Language preference saved on the account. `null` if there's no session

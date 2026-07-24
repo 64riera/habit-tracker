@@ -11,12 +11,13 @@ import { PushToggle } from "@/components/pwa/push-toggle";
 import { SyncPanel } from "@/components/settings/sync-panel";
 import { ProfileHeader } from "@/components/settings/profile-header";
 import { DarkVariantToggle } from "@/components/settings/dark-variant-toggle";
+import { LightVariantToggle } from "@/components/settings/light-variant-toggle";
 import { Select } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n/client";
 import { useInstallPrompt } from "@/lib/hooks/use-install-prompt";
 import { setDayCutoffHour, setCurrencyPreference } from "@/lib/actions/preferences";
 import type { FocusHeaderData } from "@/lib/queries/focus";
-import type { CurrencyPreference, DarkVariant, UserProfile } from "@/lib/queries/user";
+import type { CurrencyPreference, DarkVariant, LightVariant, UserProfile } from "@/lib/queries/user";
 
 const CUTOFF_HOURS = Array.from({ length: 24 }, (_, h) => ({
   value: String(h),
@@ -33,12 +34,14 @@ export function AjustesClient({
   focusHeader,
   currency,
   darkVariant,
+  lightVariant,
   profile,
 }: {
   cutoffHour: number;
   focusHeader: FocusHeaderData;
   currency: CurrencyPreference;
   darkVariant: DarkVariant;
+  lightVariant: LightVariant;
   profile: UserProfile | null;
 }) {
   const { t } = useI18n();
@@ -66,6 +69,11 @@ export function AjustesClient({
   // this row does what it says instead of just displaying the current value.
   const rows: { label: string; sub?: string; control: React.ReactNode }[] = [
     { label: t("settings.theme"), control: <ThemeToggle /> },
+    {
+      label: t("settings.lightVariant"),
+      sub: t("settings.lightVariantSub"),
+      control: <LightVariantToggle initialVariant={lightVariant} />,
+    },
     {
       label: t("settings.darkVariant"),
       sub: t("settings.darkVariantSub"),
