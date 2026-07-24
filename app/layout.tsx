@@ -16,12 +16,8 @@ import {
   type LightVariant,
 } from "@/lib/queries/user";
 import { APP_NAME, APP_NAME_FULL, APP_URL } from "@/lib/branding";
+import { THEME_COLORS } from "@/lib/theme-colors";
 import "./globals.css";
-
-// Kept in sync by hand with :root / .light.clear / .dark / .dark.oled in
-// app/globals.css — the browser chrome (status bar, system nav bar) can't
-// read CSS custom properties, so it needs these as plain values.
-const THEME_COLORS = { warm: "#faf7f2", clear: "#ffffff", dark: "#1b1712", oled: "#000000" } as const;
 
 function lightBackgroundColor(variant: LightVariant) {
   return variant === "clear" ? THEME_COLORS.clear : THEME_COLORS.warm;
