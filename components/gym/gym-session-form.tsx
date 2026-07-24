@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { nanoid } from "nanoid";
 import { Plus, Trash2, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n/client";
@@ -123,14 +123,16 @@ export function GymSessionForm({
     setExercises((prev) => prev.filter((_, idx) => idx !== i));
   }
   function addSet(i: number) {
-    // Prefills the new set's weight from the previous one — the same
-    // weight repeated across sets is the common case in how these get
-    // written down (e.g. "43+5kg 12r 10r 7r"), so this saves retyping it.
+    // Prefills the new set's weight and reps from the previous one — sets
+    // usually repeat the same numbers with at most a small correction (e.g.
+    // "43+5kg 12r 10r 7r"), so starting from the last set's values and
+    // letting ExerciseCard focus straight into the reps field (see there)
+    // saves retyping both from scratch every time.
     setExercises((prev) =>
       prev.map((e, idx) => {
         if (idx !== i) return e;
         const last = e.sets[e.sets.length - 1];
-        return { ...e, sets: [...e.sets, { key: nanoid(), weight: last?.weight ?? "", reps: "" }] };
+        return { ...e, sets: [...e.sets, { key: nanoid(), weight: last?.weight ?? "", reps: last?.reps ?? "" }] };
       })
     );
   }
@@ -280,6 +282,25 @@ function ExerciseCard({
   onRemoveSet: (j: number) => void;
 }) {
   const { t } = useI18n();
+  const prevSetsLengthRef = useRef(exercise.sets.length);
+  const newestRepsInputRef = useRef<HTMLInputElement>(null);
+
+  // Moves focus straight into the new set's reps field whenever one gets
+  // added (never on mount or on removal — length only grows on add), so
+  // the phone's keyboard has a field to attach to right away instead of
+  // going idle. Paired with the "add set" button's onMouseDown below,
+  // which stops it from ever taking focus itself: without that, focus
+  // would first drop to the button (closing the keyboard) and only then
+  // jump here, showing a close/reopen flicker instead of an uninterrupted
+  // keyboard.
+  useEffect(() => {
+    if (exercise.sets.length > prevSetsLengthRef.current) {
+      newestRepsInputRef.current?.focus();
+      newestRepsInputRef.current?.select();
+    }
+    prevSetsLengthRef.current = exercise.sets.length;
+  }, [exercise.sets.length]);
+
   return (
     <div className="rounded-lg border border-border p-3.5">
       <div className="flex items-center gap-2">
@@ -317,6 +338,7 @@ function ExerciseCard({
               className="w-0 min-w-0 flex-1 rounded-lg border border-border bg-transparent px-2.5 py-1.5 text-[13px] outline-none focus:border-text"
             />
             <input
+              ref={j === exercise.sets.length - 1 ? newestRepsInputRef : undefined}
               value={set.reps}
               onChange={(e) => onUpdateSet(j, { reps: e.target.value })}
               placeholder={t("gym.repsPlaceholder")}
@@ -341,7 +363,12 @@ function ExerciseCard({
         ))}
       </div>
 
-      <button type="button" onClick={onAddSet} className="mt-2 flex items-center gap-1 text-[11.5px] font-medium text-muted">
+      <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={onAddSet}
+        className="mt-2 flex items-center gap-1 text-[11.5px] font-medium text-muted"
+      >
         <Plus size={12} strokeWidth={2} aria-hidden />
         {t("gym.addSet")}
       </button>

@@ -3,6 +3,7 @@ import { Newsreader, Public_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeColorSync } from "@/components/theme-color-sync";
 import { I18nProvider } from "@/lib/i18n/client";
 import { ToastProvider } from "@/lib/toast/client";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
@@ -138,6 +139,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full">
         <ThemeProvider attribute="class" defaultTheme={themePreference} enableSystem>
+          <ThemeColorSync />
           <I18nProvider locale={locale} dict={dict}>
             <ToastProvider>
               <RegisterServiceWorker />
