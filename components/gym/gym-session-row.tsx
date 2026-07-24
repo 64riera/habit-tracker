@@ -24,6 +24,9 @@ export function GymSessionRow({
   const names = session.exercises.map((e) => categoryDisplayName(exercisesById.get(e.exerciseId), locale)).filter(Boolean);
   const preview = names.slice(0, 3).join(", ") + (names.length > 3 ? ` +${names.length - 3}` : "");
   const totalSets = session.exercises.reduce((sum, e) => sum + e.sets.length, 0);
+  const summary =
+    t("gym.summary", { exercises: session.exercises.length, sets: totalSets }) +
+    (session.cardioMinutes ? ` · ${t("gym.cardioSummary", { min: session.cardioMinutes })}` : "");
 
   return (
     <Link
@@ -42,9 +45,7 @@ export function GymSessionRow({
           <span className="truncate">{preview || t("gym.empty")}</span>
           {isPendingSync && <PendingSyncBadge />}
         </span>
-        <span className="mt-0.5 block truncate text-[11px] text-muted">
-          {t("gym.summary", { exercises: session.exercises.length, sets: totalSets })}
-        </span>
+        <span className="mt-0.5 block truncate text-[11px] text-muted">{summary}</span>
       </span>
     </Link>
   );

@@ -366,6 +366,11 @@ export const gymSessions = sqliteTable(
     userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     date: text("date").notNull(), // YYYY-MM-DD
     exercises: text("exercises").notNull(), // JSON, GymExercise[]
+    // Total minutes of cardio done as part of the session (treadmill, bike,
+    // etc.), logged as one number for the whole session — unlike lifting,
+    // cardio isn't tracked at the exercise/set level here. Null when the
+    // session had none.
+    cardioMinutes: integer("cardio_minutes"),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
     // Bumped on every update; the edit form round-trips the value it read
     // back as an optimistic-concurrency token (see updateGymSessionCore) so
@@ -384,6 +389,7 @@ export const gymSessions = sqliteTable(
     // (see updateGymSessionCore). Null whenever there's no pending edit.
     draftDate: text("draft_date"),
     draftExercises: text("draft_exercises"),
+    draftCardioMinutes: integer("draft_cardio_minutes"),
     draftSavedAt: text("draft_saved_at"),
   },
   (t) => [index("gym_sessions_user_idx").on(t.userId), index("gym_sessions_user_date_idx").on(t.userId, t.date)]

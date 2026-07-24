@@ -211,6 +211,13 @@
       "when": 1784925284851,
       "tag": "0029_narrow_blade",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "6",
+      "when": 1784934097098,
+      "tag": "0030_blushing_titania",
+      "breakpoints": true
     }
   ]
 }

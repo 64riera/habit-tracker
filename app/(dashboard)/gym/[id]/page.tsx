@@ -20,7 +20,12 @@ export default async function SesionGymDetallePage({ params }: { params: Promise
 
   const initialDraft =
     session.draftDate && session.draftExercises
-      ? { id: session.id, date: session.draftDate, exercises: session.draftExercises }
+      ? {
+          id: session.id,
+          date: session.draftDate,
+          exercises: session.draftExercises,
+          cardioMinutes: session.draftCardioMinutes,
+        }
       : undefined;
 
   return (

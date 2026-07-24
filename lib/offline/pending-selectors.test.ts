@@ -199,8 +199,10 @@ describe("gym sessions", () => {
       createdAt: "2026-07-01T00:00:00.000Z",
       updatedAt: "2026-07-01T00:00:00.000Z",
       status: "completed",
+      cardioMinutes: null,
       draftDate: null,
       draftExercises: null,
+      draftCardioMinutes: null,
       draftSavedAt: null,
     };
     const edited = applyPendingGymSessionEdit(real, values);

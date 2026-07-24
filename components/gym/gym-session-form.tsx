@@ -29,7 +29,12 @@ type ExerciseDraft = { key: string; exerciseId: string; note: string; sets: SetD
  * either a brand-new session that was autosaved but never submitted, or an
  * in-progress edit to an existing one (see saveGymSessionDraftCore for how
  * these get built server-side). */
-export type GymSessionDraftToRestore = { id: string; date: string; exercises: GymExercise[] };
+export type GymSessionDraftToRestore = {
+  id: string;
+  date: string;
+  exercises: GymExercise[];
+  cardioMinutes: number | null;
+};
 
 function toDrafts(exercises: GymExercise[] | undefined, defaultExerciseId: string): ExerciseDraft[] {
   if (!exercises || exercises.length === 0) {
@@ -63,6 +68,9 @@ export function GymSessionForm({
   const [exercises, setExercises] = useState<ExerciseDraft[]>(() =>
     toDrafts(initialDraft?.exercises ?? session?.exercises, catalog[0]?.id ?? "")
   );
+  const [cardioMinutes, setCardioMinutes] = useState(() =>
+    initialDraft ? (initialDraft.cardioMinutes ?? "").toString() : (session?.cardioMinutes ?? "").toString()
+  );
   const [draftDismissed, setDraftDismissed] = useState(false);
   const showDraftBanner = Boolean(initialDraft) && !draftDismissed;
 
@@ -70,6 +78,7 @@ export function GymSessionForm({
     setDraftDismissed(true);
     setDate(session?.date ?? today);
     setExercises(toDrafts(session?.exercises, catalog[0]?.id ?? ""));
+    setCardioMinutes((session?.cardioMinutes ?? "").toString());
     void runOrQueue({ type: "discardGymSessionDraft", id });
   }
 
@@ -148,8 +157,9 @@ export function GymSessionForm({
         note: e.note || undefined,
         sets: e.sets.map((s) => ({ weight: s.weight, reps: s.reps })),
       })),
+      cardioMinutes: cardioMinutes || undefined,
     }),
-    [date, exercises]
+    [date, exercises, cardioMinutes]
   );
   const serializedExercises = JSON.stringify(draftValues.exercises);
   const serializedDraftValues = JSON.stringify(draftValues);
@@ -176,6 +186,7 @@ export function GymSessionForm({
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="date" value={date} />
       <input type="hidden" name="exercises" value={serializedExercises} />
+      <input type="hidden" name="cardioMinutes" value={cardioMinutes} />
       {session && <input type="hidden" name="expectedUpdatedAt" value={session.updatedAt} />}
 
       <FormAlert
@@ -248,6 +259,20 @@ export function GymSessionForm({
         <Plus size={14} strokeWidth={2} aria-hidden />
         {t("gym.addExercise")}
       </button>
+
+      <Field label={t("gym.cardioMinutes")} htmlFor="gym-cardio-minutes">
+        <input
+          id="gym-cardio-minutes"
+          value={cardioMinutes}
+          onChange={(e) => setCardioMinutes(e.target.value)}
+          placeholder={t("gym.cardioMinutesPlaceholder")}
+          type="number"
+          inputMode="numeric"
+          min={0}
+          max={600}
+          className="w-24 rounded-lg border border-border bg-transparent px-3.5 py-2 text-sm outline-none focus:border-text"
+        />
+      </Field>
 
       {autosaveStatus !== "idle" && (
         <p role="status" className="text-center text-[10.5px] text-muted">

@@ -387,6 +387,9 @@
     "continueDraft": "Continuar",
     "empty": "Aún no tienes sesiones de gym. Registra la primera.",
     "summary": "{exercises} ejercicios · {sets} series",
+    "cardioMinutes": "Cardio (minutos)",
+    "cardioMinutesPlaceholder": "minutos",
+    "cardioSummary": "{min} min cardio",
     "stats": {
       "title": "Estadísticas de gym",
       "viewLink": "Ver estadísticas",

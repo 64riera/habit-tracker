@@ -371,7 +371,7 @@ export function pendingGymSessionDeleteIds(queue: QueuedRecord[]): Set<string> {
 
 /** Editable gym session fields derived from the form values — reused by the creation ghost and the edit overlay. */
 function gymSessionEditableFields(values: GymSessionFormValues) {
-  return { date: values.date, exercises: values.exercises };
+  return { date: values.date, exercises: values.exercises, cardioMinutes: values.cardioMinutes ?? null };
 }
 
 /** Builds a "good enough" `GymSessionRow` to display a session logged
@@ -386,6 +386,7 @@ export function buildGhostGymSession(id: string, values: GymSessionFormValues): 
     status: "completed",
     draftDate: null,
     draftExercises: null,
+    draftCardioMinutes: null,
     draftSavedAt: null,
     ...gymSessionEditableFields(values),
   };

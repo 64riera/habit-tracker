@@ -19,6 +19,15 @@ function revalidateGymPaths() {
   revalidatePath("/gym");
 }
 
+/** Draft cardio minutes travel as a loose, size-bounded string (see
+ * gymSessionDraftSchema) since a draft can be captured mid-typing —
+ * anything that isn't a plain non-negative integer is treated as "not
+ * logged yet" rather than rejected. */
+function parseCardioMinutes(raw?: string): number | null {
+  if (!raw || !/^\d+$/.test(raw)) return null;
+  return Number(raw);
+}
+
 export async function createGymSession(
   _prevState: GymSessionFormState,
   formData: FormData
@@ -51,6 +60,7 @@ export async function createGymSessionCore(id: string, rawValues: unknown): Prom
       status: "completed",
       date: values.date,
       exercises: JSON.stringify(values.exercises),
+      cardioMinutes: values.cardioMinutes ?? null,
       updatedAt: new Date().toISOString(),
     })
     .onConflictDoUpdate({
@@ -59,8 +69,10 @@ export async function createGymSessionCore(id: string, rawValues: unknown): Prom
         status: "completed",
         date: values.date,
         exercises: JSON.stringify(values.exercises),
+        cardioMinutes: values.cardioMinutes ?? null,
         draftDate: null,
         draftExercises: null,
+        draftCardioMinutes: null,
         draftSavedAt: null,
         updatedAt: new Date().toISOString(),
       },
@@ -101,11 +113,13 @@ export async function updateGymSessionCore(sessionId: string, rawValues: unknown
     .set({
       date: values.date,
       exercises: JSON.stringify(values.exercises),
+      cardioMinutes: values.cardioMinutes ?? null,
       // Clears whatever autosaved draft was pending (see
       // saveGymSessionDraftCore) — the user just confirmed a real save, so
       // there's nothing left to protect it from anymore.
       draftDate: null,
       draftExercises: null,
+      draftCardioMinutes: null,
       draftSavedAt: null,
       updatedAt: new Date().toISOString(),
     })
@@ -171,6 +185,7 @@ export async function saveGymSessionDraftCore(id: string, rawValues: unknown): P
         status: "draft",
         date: values.date,
         exercises: JSON.stringify(values.exercises),
+        cardioMinutes: parseCardioMinutes(values.cardioMinutes),
         updatedAt: new Date().toISOString(),
       })
       .onConflictDoNothing({ target: gymSessions.id });
@@ -185,7 +200,12 @@ export async function saveGymSessionDraftCore(id: string, rawValues: unknown): P
   if (existing.status === "draft") {
     await db
       .update(gymSessions)
-      .set({ date: values.date, exercises: JSON.stringify(values.exercises), updatedAt: new Date().toISOString() })
+      .set({
+        date: values.date,
+        exercises: JSON.stringify(values.exercises),
+        cardioMinutes: parseCardioMinutes(values.cardioMinutes),
+        updatedAt: new Date().toISOString(),
+      })
       .where(ownedWhere(gymSessions.id, id, gymSessions.userId, userId));
     return;
   }
@@ -195,6 +215,7 @@ export async function saveGymSessionDraftCore(id: string, rawValues: unknown): P
     .set({
       draftDate: values.date,
       draftExercises: JSON.stringify(values.exercises),
+      draftCardioMinutes: parseCardioMinutes(values.cardioMinutes),
       draftSavedAt: new Date().toISOString(),
     })
     .where(ownedWhere(gymSessions.id, id, gymSessions.userId, userId));
@@ -225,6 +246,6 @@ export async function discardGymSessionDraftCore(id: string): Promise<void> {
   // session (see getGymSessions).
   await db
     .update(gymSessions)
-    .set({ draftDate: null, draftExercises: null, draftSavedAt: null })
+    .set({ draftDate: null, draftExercises: null, draftCardioMinutes: null, draftSavedAt: null })
     .where(ownedWhere(gymSessions.id, id, gymSessions.userId, userId));
 }

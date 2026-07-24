@@ -12,9 +12,17 @@ export const gymExerciseSchema = z.object({
   sets: z.array(gymSetSchema).min(1),
 });
 
+// Empty string (an untouched number input) means "no cardio logged", not 0 —
+// z.coerce.number() would otherwise turn "" into NaN and fail validation.
+const optionalMinutes = z.preprocess(
+  (v) => (v === "" || v === null || v === undefined ? undefined : v),
+  z.coerce.number().int().min(0).max(600).optional()
+);
+
 export const gymSessionFormSchema = z.object({
   date: isoDateSchema,
   exercises: z.array(gymExerciseSchema).min(1),
+  cardioMinutes: optionalMinutes,
   // Only set when editing an existing session — the updatedAt the form read
   // when it opened, round-tripped as an optimistic-concurrency token (see
   // updateGymSessionCore). Absent for a brand-new session.
@@ -42,6 +50,7 @@ export const gymSessionDraftSchema = z.object({
       })
     )
     .max(50),
+  cardioMinutes: z.string().trim().max(10).optional(),
 });
 
 export type GymSessionDraftValues = z.infer<typeof gymSessionDraftSchema>;
@@ -59,5 +68,10 @@ export function extractGymSessionFields(formData: FormData): unknown {
   } catch {
     exercises = [];
   }
-  return { date: formData.get("date"), exercises, expectedUpdatedAt: formData.get("expectedUpdatedAt") ?? "" };
+  return {
+    date: formData.get("date"),
+    exercises,
+    cardioMinutes: formData.get("cardioMinutes") ?? "",
+    expectedUpdatedAt: formData.get("expectedUpdatedAt") ?? "",
+  };
 }

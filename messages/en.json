@@ -387,6 +387,9 @@
     "continueDraft": "Continue",
     "empty": "You don't have any gym sessions yet. Log the first one.",
     "summary": "{exercises} exercises · {sets} sets",
+    "cardioMinutes": "Cardio (minutes)",
+    "cardioMinutesPlaceholder": "minutes",
+    "cardioSummary": "{min} min cardio",
     "stats": {
       "title": "Gym stats",
       "viewLink": "View stats",

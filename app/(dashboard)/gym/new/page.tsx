@@ -20,7 +20,9 @@ export default async function NuevaSesionGymPage() {
         exercises={exercises}
         routines={routines}
         today={today}
-        initialDraft={draft && { id: draft.id, date: draft.date, exercises: draft.exercises }}
+        initialDraft={
+          draft && { id: draft.id, date: draft.date, exercises: draft.exercises, cardioMinutes: draft.cardioMinutes }
+        }
       />
     </div>
   );
