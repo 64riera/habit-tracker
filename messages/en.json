@@ -698,6 +698,18 @@
       "stats": {
         "title": "Real progress, not just streaks",
         "body": "Trends, weekly comparisons, and the times of day you actually follow through."
+      },
+      "finance": {
+        "title": "Every expense in its place",
+        "body": "Set a monthly limit per category, and let recurring bills log themselves."
+      },
+      "tasks": {
+        "title": "Recurring to-dos that reset on their own",
+        "body": "Daily, weekly, every few days — set the cadence once and never recreate them."
+      },
+      "gym": {
+        "title": "Every set, every rep, logged",
+        "body": "Sets, weights, and cardio. Close the app mid-workout and pick up right where you left off."
       }
     },
     "categories": {
@@ -709,7 +721,8 @@
       "items": {
         "pwa": { "title": "Installable", "body": "Add it to your home screen and open it like a native app." },
         "reminders": { "title": "Push reminders", "body": "A notification at the time you set for each habit." },
-        "export": { "title": "Your data, exportable", "body": "Download your full history as CSV or JSON whenever you want." }
+        "export": { "title": "Your data, exportable", "body": "Download your full history as CSV or JSON whenever you want." },
+        "metronome": { "title": "Metronome", "body": "Keep tempo with different sounds, or time anything with the built-in timer." }
       }
     },
     "cta": {
