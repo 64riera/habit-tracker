@@ -7,7 +7,7 @@ import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import type { GymSessionRow } from "@/lib/queries/gym";
-import type { GymExercise } from "@/lib/gym/types";
+import type { GymExercise, GymSet } from "@/lib/gym/types";
 import type { GymExerciseCatalogRow } from "@/lib/queries/gym-exercises";
 import type { GymRoutineRow } from "@/lib/queries/gym-routines";
 import { createGymSession, updateGymSession } from "@/lib/actions/gym";
@@ -36,15 +36,40 @@ export type GymSessionDraftToRestore = {
   cardioMinutes: number | null;
 };
 
-function toDrafts(exercises: GymExercise[] | undefined, defaultExerciseId: string): ExerciseDraft[] {
+function toSetDraft(s: GymSet): SetDraft {
+  return { key: nanoid(), weight: s.weight ?? "", reps: String(s.reps) };
+}
+
+function isBlankSets(sets: SetDraft[]): boolean {
+  return sets.every((s) => s.weight === "" && s.reps === "");
+}
+
+/** A fresh set list for a newly picked exercise slot: the last time that
+ * exercise was logged (if any), so the user corrects instead of retyping
+ * from scratch — same "repeat and correct" language as addSet below — or a
+ * single blank set when there's no history yet. */
+function freshSets(exerciseId: string, lastPerformance?: Record<string, GymSet[]>): SetDraft[] {
+  const remembered = lastPerformance?.[exerciseId];
+  return remembered && remembered.length > 0 ? remembered.map(toSetDraft) : [{ key: nanoid(), weight: "", reps: "" }];
+}
+
+function formatSetPreview(sets: GymSet[]): string {
+  return sets.map((s) => (s.weight ? `${s.weight} × ${s.reps}` : `× ${s.reps}`)).join(", ");
+}
+
+function toDrafts(
+  exercises: GymExercise[] | undefined,
+  defaultExerciseId: string,
+  lastPerformance?: Record<string, GymSet[]>
+): ExerciseDraft[] {
   if (!exercises || exercises.length === 0) {
-    return [{ key: nanoid(), exerciseId: defaultExerciseId, note: "", sets: [{ key: nanoid(), weight: "", reps: "" }] }];
+    return [{ key: nanoid(), exerciseId: defaultExerciseId, note: "", sets: freshSets(defaultExerciseId, lastPerformance) }];
   }
   return exercises.map((e) => ({
     key: nanoid(),
     exerciseId: e.exerciseId,
     note: e.note ?? "",
-    sets: e.sets.map((s) => ({ key: nanoid(), weight: s.weight ?? "", reps: String(s.reps) })),
+    sets: e.sets.map(toSetDraft),
   }));
 }
 
@@ -54,19 +79,25 @@ export function GymSessionForm({
   exercises: catalog,
   routines = [],
   initialDraft,
+  lastPerformance,
 }: {
   session?: GymSessionRow;
   today: string;
   exercises: GymExerciseCatalogRow[];
   routines?: GymRoutineRow[];
   initialDraft?: GymSessionDraftToRestore;
+  /** Most recent logged sets per exerciseId — only ever passed when
+   * starting a brand new session (see app/(dashboard)/gym/new/page.tsx).
+   * Left undefined when editing an existing session, where sets are real
+   * data and there's nothing to "remember" into them. */
+  lastPerformance?: Record<string, GymSet[]>;
 }) {
   const { t, locale } = useI18n();
   const { runOrQueue } = useOffline();
   const [id] = useState(() => session?.id ?? initialDraft?.id ?? nanoid());
   const [date, setDate] = useState(initialDraft?.date ?? session?.date ?? today);
   const [exercises, setExercises] = useState<ExerciseDraft[]>(() =>
-    toDrafts(initialDraft?.exercises ?? session?.exercises, catalog[0]?.id ?? "")
+    toDrafts(initialDraft?.exercises ?? session?.exercises, catalog[0]?.id ?? "", lastPerformance)
   );
   const [cardioMinutes, setCardioMinutes] = useState(() =>
     initialDraft ? (initialDraft.cardioMinutes ?? "").toString() : (session?.cardioMinutes ?? "").toString()
@@ -77,7 +108,7 @@ export function GymSessionForm({
   function discardDraft() {
     setDraftDismissed(true);
     setDate(session?.date ?? today);
-    setExercises(toDrafts(session?.exercises, catalog[0]?.id ?? ""));
+    setExercises(toDrafts(session?.exercises, catalog[0]?.id ?? "", lastPerformance));
     setCardioMinutes((session?.cardioMinutes ?? "").toString());
     void runOrQueue({ type: "discardGymSessionDraft", id });
   }
@@ -96,7 +127,7 @@ export function GymSessionForm({
         key: nanoid(),
         exerciseId: e.exerciseId,
         note: e.note ?? "",
-        sets: [{ key: nanoid(), weight: "", reps: "" }],
+        sets: freshSets(e.exerciseId, lastPerformance),
       }))
     );
   }
@@ -113,7 +144,19 @@ export function GymSessionForm({
   const [state, formAction] = useActionState(action, {});
 
   function updateExercise(i: number, patch: Partial<ExerciseDraft>) {
-    setExercises((prev) => prev.map((e, idx) => (idx === i ? { ...e, ...patch } : e)));
+    setExercises((prev) =>
+      prev.map((e, idx) => {
+        if (idx !== i) return e;
+        const next = { ...e, ...patch };
+        // Picking a different exercise into an untouched slot (its set is
+        // still blank) recalls that exercise's own last performance too —
+        // never overwrites a slot the user already started filling in.
+        if (patch.exerciseId && patch.exerciseId !== e.exerciseId && isBlankSets(e.sets)) {
+          next.sets = freshSets(patch.exerciseId, lastPerformance);
+        }
+        return next;
+      })
+    );
   }
   function updateSet(i: number, j: number, patch: Partial<SetDraft>) {
     setExercises((prev) =>
@@ -125,7 +168,12 @@ export function GymSessionForm({
   function addExercise() {
     setExercises((prev) => [
       ...prev,
-      { key: nanoid(), exerciseId: catalog[0]?.id ?? "", note: "", sets: [{ key: nanoid(), weight: "", reps: "" }] },
+      {
+        key: nanoid(),
+        exerciseId: catalog[0]?.id ?? "",
+        note: "",
+        sets: freshSets(catalog[0]?.id ?? "", lastPerformance),
+      },
     ]);
   }
   function removeExercise(i: number) {
@@ -242,6 +290,7 @@ export function GymSessionForm({
             exercise={exercise}
             catalogOptions={catalogOptions}
             canRemove={exercises.length > 1}
+            remembered={lastPerformance?.[exercise.exerciseId]}
             onChange={(patch) => updateExercise(i, patch)}
             onRemove={() => removeExercise(i)}
             onAddSet={() => addSet(i)}
@@ -290,6 +339,7 @@ function ExerciseCard({
   exercise,
   catalogOptions,
   canRemove,
+  remembered,
   onChange,
   onRemove,
   onAddSet,
@@ -300,6 +350,7 @@ function ExerciseCard({
   exercise: ExerciseDraft;
   catalogOptions: { value: string; label: string }[];
   canRemove: boolean;
+  remembered?: GymSet[];
   onChange: (patch: Partial<ExerciseDraft>) => void;
   onRemove: () => void;
   onAddSet: () => void;
@@ -349,6 +400,10 @@ function ExerciseCard({
           </button>
         )}
       </div>
+
+      {remembered && remembered.length > 0 && (
+        <p className="mt-1 text-[10.5px] text-muted">{t("gym.lastTime", { sets: formatSetPreview(remembered) })}</p>
+      )}
 
       <div className="mt-2.5 flex flex-col gap-1.5">
         {exercise.sets.map((set, j) => (

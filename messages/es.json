@@ -370,6 +370,7 @@
     "addExercise": "Agregar ejercicio",
     "removeExercise": "Quitar ejercicio",
     "setLabel": "Serie {n}",
+    "lastTime": "Antes: {sets}",
     "weightPlaceholder": "peso",
     "repsPlaceholder": "reps",
     "addSet": "Agregar serie",
