@@ -25,6 +25,29 @@ export function playChime() {
   }
 }
 
+// Same cadence as the metronome timer's own alarm (see
+// components/metronome/timer-panel.tsx) — a single chime is easy to miss
+// if a countdown session finishes while you've stepped away from the tab.
+const ALARM_REPEAT_MS = 1200;
+const ALARM_MAX_REPEATS = 5;
+
+/**
+ * Rings the chime a few times instead of once. Self-terminating (not tied
+ * to the component that triggered it staying mounted) — completing a
+ * session tears down FocusTimerDisplay via router.refresh() right after,
+ * same as the manual "Finish" path, so there's no "awaiting dismissal"
+ * screen to hang a stop condition on the way the metronome's does.
+ */
+export function playCompletionAlarm() {
+  playChime();
+  let reps = 1;
+  const id = setInterval(() => {
+    playChime();
+    reps += 1;
+    if (reps >= ALARM_MAX_REPEATS) clearInterval(id);
+  }, ALARM_REPEAT_MS);
+}
+
 const FLASH_INTERVAL_MS = 1000;
 const FLASH_DURATION_MS = 8000;
 

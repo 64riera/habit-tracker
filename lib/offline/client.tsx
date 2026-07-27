@@ -15,6 +15,7 @@ import { sectionRegistry } from "@/lib/swr/sections";
 import { getClientToday } from "@/lib/date-client";
 import { subscribeToRealtimeSync } from "@/lib/realtime/client";
 import type { RealtimeDomain } from "@/lib/realtime/domain";
+import { NAV_ITEMS } from "@/components/nav/nav-items";
 
 /** Domains a realtime push can arrive for that this device should react to
  * with a targeted section refresh — "focus" isn't here because the live
@@ -135,6 +136,14 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLastSyncedAt(readLastSyncedAt());
   }, []);
+
+  useEffect(() => {
+    // Warms the SW's flight/pages/static caches (see lib/sw/sw-source.ts)
+    // for the main tab-bar destinations, so they're reachable offline even
+    // before the user has ever opened them — otherwise a route only
+    // becomes available offline after a first online visit.
+    if (navigator.onLine) NAV_ITEMS.forEach((item) => router.prefetch(item.href));
+  }, [router]);
 
   const refreshQueue = useCallback(async () => {
     const queued = await getQueuedMutations();
