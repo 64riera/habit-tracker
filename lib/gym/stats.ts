@@ -1,4 +1,4 @@
-import { addDays, daysBetween, dateRange, startOfMonth, startOfWeek } from "@/lib/date";
+import { addDays, daysBetween, dateRange, filterByRange, startOfMonth, startOfWeek } from "@/lib/date";
 import type { GymSessionRow } from "@/lib/queries/gym";
 import type { GymSet } from "@/lib/gym/types";
 
@@ -36,10 +36,6 @@ export function sessionVolume(session: GymSessionRow): number {
 
 export function sessionSetCount(session: GymSessionRow): number {
   return session.exercises.reduce((sum, e) => sum + e.sets.length, 0);
-}
-
-export function filterByRange(sessions: GymSessionRow[], from: string, to: string): GymSessionRow[] {
-  return sessions.filter((s) => s.date >= from && s.date <= to);
 }
 
 export type GymPeriodSummary = { sessionCount: number; setCount: number; volume: number };

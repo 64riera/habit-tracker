@@ -128,6 +128,10 @@ export function formatTimeOfDay(date: Date, locale: "es" | "en"): string {
   return formatted.replace(/\s+/g, " ");
 }
 
+export function filterByRange<T extends { date: string }>(rows: T[], from: string, to: string): T[] {
+  return rows.filter((r) => r.date >= from && r.date <= to);
+}
+
 /** Groups a list already sorted by date desc into blocks of consecutive days. */
 export function groupByDate<T extends { date: string }>(entries: T[]): { date: string; items: T[] }[] {
   const groups: { date: string; items: T[] }[] = [];

@@ -35,10 +35,6 @@ export function periodRange(period: Period, today: string, custom?: { from: stri
   }
 }
 
-export function filterByRange<T extends { date: string }>(rows: T[], from: string, to: string): T[] {
-  return rows.filter((r) => r.date >= from && r.date <= to);
-}
-
 /** The equivalent-length window immediately before the selected period —
  * "last week" for "week", the previous calendar month for "month", etc.
  * Same shifting logic already used for Focus's week/month comparisons (see
