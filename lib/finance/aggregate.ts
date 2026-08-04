@@ -1,39 +1,23 @@
 import {
   startOfWeek,
-  endOfWeek,
   startOfMonth,
-  endOfMonth,
   startOfYear,
-  endOfYear,
   monthKey,
   yearKey,
   addDays,
   daysBetween,
   isoWeekday,
+  periodRange,
+  type Period,
 } from "@/lib/date";
 
-export type Period = "day" | "week" | "month" | "year" | "custom";
-export type Bucket = "day" | "week" | "month" | "year";
+// Re-exported for existing callers (finance-client.tsx, period-selector.tsx,
+// etc.) — the type and its range logic now live in lib/date.ts since Gym's
+// exercise-progress chart needs the exact same period selector and this
+// avoids a second copy (see lib/gym/stats.ts's exerciseProgress).
+export { periodRange, type Period };
 
-/** Pure — safe to run on the client so switching periods (day/week/month/year/
- * custom range) never needs a network round-trip: the whole dataset is
- * fetched once (see getTransactions in lib/queries/finance.ts) and every
- * period view is just a different slice/reduce over it. That's what keeps
- * the reports usable offline, not just the create/edit forms. */
-export function periodRange(period: Period, today: string, custom?: { from: string; to: string }): { from: string; to: string } {
-  switch (period) {
-    case "day":
-      return { from: today, to: today };
-    case "week":
-      return { from: startOfWeek(today), to: endOfWeek(today) };
-    case "month":
-      return { from: startOfMonth(today), to: endOfMonth(today) };
-    case "year":
-      return { from: startOfYear(today), to: endOfYear(today) };
-    case "custom":
-      return custom ?? { from: today, to: today };
-  }
-}
+export type Bucket = "day" | "week" | "month" | "year";
 
 /** The equivalent-length window immediately before the selected period —
  * "last week" for "week", the previous calendar month for "month", etc.

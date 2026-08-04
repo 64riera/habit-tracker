@@ -104,6 +104,29 @@ export function gymTrend(sessions: GymSessionRow[], today: string, days = 30): G
   return dateRange(from, today).map((date) => ({ date, volume: Math.round(volumeByDate.get(date) ?? 0) }));
 }
 
+export type ExerciseProgressPoint = { date: string; maxWeight: number | null; setCount: number };
+
+/** One point per session where `exerciseId` was logged, within [from, to] —
+ * unlike gymTrend (zero-filled daily volume across ALL exercises), a single
+ * exercise is rarely trained every day, so zero-filling would mostly show
+ * empty gaps; one bar per actual session reads better. `maxWeight` follows
+ * the same "best set of the session" convention as exerciseBreakdown's
+ * bestWeight below, just per-session instead of all-time. */
+export function exerciseProgress(sessions: GymSessionRow[], exerciseId: string, from: string, to: string): ExerciseProgressPoint[] {
+  const points: ExerciseProgressPoint[] = [];
+  for (const session of filterByRange(sessions, from, to)) {
+    const exercise = session.exercises.find((e) => e.exerciseId === exerciseId);
+    if (!exercise) continue;
+    let maxWeight: number | null = null;
+    for (const set of exercise.sets) {
+      const w = parseWeight(set.weight);
+      if (w !== null && (maxWeight === null || w > maxWeight)) maxWeight = w;
+    }
+    points.push({ date: session.date, maxWeight, setCount: exercise.sets.length });
+  }
+  return points.sort((a, b) => a.date.localeCompare(b.date));
+}
+
 export type GymExerciseStat = {
   exerciseId: string;
   sessionCount: number;

@@ -5,6 +5,7 @@ import {
   overallSessionCounts,
   getGymWeekSummary,
   gymTrend,
+  exerciseProgress,
   exerciseBreakdown,
   gymStreak,
 } from "./stats";
@@ -94,6 +95,30 @@ describe("gymTrend", () => {
       { date: "2026-07-13", volume: 100 },
       { date: "2026-07-14", volume: 0 },
     ]);
+  });
+});
+
+describe("exerciseProgress", () => {
+  it("only includes sessions with that exercise inside the given range, sorted by date", () => {
+    const sessions = [
+      session("s1", "2026-07-01", [{ exerciseId: "press-militar", sets: [{ weight: "20", reps: 10 }] }]),
+      session("s2", "2026-07-10", [{ exerciseId: "dominadas", sets: [{ reps: 8 }] }]), // different exercise
+      session("s3", "2026-07-15", [
+        { exerciseId: "press-militar", sets: [{ weight: "23", reps: 8 }, { weight: "25", reps: 6 }] },
+      ]),
+      session("s4", "2026-08-01", [{ exerciseId: "press-militar", sets: [{ weight: "30", reps: 5 }] }]), // outside range
+    ];
+    const points = exerciseProgress(sessions, "press-militar", "2026-07-01", "2026-07-31");
+    expect(points).toEqual([
+      { date: "2026-07-01", maxWeight: 20, setCount: 1 },
+      { date: "2026-07-15", maxWeight: 25, setCount: 2 },
+    ]);
+  });
+
+  it("has a null maxWeight for a bodyweight-only exercise", () => {
+    const sessions = [session("s1", "2026-07-01", [{ exerciseId: "dominadas", sets: [{ reps: 8 }, { reps: 6 }] }])];
+    const points = exerciseProgress(sessions, "dominadas", "2026-07-01", "2026-07-31");
+    expect(points).toEqual([{ date: "2026-07-01", maxWeight: null, setCount: 2 }]);
   });
 });
 

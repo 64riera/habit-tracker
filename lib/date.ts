@@ -132,6 +132,29 @@ export function filterByRange<T extends { date: string }>(rows: T[], from: strin
   return rows.filter((r) => r.date >= from && r.date <= to);
 }
 
+export type Period = "day" | "week" | "month" | "year" | "custom";
+
+/** Pure — safe to run on the client so switching periods (day/week/month/year/
+ * custom range) never needs a network round-trip: the whole dataset is
+ * fetched once and every period view is just a different slice/reduce over
+ * it. Originally Finance-only (see lib/finance/aggregate.ts, which
+ * re-exports this), generalized here once Gym's exercise-progress chart
+ * needed the exact same day/week/month/year/custom selector. */
+export function periodRange(period: Period, today: string, custom?: { from: string; to: string }): { from: string; to: string } {
+  switch (period) {
+    case "day":
+      return { from: today, to: today };
+    case "week":
+      return { from: startOfWeek(today), to: endOfWeek(today) };
+    case "month":
+      return { from: startOfMonth(today), to: endOfMonth(today) };
+    case "year":
+      return { from: startOfYear(today), to: endOfYear(today) };
+    case "custom":
+      return custom ?? { from: today, to: today };
+  }
+}
+
 /** Groups a list already sorted by date desc into blocks of consecutive days. */
 export function groupByDate<T extends { date: string }>(entries: T[]): { date: string; items: T[] }[] {
   const groups: { date: string; items: T[] }[] = [];

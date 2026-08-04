@@ -7,6 +7,7 @@ import { CategoryBars } from "@/components/charts/category-bars";
 import { MetricSummaryCard } from "@/components/stats/metric-summary-card";
 import { StatMini } from "@/components/stats/stat-mini";
 import { PersonalRecordsList } from "@/components/gym/personal-records-list";
+import { ExerciseProgressChart } from "@/components/gym/exercise-progress-chart";
 import { useI18n } from "@/lib/i18n/client";
 import { categoryDisplayName } from "@/lib/habits/describe";
 import { formatVolume } from "@/lib/gym/format";
@@ -140,6 +141,20 @@ export function GymEstadisticasClient({
               highlightColor="var(--color-cat-fitness)"
             />
           </div>
+
+          {breakdown.length > 0 && (
+            <div>
+              <div className="mb-2.5 text-[10px] tracking-wide text-muted uppercase">
+                {t("gym.stats.exerciseProgress")}
+              </div>
+              <ExerciseProgressChart
+                sessions={sessions}
+                exercises={exercises}
+                defaultExerciseId={breakdown[0].exerciseId}
+                today={today}
+              />
+            </div>
+          )}
 
           {topExercises.length > 0 && (
             <div>
